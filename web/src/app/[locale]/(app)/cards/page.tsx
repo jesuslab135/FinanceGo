@@ -20,9 +20,11 @@ import { parseISODate } from "@/lib/dates";
 import {
   useCardsOverview, useCreatePaymentMethod, useDeletePaymentMethod, usePaymentMethods, useUpdatePaymentMethod,
 } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export default function CardsPage() {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const locale = useLocale();
   const { data: methods = [], isPending } = usePaymentMethods();
   const { data: overview = [] } = useCardsOverview();
@@ -83,7 +85,7 @@ export default function CardsPage() {
                 <Badge variant="outline">{t(`cards.types.${m.type}`)}</Badge>
                 {!m.active && <Badge variant="outline">{t("common.inactive")}</Badge>}
                 <Button size="icon" variant="ghost" aria-label={t("common.edit")} onClick={() => setDialog({ pm: m })}><Pencil /></Button>
-                <ConfirmButton onConfirm={() => remove.mutate(m.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(e.message) })}>
+                <ConfirmButton onConfirm={() => remove.mutate(m.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(errMsg(e)) })}>
                   <Button size="icon" variant="ghost" aria-label={t("common.delete")}><Trash2 /></Button>
                 </ConfirmButton>
               </li>

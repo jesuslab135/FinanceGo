@@ -10,9 +10,11 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { useUpdateMe } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function UserMenu() {
   const t = useTranslations("nav");
+  const errMsg = useErrorMessage();
   const { user, logout, setUser } = useAuth();
   const { setTheme } = useTheme();
   const router = useRouter();
@@ -24,7 +26,7 @@ export function UserMenu() {
       const u = await updateMe.mutateAsync({ name: user.name ?? "", currency: user.currency ?? "MXN", timezone: user.timezone ?? "UTC", locale });
       setUser(u); // the (app) layout redirects to the new locale
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : String(e));
+      toast.error(errMsg(e));
     }
   };
 

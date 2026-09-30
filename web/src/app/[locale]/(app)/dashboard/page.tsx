@@ -14,10 +14,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Period } from "@/lib/dates";
 import { useBreakdown, useSeries, useSummary } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 function Dashboard() {
   const t = useTranslations("dashboard");
   const tc = useTranslations("common");
+  const errMsg = useErrorMessage();
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -45,7 +47,7 @@ function Dashboard() {
         <PeriodControls period={period} anchor={anchorStr} onChange={onChange} />
       </div>
       {summary.data ? <KpiCards summary={summary.data} spent={spent} period={period} /> : <Skeleton className="h-28 w-full" />}
-      {summary.error && <p role="alert" className="text-sm text-destructive">{summary.error.message}</p>}
+      {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {series.data ? <SpendingChart points={series.data} period={period} /> : <Skeleton className="h-80 w-full" />}

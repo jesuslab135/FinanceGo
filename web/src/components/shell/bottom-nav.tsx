@@ -43,7 +43,7 @@ export function BottomNav() {
         </button>
       </nav>
       <Sheet open={more} onOpenChange={setMore}>
-        <SheetContent side="bottom" className="rounded-t-xl pb-8">
+        <SheetContent side="bottom" className="rounded-t-xl pb-8" closeLabel={t("common.close")}>
           <SheetHeader><SheetTitle>{t("nav.more")}</SheetTitle></SheetHeader>
           <div className="flex flex-col gap-1 px-4">
             {rest.map((item) => (

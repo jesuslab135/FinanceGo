@@ -16,11 +16,13 @@ import { toISODate } from "@/lib/dates";
 import { saveBlob } from "@/lib/download";
 import { CURRENCIES, timezones } from "@/lib/locale-options";
 import { useMe, useUpdateMe } from "@/lib/query/hooks";
+import { fieldMessageKey, localizeFields, useErrorMessage } from "@/lib/api/error-messages";
 
 const selectCls = "h-9 w-full rounded-md border bg-transparent px-2 text-sm";
 
 export default function SettingsPage() {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const { data: me } = useMe();
   const { setUser, logout } = useAuth();
   const updateMe = useUpdateMe();
@@ -45,8 +47,8 @@ export default function SettingsPage() {
       setUser(u);
       toast.success(t("common.saved"));
     } catch (err) {
-      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(err.fields);
-      else toast.error(err instanceof Error ? err.message : String(err));
+      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(localizeFields(err.fields, t));
+      else toast.error(errMsg(err));
     }
   };
 
@@ -61,7 +63,7 @@ export default function SettingsPage() {
         if (raw instanceof Blob) {
           try { body = JSON.parse(await raw.text()); } catch { body = undefined; }
         }
-        return toast.error(toApiError(response.status, body).message);
+        return toast.error(errMsg(toApiError(response.status, body)));
       }
       saveBlob(data as Blob, `${kind}_${from}_${to}.csv`);
     } finally {
@@ -75,7 +77,7 @@ export default function SettingsPage() {
     const { error, response } = await api.DELETE("/me", { body: { password } });
     if (!response.ok) {
       const err = toApiError(response.status, error);
-      return setDeleteError(err.fields.password ?? err.message);
+      return setDeleteError(err.fields.password ? t(fieldMessageKey(err.fields.password)) : errMsg(err));
     }
     await logout();
     router.replace("/register");

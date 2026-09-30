@@ -54,7 +54,7 @@ export function PlanForm({ cardId, initial, onSubmit, onCancel }: {
         total_amount: parseMoney(v.total_amount)!, installments: Number(v.installments), purchased_on: v.purchased_on,
       });
     } catch (e) {
-      applyApiError(e, form.setError, (m) => toast.error(m));
+      applyApiError(e, form.setError, (m) => toast.error(m), t);
     }
   });
 

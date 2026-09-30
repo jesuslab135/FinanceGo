@@ -16,6 +16,7 @@ import {
   useCreateFixedPayment, useCreateIncomeSource, useDeactivateFixedPayment, useDeactivateIncomeSource,
   useFixedPayments, useIncomeSources, useUpdateFixedPayment, useUpdateIncomeSource,
 } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 type Row = (IncomeSource | FixedPayment) & { id: number };
 
@@ -48,6 +49,7 @@ function TemplateList({ rows, onEdit, onToggle }: {
 
 export default function RecurringPage() {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const incomes = useIncomeSources();
   const fixed = useFixedPayments();
   const [tab, setTab] = useState<"income" | "fixed">("income");
@@ -62,7 +64,7 @@ export default function RecurringPage() {
   // Deactivating (DELETE) sets end_month to the current month server-side, so reactivation is a
   // full PUT with active=true and end_month=null (the API has no separate endpoint).
   const toggle = (kind: "income" | "fixed", r: Row) => {
-    const done = { onSuccess: () => toast.success(t("common.saved")), onError: (e: Error) => toast.error(e.message) };
+    const done = { onSuccess: () => toast.success(t("common.saved")), onError: (e: Error) => toast.error(errMsg(e)) };
     if (r.active) return kind === "income" ? offIncome.mutate(r.id, done) : offFixed.mutate(r.id, done);
     const input = {
       name: r.name, amount: r.amount, day_of_month: r.day_of_month, start_month: r.start_month,

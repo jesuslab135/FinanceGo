@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { parseISODate } from "@/lib/dates";
 import { useUpcoming, useUpdateEntry } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function UpcomingList() {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const locale = useLocale();
   const { data = [] } = useUpcoming(30);
   const update = useUpdateEntry();
@@ -46,7 +48,7 @@ export function UpcomingList() {
                 <Button size="sm" variant="outline" disabled={update.isPending}
                   onClick={() => update.mutate(
                     { id: u.entry_id!, amount: u.amount, status: "paid", payment_method_id: u.payment_method_id ?? undefined },
-                    { onSuccess: () => toast.success(t("common.saved")), onError: (e) => toast.error(e.message) },
+                    { onSuccess: () => toast.success(t("common.saved")), onError: (e) => toast.error(errMsg(e)) },
                   )}>
                   {t("month.markPaid")}
                 </Button>

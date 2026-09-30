@@ -60,7 +60,7 @@ export function ExpenseForm({ initial, onSubmit, onCancel }: {
         spent_on: v.spent_on,
       });
     } catch (e) {
-      applyApiError(e, form.setError, (m) => toast.error(m));
+      applyApiError(e, form.setError, (m) => toast.error(m), t);
     }
   });
 

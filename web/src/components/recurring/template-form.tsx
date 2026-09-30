@@ -43,7 +43,8 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
           category_id: z.number().nullable(),
           payment_method_id: z.number().nullable(),
         })
-        .refine((v) => kind === "income" || v.category_id !== null, { path: ["category_id"], message: t("validation.required") }),
+        .refine((v) => kind === "income" || v.category_id !== null, { path: ["category_id"], message: t("validation.required") })
+        .refine((v) => !v.end_month || v.end_month >= v.start_month, { path: ["end_month"], message: t("validation.endBeforeStart") }),
     [t, kind],
   );
   const form = useForm<Values>({
@@ -75,7 +76,7 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
           : { ...base, category_id: v.category_id!, payment_method_id: v.payment_method_id as number | undefined },
       );
     } catch (e) {
-      applyApiError(e, form.setError, (m) => toast.error(m));
+      applyApiError(e, form.setError, (m) => toast.error(m), t);
     }
   });
 

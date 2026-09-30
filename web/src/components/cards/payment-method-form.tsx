@@ -94,7 +94,7 @@ export function PaymentMethodForm({ initial, onSubmit, onCancel }: {
     try {
       await onSubmit(input);
     } catch (e) {
-      applyApiError(e, form.setError, (m) => toast.error(m));
+      applyApiError(e, form.setError, (m) => toast.error(m), t);
     }
   });
 

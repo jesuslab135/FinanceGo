@@ -36,7 +36,7 @@ export default function LoginPage() {
       router.replace("/dashboard");
     } catch (e) {
       if (e instanceof ApiError && e.code === "invalid_credentials") form.setError("root", { message: t("auth.invalidCredentials") });
-      else applyApiError(e, form.setError, (m) => toast.error(m));
+      else applyApiError(e, form.setError, (m) => toast.error(m), t);
     }
   });
 

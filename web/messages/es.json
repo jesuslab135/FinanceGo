@@ -24,7 +24,32 @@
   "validation": {
     "required": "Requerido", "amount": "Escribe un monto válido, p. ej. 1,234.50", "email": "Correo inválido",
     "min8": "Mínimo 8 caracteres", "last4": "Exactamente 4 dígitos", "day": "Día entre 1 y 31",
-    "installments": "Entre 2 y 48 mensualidades", "max200": "Máximo 200 caracteres"
+    "installments": "Entre 2 y 48 mensualidades", "max200": "Máximo 200 caracteres",
+    "endBeforeStart": "El mes final no puede ser anterior al de inicio"
+  },
+  "errors": {
+    "invalid_credentials": "Correo o contraseña incorrectos",
+    "email_taken": "Ya existe una cuenta con este correo",
+    "category_exists": "Ya existe una categoría con ese nombre",
+    "category_in_use": "La categoría está en uso; mueve sus movimientos a otra antes de eliminarla",
+    "payment_method_in_use": "Este método de pago ya tiene movimientos, así que no se puede eliminar. Desactívalo en su lugar.",
+    "plan_locked": "Ya se cobraron mensualidades de este plan; solo puedes cambiar la descripción y la categoría",
+    "month_out_of_range": "Solo puedes ver hasta 12 meses adelante",
+    "rate_limited": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+    "not_a_credit_card": "Este método de pago no es una tarjeta de crédito",
+    "invalid_reference": "Uno de los datos seleccionados ya no existe",
+    "validation_failed": "Revisa los datos e inténtalo de nuevo",
+    "payload_too_large": "La solicitud es demasiado grande",
+    "not_found": "No se encontró lo que buscas; quizá ya se eliminó",
+    "unauthorized": "Tu sesión terminó. Vuelve a iniciar sesión.",
+    "bad_request": "La solicitud no es válida",
+    "internal": "Algo salió mal en el servidor. Inténtalo de nuevo.",
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "network": "No hay conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "fieldInvalid": "Valor inválido",
+    "fieldNotFound": "Ya no existe; elige otro",
+    "fieldCardNumber": "No escribas números de tarjeta aquí",
+    "passwordIncorrect": "Contraseña incorrecta"
   },
   "expenses": {
     "title": "Gastos", "new": "Nuevo gasto", "edit": "Editar gasto", "amount": "Monto", "category": "Categoría",

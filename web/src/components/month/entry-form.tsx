@@ -11,9 +11,11 @@ import { Label } from "@/components/ui/label";
 import type { Entry } from "@/lib/api/types";
 import { centsToInput, parseMoney } from "@/lib/money";
 import { useUpdateEntry } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function EntryForm({ entry, onDone }: { entry: Entry; onDone: () => void }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const update = useUpdateEntry();
   const [amount, setAmount] = useState(centsToInput(entry.amount));
   const [pm, setPm] = useState<number | null>(entry.payment_method_id ?? null);
@@ -35,7 +37,7 @@ export function EntryForm({ entry, onDone }: { entry: Entry; onDone: () => void 
       toast.success(t("common.saved"));
       onDone();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : String(e));
+      toast.error(errMsg(e));
     }
   };
 

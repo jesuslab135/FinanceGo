@@ -24,7 +24,32 @@
   "validation": {
     "required": "Required", "amount": "Enter a valid amount, e.g. 1,234.50", "email": "Invalid email",
     "min8": "At least 8 characters", "last4": "Exactly 4 digits", "day": "Day between 1 and 31",
-    "installments": "Between 2 and 48 installments", "max200": "At most 200 characters"
+    "installments": "Between 2 and 48 installments", "max200": "At most 200 characters",
+    "endBeforeStart": "The end month can't be before the start month"
+  },
+  "errors": {
+    "invalid_credentials": "Wrong email or password",
+    "email_taken": "An account with this email already exists",
+    "category_exists": "A category with this name already exists",
+    "category_in_use": "This category is in use; move its records to another category before deleting it",
+    "payment_method_in_use": "This payment method already has records, so it can't be deleted. Deactivate it instead.",
+    "plan_locked": "Installments of this plan were already billed; only the description and category can change",
+    "month_out_of_range": "You can look at most 12 months ahead",
+    "rate_limited": "Too many attempts. Wait a minute and try again.",
+    "not_a_credit_card": "This payment method is not a credit card",
+    "invalid_reference": "One of the selected items no longer exists",
+    "validation_failed": "Check the data and try again",
+    "payload_too_large": "The request is too large",
+    "not_found": "Not found; it may have been deleted",
+    "unauthorized": "Your session ended. Log in again.",
+    "bad_request": "The request is not valid",
+    "internal": "Something went wrong on the server. Try again.",
+    "generic": "Something went wrong. Try again.",
+    "network": "Can't reach the server. Check your connection and try again.",
+    "fieldInvalid": "Invalid value",
+    "fieldNotFound": "No longer exists; pick another",
+    "fieldCardNumber": "Don't type card numbers here",
+    "passwordIncorrect": "Wrong password"
   },
   "expenses": {
     "title": "Expenses", "new": "New expense", "edit": "Edit expense", "amount": "Amount", "category": "Category",

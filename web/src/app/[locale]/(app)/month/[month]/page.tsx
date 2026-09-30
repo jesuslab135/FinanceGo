@@ -9,11 +9,13 @@ import { EntryRow } from "@/components/month/entry-row";
 import type { Entry } from "@/lib/api/types";
 import { useMonthEntries, useSummary } from "@/lib/query/hooks";
 import { cn } from "@/lib/utils";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export default function MonthPage() {
   const { month } = useParams<{ month: string }>();
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) notFound();
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const entries = useMonthEntries(month);
   const summary = useSummary(month);
 
@@ -48,7 +50,7 @@ export default function MonthPage() {
           ))}
         </dl>
       )}
-      {entries.error && <p role="alert" className="text-sm text-destructive">{entries.error.message}</p>}
+      {entries.error && <p role="alert" className="text-sm text-destructive">{errMsg(entries.error)}</p>}
       {entries.data?.length === 0 && <EmptyState>{t("month.empty")}</EmptyState>}
       {groups.map(([title, list]) =>
         list.length === 0 ? null : (

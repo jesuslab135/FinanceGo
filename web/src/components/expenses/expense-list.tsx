@@ -18,9 +18,11 @@ import {
   useCategories, useDeleteExpense, useExpenses, usePaymentMethods, useUpdateExpense, type ExpenseFilters,
 } from "@/lib/query/hooks";
 import { ExpenseForm } from "./expense-form";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const locale = useLocale();
   const q = useExpenses(filters);
   const { data: categories = [] } = useCategories();
@@ -44,7 +46,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
         onConfirm={() =>
           remove.mutate(e.id, {
             onSuccess: () => toast.success(t("common.deleted")),
-            onError: (err) => toast.error(err.message),
+            onError: (err) => toast.error(errMsg(err)),
           })
         }
       >

@@ -8,15 +8,17 @@ import { Label } from "@/components/ui/label";
 import type { Category } from "@/lib/api/types";
 import { centsToInput, parseMoney } from "@/lib/money";
 import { useDeleteBudget, usePutBudget } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function BudgetField({ category, limit }: { category: Category; limit?: number }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const put = usePutBudget();
   const del = useDeleteBudget();
   const [value, setValue] = useState(limit !== undefined ? centsToInput(limit) : "");
   const opts = {
     onSuccess: () => toast.success(t("common.saved")),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(errMsg(e)),
   };
   const save = () => {
     if (value.trim() === "") {

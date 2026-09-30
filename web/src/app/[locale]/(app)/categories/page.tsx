@@ -15,9 +15,11 @@ import type { Category } from "@/lib/api/types";
 import {
   useBudgets, useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory,
 } from "@/lib/query/hooks";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export default function CategoriesPage() {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const { data: categories = [] } = useCategories();
   const budgetsQuery = useBudgets();
   const budgets = budgetsQuery.data ?? [];
@@ -30,7 +32,7 @@ export default function CategoriesPage() {
   const tryDelete = (cat: Category) =>
     remove.mutate({ id: cat.id }, {
       onSuccess: () => toast.success(t("common.deleted")),
-      onError: (e) => (e instanceof ApiError && e.code === "category_in_use" ? setReassign({ cat, to: null }) : toast.error(e.message)),
+      onError: (e) => (e instanceof ApiError && e.code === "category_in_use" ? setReassign({ cat, to: null }) : toast.error(errMsg(e))),
     });
 
   const section = (kind: "expense" | "income") => (
@@ -89,7 +91,7 @@ export default function CategoriesPage() {
                 onClick={() =>
                   remove.mutate({ id: reassign.cat.id, reassignTo: reassign.to! }, {
                     onSuccess: () => { toast.success(t("common.deleted")); setReassign(null); },
-                    onError: (e) => toast.error(e.message),
+                    onError: (e) => toast.error(errMsg(e)),
                   })
                 }
               >

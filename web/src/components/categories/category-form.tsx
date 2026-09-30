@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api/errors";
 import type { Category, CategoryInput } from "@/lib/api/types";
+import { localizeFields, useErrorMessage } from "@/lib/api/error-messages";
 
 export function CategoryForm({ initial, onSubmit, onCancel }: {
   initial?: Partial<Category>; onSubmit: (v: CategoryInput) => Promise<void>; onCancel?: () => void;
 }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const [name, setName] = useState(initial?.name ?? "");
   const [kind, setKind] = useState<"expense" | "income">((initial?.kind as "expense" | "income") ?? "expense");
   const [color, setColor] = useState(initial?.color ?? "#64748b");
@@ -28,8 +30,8 @@ export function CategoryForm({ initial, onSubmit, onCancel }: {
     try {
       await onSubmit({ name: name.trim(), kind, color, icon: initial?.icon ?? "tag" });
     } catch (err) {
-      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(err.fields);
-      else toast.error(err instanceof Error ? err.message : String(err));
+      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(localizeFields(err.fields, t));
+      else toast.error(errMsg(err));
     } finally {
       setBusy(false);
     }

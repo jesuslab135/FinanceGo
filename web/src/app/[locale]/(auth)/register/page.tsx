@@ -47,7 +47,7 @@ export default function RegisterPage() {
       router.replace("/dashboard");
     } catch (e) {
       if (e instanceof ApiError && e.code === "email_taken") form.setError("email", { type: "server", message: t("auth.emailTaken") });
-      else applyApiError(e, form.setError, (m) => toast.error(m));
+      else applyApiError(e, form.setError, (m) => toast.error(m), t);
     }
   });
 

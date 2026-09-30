@@ -16,9 +16,11 @@ import type { CardPayment } from "@/lib/api/types";
 import { parseISODate, parseMonthKey, toMonthKey } from "@/lib/dates";
 import { useDeleteCardPayment, useStatement } from "@/lib/query/hooks";
 import { CardPaymentForm } from "./card-payment-form";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function StatementView({ cardId }: { cardId: number }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const locale = useLocale();
   const [cycle, setCycle] = useState<string | undefined>();
   const [paying, setPaying] = useState(false);
@@ -35,7 +37,7 @@ export function StatementView({ cardId }: { cardId: number }) {
       <span className="w-16 text-muted-foreground">{fmt(p.paid_on)}</span>
       <span className="min-w-0 flex-1 truncate">{p.note}</span>
       <Money cents={p.amount} />
-      <ConfirmButton onConfirm={() => del.mutate(p.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(e.message) })}>
+      <ConfirmButton onConfirm={() => del.mutate(p.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(errMsg(e)) })}>
         <Button variant="ghost" size="icon" aria-label={t("common.delete")}><Trash2 /></Button>
       </ConfirmButton>
     </li>
@@ -52,7 +54,7 @@ export function StatementView({ cardId }: { cardId: number }) {
         <Button onClick={() => setPaying(true)}>{t("cards.recordPayment")}</Button>
       </div>
       {!s ? (
-        q.isError ? <p role="alert" className="text-sm text-destructive">{q.error.message}</p> : <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+        q.isError ? <p role="alert" className="text-sm text-destructive">{errMsg(q.error)}</p> : <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : (
       <>
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">

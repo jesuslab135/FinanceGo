@@ -12,9 +12,11 @@ import { ApiError } from "@/lib/api/errors";
 import { toISODate } from "@/lib/dates";
 import { centsToInput, parseMoney } from "@/lib/money";
 import { useCreateCardPayment } from "@/lib/query/hooks";
+import { localizeFields, useErrorMessage } from "@/lib/api/error-messages";
 
 export function CardPaymentForm({ cardId, defaultAmount, onDone }: { cardId: number; defaultAmount: number; onDone: () => void }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const create = useCreateCardPayment();
   const [amount, setAmount] = useState(defaultAmount > 0 ? centsToInput(defaultAmount) : "");
   const [paidOn, setPaidOn] = useState(toISODate(new Date()));
@@ -30,8 +32,8 @@ export function CardPaymentForm({ cardId, defaultAmount, onDone }: { cardId: num
       toast.success(t("common.saved"));
       onDone();
     } catch (err) {
-      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(err.fields);
-      else toast.error(err instanceof Error ? err.message : String(err));
+      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(localizeFields(err.fields, t));
+      else toast.error(errMsg(err));
     }
   };
 

@@ -16,10 +16,12 @@ import { useUpdateEntry } from "@/lib/query/hooks";
 import { cn } from "@/lib/utils";
 import { entryActions } from "./entry-actions";
 import { EntryForm } from "./entry-form";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function EntryRow({ entry }: { entry: Entry }) {
   const t = useTranslations("month");
   const tc = useTranslations("common");
+  const errMsg = useErrorMessage();
   const locale = useLocale();
   const update = useUpdateEntry();
   const [editing, setEditing] = useState(false);
@@ -29,7 +31,7 @@ export function EntryRow({ entry }: { entry: Entry }) {
   const setStatus = (status: string) =>
     update.mutate(
       { id: entry.id, amount: entry.amount, status, payment_method_id: entry.payment_method_id ?? undefined },
-      { onError: (e) => toast.error(e.message) },
+      { onError: (e) => toast.error(errMsg(e)) },
     );
 
   return (

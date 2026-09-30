@@ -41,7 +41,7 @@ describe("ExpenseForm", () => {
     renderWithProviders(<ExpenseForm initial={initial} onSubmit={onSubmit} />);
     await userEvent.type(screen.getByLabelText("Monto"), "10");
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
-    const msg = await screen.findByText("does not exist");
+    const msg = await screen.findByText("Ya no existe; elige otro");
     expect(msg).toHaveAttribute("id", "expense-category-error");
   });
 });

@@ -13,9 +13,11 @@ import { Button } from "@/components/ui/button";
 import type { InstallmentPlan } from "@/lib/api/types";
 import { useCancelPlan, useCreatePlan, usePlans, useUpdatePlan } from "@/lib/query/hooks";
 import { PlanForm } from "./plan-form";
+import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function PlansList({ cardId }: { cardId: number }) {
   const t = useTranslations();
+  const errMsg = useErrorMessage();
   const fmt = useFormatMoney();
   const { data: plans = [] } = usePlans(cardId);
   const create = useCreatePlan();
@@ -43,7 +45,7 @@ export function PlansList({ cardId }: { cardId: number }) {
                     onConfirm={() =>
                       cancel.mutate(p.id, {
                         onSuccess: () => toast.success(t("common.saved")),
-                        onError: (e) => toast.error(e.message),
+                        onError: (e) => toast.error(errMsg(e)),
                       })
                     }
                   >
