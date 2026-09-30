@@ -14,20 +14,24 @@ import { parseISODate, type Period } from "@/lib/dates";
 import { intlLocale } from "@/lib/money";
 import { duration } from "@/lib/motion";
 
-export function SpendingChart({ points, period }: { points: SeriesPoint[]; period: Period }) {
+export function SpendingChart({ points, period, stale = false }: { points: SeriesPoint[]; period: Period; stale?: boolean }) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
   const fmt = useFormatMoney();
   const [asTable, setAsTable] = useState(false);
   const reduce = useReducedMotion();
+  // While the series is a placeholder from the previous query, its points still belong to the last settled period.
+  const [settled, setSettled] = useState(period);
+  if (!stale && settled !== period) setSettled(period);
+  const dataPeriod = stale ? settled : period;
   const dfLocale = locale === "en" ? enUS : es;
-  const label = (s: string) => format(parseISODate(s), period === "month" ? "MMM yy" : "d MMM", { locale: dfLocale });
+  const label = (s: string) => format(parseISODate(s), dataPeriod === "month" ? "MMM yy" : "d MMM", { locale: dfLocale });
   const compact = new Intl.NumberFormat(intlLocale(locale), { notation: "compact", maximumFractionDigits: 1 });
   const names: Record<string, string> = { expenses: t("expensesSeries"), committed: t("committedSeries") };
   const empty = points.every((p) => p.expenses === 0 && p.committed === 0);
 
   return (
-    <section className="h-full space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+    <section aria-busy={stale || undefined} className={`h-full space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5 transition-opacity duration-200 motion-reduce:transition-none ${stale ? "opacity-60" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-base font-bold">{t("spending")}</h2>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -59,7 +63,7 @@ export function SpendingChart({ points, period }: { points: SeriesPoint[]; perio
         <p className="py-16 text-center text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
         <AnimatePresence mode="wait">
-          <m.div key={period} className="h-64" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : duration.small }}>
+          <m.div key={dataPeriod} className="h-64" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : duration.small }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
                 <CartesianGrid vertical={false} stroke="var(--chart-grid)" />

@@ -67,16 +67,16 @@ function Dashboard() {
       {summary.data ? <HeroAvailable summary={summary.data} /> : summary.error ? null : <HeroSkeleton />}
       {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
       <div id="insights-slot" />
-      {summary.data ? <KpiChips summary={summary.data} spent={spent} period={period} /> : summary.error ? null : <ChipsSkeleton />}
+      {summary.data ? <KpiChips summary={summary.data} spent={spent} period={period} spentStale={current.isPlaceholderData} /> : summary.error ? null : <ChipsSkeleton />}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <Rise index={0} className="min-w-0 lg:col-span-2">
-          {series.error ? <QueryError error={series.error} className="rounded-2xl bg-card p-4 shadow-card" /> : series.data ? <SpendingChart points={series.data} period={period} /> : <ChartSkeleton />}
+          {series.error ? <QueryError error={series.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : series.data ? <SpendingChart points={series.data} period={period} stale={series.isPlaceholderData} /> : <ChartSkeleton />}
         </Rise>
         <Rise index={1}><UpcomingList /></Rise>
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        <Rise index={2}>{byCat.error ? <QueryError error={byCat.error} className="rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} icons={icons} />}</Rise>
-        <Rise index={3}>{byPm.error ? <QueryError error={byPm.error} className="rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}</Rise>
+        <Rise index={2}>{byCat.error ? <QueryError error={byCat.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} icons={icons} />}</Rise>
+        <Rise index={3}>{byPm.error ? <QueryError error={byPm.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}</Rise>
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
         <Rise index={4}><BudgetMeters budgets={summary.data?.budgets ?? []} /></Rise>
