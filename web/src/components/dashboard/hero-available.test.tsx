@@ -19,11 +19,13 @@ describe("HeroAvailable", () => {
     expect(screen.getByText(/734\.14 al día · 17 días/)).toBeInTheDocument();
     expect(container.querySelector("[data-tone='brand']")).not.toBeNull();
   });
-  it("dims the cents and shows the final value immediately under reduced motion", () => {
+  it("renders the cents smaller (full white, not dimmed) and shows the final value immediately under reduced motion", () => {
     renderWithProviders(<HeroAvailable summary={s} />);
     const el = screen.getByLabelText("$12,480.50");
     expect(el.textContent).toBe("$12,480.50");
-    expect(el.querySelector(".opacity-60")?.textContent).toBe(".50");
+    const cents = el.querySelector("[class*=\"0.75em\"]");
+    expect(cents?.textContent).toBe(".50");
+    expect(el.querySelector(".opacity-60")).toBeNull();
   });
   it("overspent: critical tone with icon and label, not color alone", () => {
     const { container } = renderWithProviders(<HeroAvailable summary={{ ...s, available: -20000, safe_to_spend_per_day: 0 }} />);

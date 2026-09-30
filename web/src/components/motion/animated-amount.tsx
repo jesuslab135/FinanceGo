@@ -33,9 +33,9 @@ export function AnimatedAmount({ cents, className, splitCents = false }: { cents
   if (splitCents) {
     const [w, f] = splitAtCents(fmt(cents));
     body = reduce ? (
-      <span aria-hidden>{w}<span className="opacity-60">{f}</span></span>
+      <span aria-hidden>{w}<span className="text-[0.75em]">{f}</span></span>
     ) : (
-      <span aria-hidden><m.span>{whole}</m.span><m.span className="opacity-60">{fraction}</m.span></span>
+      <span aria-hidden><m.span>{whole}</m.span><m.span className="text-[0.75em]">{fraction}</m.span></span>
     );
   } else {
     body = reduce ? <span aria-hidden>{fmt(cents)}</span> : <m.span aria-hidden>{text}</m.span>;
