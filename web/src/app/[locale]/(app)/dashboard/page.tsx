@@ -25,7 +25,7 @@ import { riseIn } from "@/lib/motion";
 function Rise({ index, className, children }: { index: number; className?: string; children: React.ReactNode }) {
   const reduce = useReducedMotion();
   return (
-    <m.div className={className} initial={reduce ? false : riseIn.initial} animate={riseIn.animate}
+    <m.div className={`h-full ${className ?? ""}`} initial={reduce ? false : riseIn.initial} animate={riseIn.animate}
       transition={reduce ? { duration: 0 } : { ...riseIn.transition, delay: index * 0.04 }}>
       {children}
     </m.div>

@@ -23,7 +23,7 @@ export function BudgetMeters({ budgets }: { budgets: Budget[] }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
   return (
-    <section className="min-w-0 space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+    <section className="h-full min-w-0 space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <h2 className="font-display text-base font-bold">{t("budgets")}</h2>
       {budgets.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noData")}</p>

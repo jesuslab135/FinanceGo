@@ -25,7 +25,7 @@ export function UpcomingList() {
   const day = (s: string) => format(parseISODate(s), "EEE d MMM", { locale: locale === "en" ? enUS : es });
 
   return (
-    <section className="space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+    <section className="h-full space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-base font-bold">{t("dashboard.upcoming")}</h2>
         <Segmented

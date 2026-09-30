@@ -132,6 +132,7 @@ export const useSummary = (month?: string) =>
 export const useSeries = (period: "day" | "week" | "month", from: string, to: string) =>
   useQuery({
     queryKey: ["series", period, from, to],
+    placeholderData: keepPreviousData,
     queryFn: () => unwrap(api.GET("/dashboard/series", { params: { query: { period, from, to } } })).then(items<T.SeriesPoint>),
   });
 export const useBreakdown = (by: "category" | "payment_method", from: string, to: string) =>

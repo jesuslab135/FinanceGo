@@ -27,7 +27,7 @@ export function SpendingChart({ points, period }: { points: SeriesPoint[]; perio
   const empty = points.every((p) => p.expenses === 0 && p.committed === 0);
 
   return (
-    <section className="space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+    <section className="h-full space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-base font-bold">{t("spending")}</h2>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -59,36 +59,36 @@ export function SpendingChart({ points, period }: { points: SeriesPoint[]; perio
         <p className="py-16 text-center text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
         <AnimatePresence mode="wait">
-        <m.div key={period} className="h-64" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : duration.small }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
-              <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
-              <XAxis dataKey="start" tickFormatter={label} tickLine={false} axisLine={{ stroke: "var(--chart-grid)" }}
-                tick={{ fill: "var(--chart-axis)", fontSize: 12 }} minTickGap={12} />
-              <YAxis tickFormatter={(v: number) => compact.format(v / 100)} tickLine={false} axisLine={false}
-                tick={{ fill: "var(--chart-axis)", fontSize: 12 }} width={48} />
-              <Tooltip
-                cursor={{ fill: "var(--muted)", opacity: 0.5 }}
-                content={({ active, payload, label: key }) =>
-                  active && payload?.length ? (
-                    <div className="min-w-44 rounded-md border bg-popover p-2 text-xs text-popover-foreground shadow">
-                      <p className="mb-1 font-medium">{label(String(key))}</p>
-                      {payload.map((p) => (
-                        <p key={String(p.dataKey)} className="flex items-center gap-2">
-                          <span className="size-2 rounded-sm" style={{ background: p.color }} aria-hidden />
-                          {names[String(p.dataKey)]}
-                          <span className="ml-auto tabular-nums">{fmt(Number(p.value))}</span>
-                        </p>
-                      ))}
-                    </div>
-                  ) : null
-                }
-              />
-              <Bar dataKey="expenses" stackId="s" isAnimationActive={!reduce} animationDuration={600} animationEasing="ease-out" fill="var(--chart-1)" stroke="var(--background)" strokeWidth={2} />
-              <Bar dataKey="committed" stackId="s" isAnimationActive={!reduce} animationBegin={120} animationDuration={600} animationEasing="ease-out" fill="var(--chart-2)" stroke="var(--background)" strokeWidth={2} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </m.div>
+          <m.div key={period} className="h-64" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : duration.small }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
+                <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+                <XAxis dataKey="start" tickFormatter={label} tickLine={false} axisLine={{ stroke: "var(--chart-grid)" }}
+                  tick={{ fill: "var(--chart-axis)", fontSize: 12 }} minTickGap={12} />
+                <YAxis tickFormatter={(v: number) => compact.format(v / 100)} tickLine={false} axisLine={false}
+                  tick={{ fill: "var(--chart-axis)", fontSize: 12 }} width={48} />
+                <Tooltip
+                  cursor={{ fill: "var(--muted)", opacity: 0.5 }}
+                  content={({ active, payload, label: key }) =>
+                    active && payload?.length ? (
+                      <div className="min-w-44 rounded-md border bg-popover p-2 text-xs text-popover-foreground shadow">
+                        <p className="mb-1 font-medium">{label(String(key))}</p>
+                        {payload.map((p) => (
+                          <p key={String(p.dataKey)} className="flex items-center gap-2">
+                            <span className="size-2 rounded-sm" style={{ background: p.color }} aria-hidden />
+                            {names[String(p.dataKey)]}
+                            <span className="ml-auto tabular-nums">{fmt(Number(p.value))}</span>
+                          </p>
+                        ))}
+                      </div>
+                    ) : null
+                  }
+                />
+                <Bar dataKey="expenses" stackId="s" isAnimationActive={!reduce} animationDuration={500} animationEasing="ease-out" fill="var(--chart-1)" stroke="var(--card)" strokeWidth={2} />
+                <Bar dataKey="committed" stackId="s" isAnimationActive={!reduce} animationBegin={120} animationDuration={500} animationEasing="ease-out" fill="var(--chart-2)" stroke="var(--card)" strokeWidth={2} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </m.div>
         </AnimatePresence>
       )}
     </section>

@@ -16,7 +16,7 @@ export function CardsDebt() {
   const locale = useLocale();
   const { data = [], error } = useCardsOverview();
   return (
-    <section className="min-w-0 space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+    <section className="h-full min-w-0 space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <h2 className="font-display text-base font-bold">{td("cardsDebt")}</h2>
       {error ? (
         <QueryError error={error} />

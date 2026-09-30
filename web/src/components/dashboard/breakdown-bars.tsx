@@ -16,7 +16,7 @@ export function BreakdownBars({ title, items, fallbackName, identityDots = true,
   const total = rows.reduce((a, r) => a + r.amount, 0);
   const max = Math.max(1, ...rows.map((r) => r.amount));
   return (
-    <section className="space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+    <section className="h-full space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <h2 className="font-display text-base font-bold">{title}</h2>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noData")}</p>

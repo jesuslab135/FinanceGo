@@ -1,7 +1,10 @@
 "use client";
 
 import { m, useReducedMotion } from "motion/react";
-import { duration, ease, stagger } from "@/lib/motion";
+import { ease, stagger } from "@/lib/motion";
+
+/** Fill time: max section delay 0.16 + max stagger 3*0.06 + 0.35 = 0.69s, inside the 700ms entrance budget. */
+const METER_FILL = 0.35;
 
 /** Animated horizontal fill. `pct` is 0-100; `index` staggers siblings. Instant under reduced motion. */
 export function MeterFill({ pct, index = 0, className }: { pct: number; index?: number; className: string }) {
@@ -11,7 +14,7 @@ export function MeterFill({ pct, index = 0, className }: { pct: number; index?: 
       className={`h-2 rounded-full ${className}`}
       initial={reduce ? false : { width: 0 }}
       animate={{ width: `${pct}%` }}
-      transition={reduce ? { duration: 0 } : { duration: duration.count, ease: ease.enter, delay: index * stagger.bars }}
+      transition={reduce ? { duration: 0 } : { duration: METER_FILL, ease: ease.enter, delay: Math.min(index, 3) * stagger.bars }}
     />
   );
 }
