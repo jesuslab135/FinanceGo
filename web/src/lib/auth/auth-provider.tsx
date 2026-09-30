@@ -47,12 +47,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const start = useCallback((s: Session) => {
-    tokenStore.set(s.access_token ?? null);
-    setSessionHint(true);
-    setUser(s.user ?? null);
-    setStatus("authenticated");
-  }, []);
+  // Cached data belongs to whoever was signed in; drop it whenever the session ends.
+  useEffect(() => {
+    if (status === "anonymous") qc.clear();
+  }, [status, qc]);
+
+  const start = useCallback(
+    (s: Session) => {
+      // A new session (possibly another user) must never see the previous user's cached data.
+      qc.clear();
+      tokenStore.set(s.access_token ?? null);
+      setSessionHint(true);
+      setUser(s.user ?? null);
+      setStatus("authenticated");
+    },
+    [qc],
+  );
 
   const value = useMemo<AuthState>(
     () => ({
