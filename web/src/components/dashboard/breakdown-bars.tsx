@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { CategoryTile } from "@/components/common/category-tile";
+import { MeterFill } from "@/components/common/meter";
 import { useFormatMoney } from "@/components/common/money";
 import type { BreakdownItem } from "@/lib/api/types";
 
@@ -15,8 +16,8 @@ export function BreakdownBars({ title, items, fallbackName, identityDots = true,
   const total = rows.reduce((a, r) => a + r.amount, 0);
   const max = Math.max(1, ...rows.map((r) => r.amount));
   return (
-    <section className="space-y-3 rounded-xl border p-4">
-      <h2 className="font-medium">{title}</h2>
+    <section className="space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
+      <h2 className="font-display text-base font-bold">{title}</h2>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
@@ -40,7 +41,7 @@ export function BreakdownBars({ title, items, fallbackName, identityDots = true,
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-muted">
-                  <div className="h-2 rounded-full bg-chart-1" style={{ width: `${(r.amount / max) * 100}%` }} />
+                  <MeterFill pct={(r.amount / max) * 100} index={i} className="bg-chart-1" />
                 </div>
               </li>
             );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { m, useReducedMotion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo } from "react";
 import { BreakdownBars } from "@/components/dashboard/breakdown-bars";
@@ -18,6 +19,18 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Period } from "@/lib/dates";
 import { useBreakdown, useCategories, useSeries, useSummary } from "@/lib/query/hooks";
 import { useErrorMessage } from "@/lib/api/error-messages";
+import { riseIn } from "@/lib/motion";
+
+/** Dashboard section that rises in, staggered by position. Fade only under reduced motion. */
+function Rise({ index, className, children }: { index: number; className?: string; children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  return (
+    <m.div className={className} initial={reduce ? false : riseIn.initial} animate={riseIn.animate}
+      transition={reduce ? { duration: 0 } : { ...riseIn.transition, delay: index * 0.04 }}>
+      {children}
+    </m.div>
+  );
+}
 
 function Dashboard() {
   const t = useTranslations("dashboard");
@@ -56,18 +69,18 @@ function Dashboard() {
       <div id="insights-slot" />
       {summary.data ? <KpiChips summary={summary.data} spent={spent} period={period} /> : summary.error ? null : <ChipsSkeleton />}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
-        <div className="min-w-0 lg:col-span-2">
-          {series.error ? <QueryError error={series.error} className="rounded-xl border p-4" /> : series.data ? <SpendingChart points={series.data} period={period} /> : <ChartSkeleton />}
-        </div>
-        <UpcomingList />
+        <Rise index={0} className="min-w-0 lg:col-span-2">
+          {series.error ? <QueryError error={series.error} className="rounded-2xl bg-card p-4 shadow-card" /> : series.data ? <SpendingChart points={series.data} period={period} /> : <ChartSkeleton />}
+        </Rise>
+        <Rise index={1}><UpcomingList /></Rise>
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        {byCat.error ? <QueryError error={byCat.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} icons={icons} />}
-        {byPm.error ? <QueryError error={byPm.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}
+        <Rise index={2}>{byCat.error ? <QueryError error={byCat.error} className="rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} icons={icons} />}</Rise>
+        <Rise index={3}>{byPm.error ? <QueryError error={byPm.error} className="rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}</Rise>
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        <BudgetMeters budgets={summary.data?.budgets ?? []} />
-        <CardsDebt />
+        <Rise index={4}><BudgetMeters budgets={summary.data?.budgets ?? []} /></Rise>
+        <Rise index={5}><CardsDebt /></Rise>
       </div>
     </div>
   );
