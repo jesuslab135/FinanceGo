@@ -12,6 +12,8 @@ const pairs: Array<[string, string, string, number]> = [
   ["muted on surface (dark)", "#b8a797", "#1c1714", 4.5],
   ["muted on raised (dark)", "#b8a797", "#241d19", 4.5],
   ["white on brand (dark, hero bold)", "#ffffff", "#b64b22", 3],
+  ["white on primary (light)", "#ffffff", "#b9501f", 4.5],
+  ["white on primary (dark)", "#ffffff", "#c4531f", 4.5],
   ["white on critical hero", "#ffffff", "#b42828", 4.5],
 ];
 
