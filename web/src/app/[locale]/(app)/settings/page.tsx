@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmButton } from "@/components/common/confirm-button";
 import { FieldError } from "@/components/common/field-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,8 +72,8 @@ export default function SettingsPage() {
     }
   };
 
-  const deleteAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Runs only from the confirmation dialog, never straight from the form.
+  const deleteAccount = async () => {
     setDeleteError(undefined);
     const { error, response } = await api.DELETE("/me", { body: { password } });
     if (!response.ok) {
@@ -138,12 +139,14 @@ export default function SettingsPage() {
       <Card className="border-destructive/50">
         <CardHeader><CardTitle className="text-destructive">{t("settings.danger")}</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={deleteAccount} className="space-y-3" noValidate>
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-3" noValidate>
             <p className="text-sm text-muted-foreground">{t("settings.deleteWarning")}</p>
             <Label htmlFor="d-pass">{t("settings.confirmPassword")}</Label>
             <Input id="d-pass" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!deleteError} />
             <FieldError message={deleteError} />
-            <Button type="submit" variant="destructive" disabled={!password}>{t("settings.deleteAccount")}</Button>
+            <ConfirmButton onConfirm={deleteAccount} actionLabel={t("settings.deleteAccount")} description={t("settings.deleteWarning")}>
+              <Button type="button" variant="destructive" disabled={!password}>{t("settings.deleteAccount")}</Button>
+            </ConfirmButton>
           </form>
         </CardContent>
       </Card>

@@ -96,3 +96,27 @@ test("cards: a card with records can't be deleted, an unused one can", async ({ 
   await expect(page.getByText("Usada")).toBeVisible();
   await expect(page.getByText("Sin uso")).toHaveCount(0);
 });
+
+test("settings: account deletion asks for confirmation and a correct password", async ({ page }) => {
+  await register(page, uniqueEmail("goodbye"));
+  await page.goto("/es/settings");
+  const password = page.getByLabel("Escribe tu contraseña para confirmar");
+  const remove = page.getByRole("button", { name: "Eliminar cuenta" });
+  const dialog = page.getByRole("alertdialog");
+
+  await password.fill("wrong-password");
+  await remove.click();
+  await dialog.getByRole("button", { name: "Cancelar" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/es\/settings/);
+
+  await remove.click();
+  await dialog.getByRole("button", { name: "Eliminar cuenta" }).click();
+  await expect(page.getByText("Contraseña incorrecta")).toBeVisible();
+
+  await password.fill("password123");
+  await remove.click();
+  await dialog.getByRole("button", { name: "Eliminar cuenta" }).click();
+  // The auth gate may reach /login before the redirect to /register; either proves the session is gone.
+  await expect(page).toHaveURL(/\/es\/(login|register)$/);
+});
