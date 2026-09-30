@@ -63,7 +63,7 @@ export function SpendingChart({ points, period, stale = false }: { points: Serie
         <p className="py-16 text-center text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
         <AnimatePresence mode="wait">
-          <m.div key={dataPeriod} className="h-64" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : duration.small }}>
+          <m.div key={dataPeriod} className="h-64" initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : duration.small }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
                 <CartesianGrid vertical={false} stroke="var(--chart-grid)" />

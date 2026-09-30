@@ -33,7 +33,7 @@ export function ResponsiveDialog({ open, onOpenChange, title, description, child
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription className={description ? undefined : "sr-only"}>{description ?? t("dialogHint")}</DrawerDescription>
         </DrawerHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))]">{children}</div>
+        <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pb-[max(2rem,env(safe-area-inset-bottom))]">{children}</div>
       </DrawerContent>
     </Drawer>
   );
