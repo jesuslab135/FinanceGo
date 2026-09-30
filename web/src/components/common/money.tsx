@@ -13,5 +13,5 @@ export function useFormatMoney() {
 
 export function Money({ cents, className }: { cents: number; className?: string }) {
   const fmt = useFormatMoney();
-  return <span className={cn("tabular-nums", className)}>{fmt(cents)}</span>;
+  return <span className={cn("num", className)}>{fmt(cents)}</span>;
 }

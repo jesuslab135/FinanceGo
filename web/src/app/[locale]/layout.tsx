@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/providers";
+import { display, sans } from "../fonts";
 import "../globals.css";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -17,8 +18,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fcfcfb" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1a19" },
+    { media: "(prefers-color-scheme: light)", color: "#f6efe7" },
+    { media: "(prefers-color-scheme: dark)", color: "#14100d" },
   ],
 };
 
@@ -31,7 +32,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning className={`${display.variable} ${sans.variable}`}>
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <NextIntlClientProvider>
           <Providers>{children}</Providers>
