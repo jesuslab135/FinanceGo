@@ -31,4 +31,13 @@ describe("CategoryForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: "Café", icon: "coffee" })));
   });
+  it("defaults a new category to the tag icon", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(<CategoryForm onSubmit={onSubmit} />);
+    expect(screen.getByRole("radiogroup", { name: "Ícono" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Otros" })).toBeChecked();
+    await userEvent.type(screen.getByLabelText("Nombre"), "X");
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ icon: "tag" })));
+  });
 });

@@ -61,8 +61,8 @@ export function CategoryForm({ initial, onSubmit, onCancel }: {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>{t("categories.icon")}</Label>
-        <IconPicker value={icon} onChange={setIcon} color={color} />
+        <Label id="cat-icon-label">{t("categories.icon")}</Label>
+        <IconPicker id="cat-icon" labelledBy="cat-icon-label" value={icon} onChange={setIcon} color={color} />
       </div>
       <div className="flex justify-end gap-2">
         {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>}
