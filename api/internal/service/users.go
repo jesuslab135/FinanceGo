@@ -202,7 +202,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 			return err
 		}
 		if n == 0 { // a concurrent refresh won the race
-			return apperr.Unauthorized()
+			return &apperr.Error{Status: http.StatusUnauthorized, Code: "refresh_race", Message: "refresh already in progress"}
 		}
 		u, err := q.GetUser(ctx, rt.UserID)
 		if err != nil {

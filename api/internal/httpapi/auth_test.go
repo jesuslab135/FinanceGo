@@ -78,11 +78,9 @@ func TestLoginAndMe(t *testing.T) {
 	h := newHarness(t)
 	h.signup("bo@example.com")
 
-	for _, pw := range []string{"wrongpass1"} {
-		r := h.do("POST", "/api/v1/auth/login", "", M{"email": "bo@example.com", "password": pw})
-		if r.Code != 401 || errCode(r) != "invalid_credentials" {
-			t.Fatalf("wrong password: %d %s", r.Code, r.Body)
-		}
+	wrong := h.do("POST", "/api/v1/auth/login", "", M{"email": "bo@example.com", "password": "wrongpass1"})
+	if wrong.Code != 401 || errCode(wrong) != "invalid_credentials" {
+		t.Fatalf("wrong password: %d %s", wrong.Code, wrong.Body)
 	}
 	unknown := h.do("POST", "/api/v1/auth/login", "", M{"email": "ghost@example.com", "password": "password123"})
 	if unknown.Code != 401 || errCode(unknown) != "invalid_credentials" {
@@ -172,5 +170,18 @@ func TestAuthRateLimit(t *testing.T) {
 	h.do("POST", "/api/v1/auth/login", "", body)
 	if r := h.do("POST", "/api/v1/auth/login", "", body); r.Code != 429 || errCode(r) != "rate_limited" {
 		t.Fatalf("3rd attempt: %d %s", r.Code, r.Body)
+	}
+}
+
+func TestRefreshExpiredClearsCookie(t *testing.T) {
+	h := newHarness(t)
+	reg := h.do("POST", "/api/v1/auth/register", "", M{
+		"email": "fy@example.com", "password": "password123", "name": "Fy", "currency": "MXN", "locale": "es", "timezone": "UTC",
+	})
+	c := refreshCookieOf(t, reg)
+	h.setNow(h.now.Add(31 * 24 * time.Hour))
+	r := h.do("POST", "/api/v1/auth/refresh", "", nil, c)
+	if r.Code != 401 || refreshCookieOf(t, r).MaxAge >= 0 {
+		t.Fatalf("expired refresh: %d cookies=%v", r.Code, r.Cookies)
 	}
 }

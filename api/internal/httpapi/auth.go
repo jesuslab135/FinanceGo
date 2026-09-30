@@ -1,10 +1,12 @@
 package httpapi
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	"financego/internal/apperr"
 	"financego/internal/service"
 )
 
@@ -81,7 +83,11 @@ func (h *handlers) refresh(c *gin.Context) {
 	raw, _ := c.Cookie(refreshCookie)
 	sess, err := h.svc.Refresh(c.Request.Context(), raw)
 	if err != nil {
-		h.setRefreshCookie(c, "", -1)
+		// Clear the cookie only on a definitive rejection, not on 500s or a concurrent-rotation race.
+		var ae *apperr.Error
+		if errors.As(err, &ae) && ae.Status == http.StatusUnauthorized && ae.Code != "refresh_race" {
+			h.setRefreshCookie(c, "", -1)
+		}
 		fail(c, err)
 		return
 	}
