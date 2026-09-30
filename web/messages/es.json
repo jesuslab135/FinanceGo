@@ -6,7 +6,8 @@
     "optional": "opcional", "active": "Activo", "inactive": "Inactivo", "activate": "Activar",
     "error": "Algo salió mal", "saved": "Guardado", "deleted": "Eliminado", "empty": "Aún no hay nada aquí",
     "actions": "Acciones", "search": "Buscar", "from": "Desde", "to": "Hasta", "all": "Todos",
-    "previous": "Anterior", "next": "Siguiente", "today": "Hoy", "total": "Total"
+    "previous": "Anterior", "next": "Siguiente", "today": "Hoy", "total": "Total",
+    "dialogHint": "Presiona Escape para cerrar."
   },
   "nav": {
     "dashboard": "Inicio", "expenses": "Gastos", "month": "Mes", "recurring": "Recurrentes", "cards": "Tarjetas",

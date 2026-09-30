@@ -6,7 +6,8 @@
     "optional": "optional", "active": "Active", "inactive": "Inactive", "activate": "Activate",
     "error": "Something went wrong", "saved": "Saved", "deleted": "Deleted", "empty": "Nothing here yet",
     "actions": "Actions", "search": "Search", "from": "From", "to": "To", "all": "All",
-    "previous": "Previous", "next": "Next", "today": "Today", "total": "Total"
+    "previous": "Previous", "next": "Next", "today": "Today", "total": "Total",
+    "dialogHint": "Press Escape to close."
   },
   "nav": {
     "dashboard": "Home", "expenses": "Expenses", "month": "Month", "recurring": "Recurring", "cards": "Cards",
