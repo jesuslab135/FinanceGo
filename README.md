@@ -41,3 +41,16 @@ swag init -g cmd/api/main.go -o docs --parseInternal   # after changing handler 
 ```
 
 Amounts are integer cents everywhere. Card data is reference-only: never store full card numbers.
+
+## Web app
+
+```bash
+cd web
+pnpm install
+pnpm gen:api     # after API handler changes (regenerates src/lib/api/schema.d.ts from api/docs/swagger.json)
+pnpm dev         # http://localhost:3000 (proxies /api to http://localhost:8080; override with API_URL)
+pnpm test        # unit/component tests
+pnpm e2e         # Playwright against a running stack (docker compose -f docker-compose.yml up -d --build)
+```
+
+Installable as a PWA (manifest + icons). Spanish at `/es`, English at `/en`.
