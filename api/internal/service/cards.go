@@ -326,6 +326,9 @@ type Statement struct {
 	Charges         []StatementCharge      `json:"charges"`
 	Installments    []StatementInstallment `json:"installments"`
 	Payments        []CardPayment          `json:"payments"`
+	// PaymentsAfterClose are payments in (closes_on, due_on]; they reduce
+	// amount_due below billed_balance.
+	PaymentsAfterClose []CardPayment `json:"payments_after_close"`
 }
 
 type cardState struct {
@@ -399,7 +402,7 @@ func (s *Service) CardStatement(ctx context.Context, a Actor, pmID int64, cycle 
 		PaymentMethodID: pmID, Cycle: datex.NewMonth(r.Cycle), OpensOn: datex.NewDate(r.Opens), ClosesOn: datex.NewDate(r.Closes),
 		DueOn: datex.NewDate(r.Due), BilledBalance: r.BilledBalance, AmountDue: r.AmountDue, CurrentBalance: r.CurrentBalance,
 		CreditLimit: pm.CreditLimit, AvailableCredit: avail, Utilization: util,
-		Charges: []StatementCharge{}, Installments: []StatementInstallment{}, Payments: []CardPayment{},
+		Charges: []StatementCharge{}, Installments: []StatementInstallment{}, Payments: []CardPayment{}, PaymentsAfterClose: []CardPayment{},
 	}
 	inCycle := func(d time.Time) bool { return !d.Before(r.Opens) && !d.After(r.Closes) }
 	for _, ch := range st.charges {
@@ -417,6 +420,8 @@ func (s *Service) CardStatement(ctx context.Context, a Actor, pmID int64, cycle 
 	for _, p := range st.payments {
 		if inCycle(p.PaidOn) {
 			out.Payments = append(out.Payments, toCardPayment(p))
+		} else if p.PaidOn.After(r.Closes) && !p.PaidOn.After(r.Due) && !p.PaidOn.Before(st.card.OpeningDate) {
+			out.PaymentsAfterClose = append(out.PaymentsAfterClose, toCardPayment(p))
 		}
 	}
 	return out, nil

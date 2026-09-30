@@ -2596,6 +2596,13 @@ const docTemplate = `{
                         "$ref": "#/definitions/service.CardPayment"
                     }
                 },
+                "payments_after_close": {
+                    "description": "PaymentsAfterClose are payments in (closes_on, due_on]; they reduce\namount_due below billed_balance.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.CardPayment"
+                    }
+                },
                 "utilization": {
                     "type": "number"
                 }

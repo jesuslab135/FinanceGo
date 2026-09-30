@@ -472,6 +472,13 @@ definitions:
         items:
           $ref: '#/definitions/service.CardPayment'
         type: array
+      payments_after_close:
+        description: |-
+          PaymentsAfterClose are payments in (closes_on, due_on]; they reduce
+          amount_due below billed_balance.
+        items:
+          $ref: '#/definitions/service.CardPayment'
+        type: array
       utilization:
         type: number
     type: object

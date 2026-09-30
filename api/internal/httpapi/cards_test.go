@@ -42,6 +42,10 @@ type statement struct {
 	Payments []struct {
 		Amount int64 `json:"amount"`
 	} `json:"payments"`
+	PaymentsAfterClose []struct {
+		Amount int64  `json:"amount"`
+		PaidOn string `json:"paid_on"`
+	} `json:"payments_after_close"`
 }
 
 func (h *harness) msi(tok string, card int64, total int64, n int, on string) plan {
@@ -111,6 +115,18 @@ func TestInstallmentPlanEntriesAndStatement(t *testing.T) {
 	if len(st.Charges) != 2 || len(st.Installments) != 1 || st.Installments[0].No != 1 || st.Installments[0].Of != 3 || len(st.Payments) != 1 {
 		t.Fatalf("lines %+v", st)
 	}
+	// A payment after the cut-off but before the due date lowers amount_due and is
+	// listed under payments_after_close, not payments.
+	expect[M](t, h.do("POST", "/api/v1/card-payments", tok, M{"payment_method_id": cc, "amount": 3333, "paid_on": "2026-03-15"}), 201)
+	h.setNow(time.Date(2026, 3, 20, 18, 0, 0, 0, time.UTC))
+	tok = h.login("msi@example.com")
+	expect[M](t, h.do("POST", "/api/v1/card-payments", tok, M{"payment_method_id": cc, "amount": 50000, "paid_on": "2026-03-20"}), 201)
+	st = expect[statement](t, h.do("GET", fmt.Sprintf("/api/v1/payment-methods/%d/statement?cycle=2026-03", cc), tok, nil), 200)
+	if len(st.Payments) != 2 || len(st.PaymentsAfterClose) != 1 || st.PaymentsAfterClose[0].PaidOn != "2026-03-20" || st.AmountDue != 20000 {
+		t.Fatalf("after close: payments=%+v after=%+v due=%d", st.Payments, st.PaymentsAfterClose, st.AmountDue)
+	}
+	h.setNow(time.Date(2026, 3, 15, 18, 0, 0, 0, time.UTC))
+	tok = h.login("msi@example.com")
 	def := expect[statement](t, h.do("GET", fmt.Sprintf("/api/v1/payment-methods/%d/statement", cc), tok, nil), 200)
 	if def.Cycle != "2026-03" {
 		t.Fatalf("default cycle %s", def.Cycle)
