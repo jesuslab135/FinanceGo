@@ -27,7 +27,7 @@ export function UpcomingList() {
         <ul className="divide-y">
           {data.map((u, i) => (
             <li key={`${u.type}-${u.entry_id ?? u.payment_method_id}-${i}`} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-36">
                 <p className="truncate font-medium">
                   {u.type === "card" && <CreditCard className="mr-1 inline size-3.5" aria-hidden />}
                   {u.type === "card" ? `${t("dashboard.cardDue")} · ${u.name}` : u.name}
