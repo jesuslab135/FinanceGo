@@ -147,6 +147,17 @@
     "setup": "Finish setting up to see your real numbers",
     "tone": { "info": "Notice", "good": "Good news", "warn": "Heads up", "critical": "Urgent" }
   },
+  "welcome": {
+    "title1": "How much do you earn a month?", "title2": "Your fixed payments", "title3": "Your cards (optional)",
+    "subtitle1": "We use this to work out what you have left each month.", "subtitle2": "Rent, utilities, subscriptions — whatever you pay monthly.",
+    "subtitle3": "Just a nickname and last 4 digits. Never the full number.",
+    "salary": "Salary", "payday": "Payday", "other": "Other", "skip": "Skip", "continue": "Continue", "back": "Back",
+    "addCard": "Add another", "finish": "Finish", "progress": "Step {n} of 3",
+    "incomeName": "Income name", "otherDay": "Other day (1-31)", "day": "Day", "amount": "Amount",
+    "customFixed": "+ Other", "customName": "Payment name", "removeRow": "Remove {name}",
+    "cardAdd": "Add", "cardType": "Type", "cardsAdded": "Cards added",
+    "sug": { "rent": "Rent", "power": "Electricity", "water": "Water", "internet": "Internet", "phone": "Phone", "netflix": "Streaming", "gym": "Gym", "insurance": "Insurance" }
+  },
   "celebrate": { "firstExpense":"First expense logged, great start 🎉", "cardPaidOff":"{name} is paid off 🎉", "monthUnderBudget":"You closed {month} within budget 🎉", "welcome":"All set, here are your numbers 🎉" },
   "icons": {"food":"Food","coffee":"Coffee","drinks":"Drinks","groceries":"Groceries","car":"Car","fuel":"Fuel","transit":"Transit","bike":"Bike","travel":"Travel","home":"Home","utilities":"Utilities","internet":"Internet","phone":"Phone","repairs":"Repairs","health":"Health","pharmacy":"Pharmacy","gym":"Gym","personalCare":"Personal care","entertainment":"Entertainment","music":"Music","games":"Games","books":"Books","education":"Education","kids":"Kids","pets":"Pets","cat":"Cat","clothing":"Clothing","shopping":"Shopping","gifts":"Gifts","tech":"Tech","subscriptions":"Subscriptions","fees":"Fees","card":"Card","bills":"Bills","taxes":"Taxes","savings":"Savings","delivery":"Delivery","salary":"Salary","otherIncome":"Other income","other":"Other"}
 }

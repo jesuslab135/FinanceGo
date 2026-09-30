@@ -147,6 +147,17 @@
     "setup": "Completa tu configuración para ver tus números reales",
     "tone": { "info": "Aviso", "good": "Buena noticia", "warn": "Atención", "critical": "Urgente" }
   },
+  "welcome": {
+    "title1": "¿Cuánto ganas al mes?", "title2": "Tus pagos fijos", "title3": "Tus tarjetas (opcional)",
+    "subtitle1": "Con esto calculamos cuánto te queda cada mes.", "subtitle2": "Renta, luz, suscripciones… lo que pagas cada mes.",
+    "subtitle3": "Solo alias y últimos 4 dígitos. Nunca el número completo.",
+    "salary": "Salario", "payday": "Día de pago", "other": "Otro", "skip": "Saltar", "continue": "Continuar", "back": "Atrás",
+    "addCard": "Agregar otra", "finish": "Terminar", "progress": "Paso {n} de 3",
+    "incomeName": "Nombre del ingreso", "otherDay": "Otro día (1-31)", "day": "Día", "amount": "Monto",
+    "customFixed": "+ Otro", "customName": "Nombre del pago", "removeRow": "Quitar {name}",
+    "cardAdd": "Agregar", "cardType": "Tipo", "cardsAdded": "Tarjetas agregadas",
+    "sug": { "rent": "Renta", "power": "Luz", "water": "Agua", "internet": "Internet", "phone": "Teléfono", "netflix": "Streaming", "gym": "Gimnasio", "insurance": "Seguro" }
+  },
   "celebrate": { "firstExpense":"¡Primer gasto registrado! Vas muy bien 🎉", "cardPaidOff":"¡{name} al corriente! 🎉", "monthUnderBudget":"¡Cerraste {month} dentro de tu presupuesto! 🎉", "welcome":"¡Todo listo! Estos son tus números 🎉" },
   "icons": {"food":"Comida","coffee":"Café","drinks":"Bebidas","groceries":"Súper","car":"Auto","fuel":"Gasolina","transit":"Transporte público","bike":"Bici","travel":"Viajes","home":"Hogar","utilities":"Servicios","internet":"Internet","phone":"Teléfono","repairs":"Reparaciones","health":"Salud","pharmacy":"Farmacia","gym":"Gimnasio","personalCare":"Cuidado personal","entertainment":"Entretenimiento","music":"Música","games":"Juegos","books":"Libros","education":"Educación","kids":"Hijos","pets":"Mascotas","cat":"Gato","clothing":"Ropa","shopping":"Compras","gifts":"Regalos","tech":"Tecnología","subscriptions":"Suscripciones","fees":"Comisiones","card":"Tarjeta","bills":"Recibos","taxes":"Impuestos","savings":"Ahorro","delivery":"Envíos","salary":"Salario","otherIncome":"Otros ingresos","other":"Otros"}
 }
