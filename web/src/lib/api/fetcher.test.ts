@@ -78,6 +78,67 @@ describe("authFetch", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("a late 401 after the refresh finished retries with the new token, no second refresh", async () => {
+    tokenStore.set("old");
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    fetchMock.mockImplementation(async (req: Request) => {
+      if (req.url.endsWith("/auth/refresh")) return json(200, { access_token: "new", user: { id: 1 } });
+      if (req.headers.get("Authorization") === "Bearer new") return json(200, { ok: true });
+      if (req.url.endsWith("/late")) await gate;
+      return json(401, {});
+    });
+    const late = authFetch(new Request("http://x/api/v1/late"));
+    const a = await authFetch(new Request("http://x/api/v1/expenses"));
+    expect(a.status).toBe(200);
+    await new Promise((r) => setTimeout(r, 5));
+    release();
+    expect((await late).status).toBe(200);
+    const refreshCalls = fetchMock.mock.calls.filter(([r]) => (r as Request).url.endsWith("/auth/refresh"));
+    expect(refreshCalls).toHaveLength(1);
+  });
+
+  it("returns the retry's 401 as-is after exactly one refresh", async () => {
+    tokenStore.set("old");
+    fetchMock.mockImplementation(async (req: Request) =>
+      req.url.endsWith("/auth/refresh") ? json(200, { access_token: "new", user: { id: 1 } }) : json(401, {}),
+    );
+    const res = await authFetch(new Request("http://x/api/v1/expenses"));
+    expect(res.status).toBe(401);
+    const refreshCalls = fetchMock.mock.calls.filter(([r]) => (r as Request).url.endsWith("/auth/refresh"));
+    expect(refreshCalls).toHaveLength(1);
+  });
+
+  it("a 5xx on refresh keeps the token and the hint", async () => {
+    tokenStore.set("old");
+    document.cookie = "fin_session=1; Path=/";
+    fetchMock.mockImplementation(async (req: Request) =>
+      req.url.endsWith("/auth/refresh") ? json(503, {}) : json(401, {}),
+    );
+    const res = await authFetch(new Request("http://x/api/v1/me"));
+    expect(res.status).toBe(401);
+    expect(tokenStore.get()).toBe("old");
+    expect(document.cookie).toContain("fin_session=1");
+  });
+
+  it("a network error on refresh keeps the token", async () => {
+    tokenStore.set("old");
+    fetchMock.mockRejectedValueOnce(new TypeError("network"));
+    expect(await refreshSession()).toBeNull();
+    expect(tokenStore.get()).toBe("old");
+  });
+
+  it("refresh_race then 200 yields the session", async () => {
+    let n = 0;
+    fetchMock.mockImplementation(async () =>
+      n++ === 0 ? json(401, { error: { code: "refresh_race" } }) : json(200, { access_token: "n2", user: { id: 3 } }),
+    );
+    const s = await refreshSession();
+    expect(s?.user?.id).toBe(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(tokenStore.get()).toBe("n2");
+  });
+
   it("refreshSession returns the session", async () => {
     fetchMock.mockResolvedValueOnce(json(200, { access_token: "abc", user: { id: 7 } }));
     const s = await refreshSession();
