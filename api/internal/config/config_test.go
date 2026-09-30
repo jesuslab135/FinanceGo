@@ -55,3 +55,33 @@ func TestLoadFromErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadFromRejectsPlaceholderSecret(t *testing.T) {
+	_, err := LoadFrom(env(map[string]string{
+		"DATABASE_URL": "x", "WEB_ORIGIN": "x",
+		"JWT_SECRET": "change-me-to-a-random-string-of-at-least-32-bytes",
+	}))
+	if err == nil || !strings.Contains(err.Error(), "JWT_SECRET") {
+		t.Fatalf("expected placeholder JWT_SECRET to be rejected, got %v", err)
+	}
+}
+
+func TestLoadFromTrustedProxies(t *testing.T) {
+	base := map[string]string{"DATABASE_URL": "x", "WEB_ORIGIN": "x", "JWT_SECRET": strings.Repeat("s", 32)}
+	cfg, err := LoadFrom(env(base))
+	if err != nil || len(cfg.TrustedProxies) != 0 {
+		t.Fatalf("default should trust none: %v %v", cfg.TrustedProxies, err)
+	}
+	base["TRUSTED_PROXIES"] = " 10.0.0.0/8, 172.16.0.1 ,,"
+	cfg, err = LoadFrom(env(base))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.TrustedProxies) != 2 || cfg.TrustedProxies[0] != "10.0.0.0/8" || cfg.TrustedProxies[1] != "172.16.0.1" {
+		t.Fatalf("bad proxies: %q", cfg.TrustedProxies)
+	}
+	base["TRUSTED_PROXIES"] = "not-an-ip"
+	if _, err := LoadFrom(env(base)); err == nil {
+		t.Fatal("expected invalid TRUSTED_PROXIES to be rejected")
+	}
+}

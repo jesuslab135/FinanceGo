@@ -16,6 +16,20 @@ docker compose up                                # dev: hot reload via air
 
 API on http://localhost:8080 (`/healthz`, `/readyz`, `/api/v1/...`).
 
+### Configuration
+
+| Variable | Default | Notes |
+|---|---|---|
+| `DATABASE_URL` | (required) | Postgres DSN |
+| `JWT_SECRET` | (required) | at least 32 bytes; the `change-me` placeholder from `.env.example` is rejected at startup |
+| `WEB_ORIGIN` | (required) | CORS origin of the web client |
+| `API_PORT` | `8080` | |
+| `COOKIE_SECURE` | `true` | set `false` only for plain-HTTP local dev |
+| `AUTH_RATE_PER_MIN` | `10` | per-IP limit on `/auth/*` and `DELETE /me` |
+| `TRUSTED_PROXIES` | empty (trust none) | comma-separated IPs/CIDRs of reverse proxies whose `X-Forwarded-For` is honored for the client IP (rate limiting). Set it to your proxy's address when running behind one, otherwise every client shares the proxy's bucket |
+
+The compose file publishes Postgres on `127.0.0.1:5432` only.
+
 ## Develop the API
 
 ```bash

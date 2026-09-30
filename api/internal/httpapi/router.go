@@ -23,8 +23,9 @@ type handlers struct {
 
 func NewRouter(cfg config.Config, svc *service.Service, log *slog.Logger) *gin.Engine {
 	r := gin.New()
-	_ = r.SetTrustedProxies(nil)
-	r.Use(requestID(), accessLog(log), recoverer(), securityHeaders(), cors.New(cors.Config{
+	// Entries were validated by config.LoadFrom; nil (the default) trusts no proxy.
+	_ = r.SetTrustedProxies(cfg.TrustedProxies)
+	r.Use(requestID(), accessLog(log), recoverer(), securityHeaders(), bodyLimit(maxBodyBytes), cors.New(cors.Config{
 		AllowOrigins:     []string{cfg.WebOrigin},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Authorization", "Content-Type", "X-Request-ID"},
@@ -50,7 +51,8 @@ func NewRouter(cfg config.Config, svc *service.Service, log *slog.Logger) *gin.E
 
 // routes is the single place endpoints are registered; each task adds its lines here.
 func (h *handlers) routes(v1 *gin.RouterGroup) {
-	a := v1.Group("/auth", rateLimit(h.cfg.AuthRatePerMin))
+	authLimit := rateLimit(h.cfg.AuthRatePerMin)
+	a := v1.Group("/auth", authLimit)
 	a.POST("/register", h.register)
 	a.POST("/login", h.login)
 	a.POST("/refresh", h.refresh)
@@ -106,7 +108,7 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.GET("/dashboard/breakdown", h.dashboardBreakdown)
 	p.GET("/dashboard/cards", h.dashboardCards)
 	p.GET("/dashboard/upcoming", h.dashboardUpcoming)
-	p.DELETE("/me", h.deleteMe)
+	p.DELETE("/me", authLimit, h.deleteMe) // password check: same budget as login
 	p.GET("/export/expenses.csv", h.exportExpenses)
 	p.GET("/export/entries.csv", h.exportEntries)
 }
