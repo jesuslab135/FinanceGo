@@ -109,23 +109,23 @@ func (s *Service) DeleteCategory(ctx context.Context, a Actor, id int64, reassig
 				return err
 			}
 			to, from := *reassignTo, id
-			if err := q.ReassignExpensesCategory(ctx, store.ReassignExpensesCategoryParams{ToID: to, FromID: from}); err != nil {
+			if err := q.ReassignExpensesCategory(ctx, store.ReassignExpensesCategoryParams{ToID: to, FromID: from, UserID: a.UserID}); err != nil {
 				return err
 			}
-			if err := q.ReassignFixedCategory(ctx, store.ReassignFixedCategoryParams{ToID: to, FromID: from}); err != nil {
+			if err := q.ReassignFixedCategory(ctx, store.ReassignFixedCategoryParams{ToID: to, FromID: from, UserID: a.UserID}); err != nil {
 				return err
 			}
-			if err := q.ReassignIncomeCategory(ctx, store.ReassignIncomeCategoryParams{ToID: &to, FromID: &from}); err != nil {
+			if err := q.ReassignIncomeCategory(ctx, store.ReassignIncomeCategoryParams{ToID: &to, FromID: &from, UserID: a.UserID}); err != nil {
 				return err
 			}
-			if err := q.ReassignEntriesCategory(ctx, store.ReassignEntriesCategoryParams{ToID: &to, FromID: &from}); err != nil {
+			if err := q.ReassignEntriesCategory(ctx, store.ReassignEntriesCategoryParams{ToID: &to, FromID: &from, UserID: a.UserID}); err != nil {
 				return err
 			}
-			if err := q.ReassignPlansCategory(ctx, store.ReassignPlansCategoryParams{ToID: to, FromID: from}); err != nil {
+			if err := q.ReassignPlansCategory(ctx, store.ReassignPlansCategoryParams{ToID: to, FromID: from, UserID: a.UserID}); err != nil {
 				return err
 			}
 		} else {
-			uses, err := q.CategoryUsage(ctx, id)
+			uses, err := q.CategoryUsage(ctx, store.CategoryUsageParams{ID: id, UserID: a.UserID})
 			if err != nil {
 				return err
 			}

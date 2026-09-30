@@ -37,13 +37,13 @@ UPDATE monthly_entries m SET name = s.name, amount = s.amount, category_id = s.c
     due_date = m.month + (LEAST(s.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM income_sources s
-WHERE s.id = @source_id AND m.income_source_id = s.id
+WHERE s.id = @source_id AND s.user_id = @user_id AND m.user_id = @user_id AND m.income_source_id = s.id
   AND m.month >= sqlc.arg(from_month)::date AND m.status = 'pending' AND NOT m.edited;
 
 -- name: PruneIncomeEntries :exec
 DELETE FROM monthly_entries m
 USING income_sources s
-WHERE s.id = @source_id AND m.income_source_id = s.id
+WHERE s.id = @source_id AND s.user_id = @user_id AND m.user_id = @user_id AND m.income_source_id = s.id
   AND m.status = 'pending' AND NOT m.edited AND m.month >= sqlc.arg(from_month)::date
   AND ((NOT s.active AND m.month > sqlc.arg(from_month)::date)
        OR (s.end_month IS NOT NULL AND m.month > s.end_month)
@@ -55,13 +55,13 @@ UPDATE monthly_entries m SET name = f.name, amount = f.amount, category_id = f.c
     due_date = m.month + (LEAST(f.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM fixed_payments f
-WHERE f.id = @source_id AND m.fixed_payment_id = f.id
+WHERE f.id = @source_id AND f.user_id = @user_id AND m.user_id = @user_id AND m.fixed_payment_id = f.id
   AND m.month >= sqlc.arg(from_month)::date AND m.status = 'pending' AND NOT m.edited;
 
 -- name: PruneFixedEntries :exec
 DELETE FROM monthly_entries m
 USING fixed_payments f
-WHERE f.id = @source_id AND m.fixed_payment_id = f.id
+WHERE f.id = @source_id AND f.user_id = @user_id AND m.user_id = @user_id AND m.fixed_payment_id = f.id
   AND m.status = 'pending' AND NOT m.edited AND m.month >= sqlc.arg(from_month)::date
   AND ((NOT f.active AND m.month > sqlc.arg(from_month)::date)
        OR (f.end_month IS NOT NULL AND m.month > f.end_month)

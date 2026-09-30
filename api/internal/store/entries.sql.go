@@ -266,17 +266,18 @@ UPDATE monthly_entries m SET name = f.name, amount = f.amount, category_id = f.c
     due_date = m.month + (LEAST(f.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM fixed_payments f
-WHERE f.id = $1 AND m.fixed_payment_id = f.id
-  AND m.month >= $2::date AND m.status = 'pending' AND NOT m.edited
+WHERE f.id = $1 AND f.user_id = $2 AND m.user_id = $2 AND m.fixed_payment_id = f.id
+  AND m.month >= $3::date AND m.status = 'pending' AND NOT m.edited
 `
 
 type PropagateFixedPaymentParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PropagateFixedPayment(ctx context.Context, arg PropagateFixedPaymentParams) error {
-	_, err := q.db.Exec(ctx, propagateFixedPayment, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, propagateFixedPayment, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 
@@ -285,57 +286,60 @@ UPDATE monthly_entries m SET name = s.name, amount = s.amount, category_id = s.c
     due_date = m.month + (LEAST(s.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM income_sources s
-WHERE s.id = $1 AND m.income_source_id = s.id
-  AND m.month >= $2::date AND m.status = 'pending' AND NOT m.edited
+WHERE s.id = $1 AND s.user_id = $2 AND m.user_id = $2 AND m.income_source_id = s.id
+  AND m.month >= $3::date AND m.status = 'pending' AND NOT m.edited
 `
 
 type PropagateIncomeSourceParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PropagateIncomeSource(ctx context.Context, arg PropagateIncomeSourceParams) error {
-	_, err := q.db.Exec(ctx, propagateIncomeSource, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, propagateIncomeSource, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 
 const pruneFixedEntries = `-- name: PruneFixedEntries :exec
 DELETE FROM monthly_entries m
 USING fixed_payments f
-WHERE f.id = $1 AND m.fixed_payment_id = f.id
-  AND m.status = 'pending' AND NOT m.edited AND m.month >= $2::date
-  AND ((NOT f.active AND m.month > $2::date)
+WHERE f.id = $1 AND f.user_id = $2 AND m.user_id = $2 AND m.fixed_payment_id = f.id
+  AND m.status = 'pending' AND NOT m.edited AND m.month >= $3::date
+  AND ((NOT f.active AND m.month > $3::date)
        OR (f.end_month IS NOT NULL AND m.month > f.end_month)
        OR m.month < f.start_month)
 `
 
 type PruneFixedEntriesParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PruneFixedEntries(ctx context.Context, arg PruneFixedEntriesParams) error {
-	_, err := q.db.Exec(ctx, pruneFixedEntries, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, pruneFixedEntries, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 
 const pruneIncomeEntries = `-- name: PruneIncomeEntries :exec
 DELETE FROM monthly_entries m
 USING income_sources s
-WHERE s.id = $1 AND m.income_source_id = s.id
-  AND m.status = 'pending' AND NOT m.edited AND m.month >= $2::date
-  AND ((NOT s.active AND m.month > $2::date)
+WHERE s.id = $1 AND s.user_id = $2 AND m.user_id = $2 AND m.income_source_id = s.id
+  AND m.status = 'pending' AND NOT m.edited AND m.month >= $3::date
+  AND ((NOT s.active AND m.month > $3::date)
        OR (s.end_month IS NOT NULL AND m.month > s.end_month)
        OR m.month < s.start_month)
 `
 
 type PruneIncomeEntriesParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PruneIncomeEntries(ctx context.Context, arg PruneIncomeEntriesParams) error {
-	_, err := q.db.Exec(ctx, pruneIncomeEntries, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, pruneIncomeEntries, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 

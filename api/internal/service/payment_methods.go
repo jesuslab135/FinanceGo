@@ -189,7 +189,7 @@ func (s *Service) DeletePaymentMethod(ctx context.Context, a Actor, id int64) er
 		if _, err := q.GetPaymentMethod(ctx, store.GetPaymentMethodParams{ID: id, UserID: a.UserID}); err != nil {
 			return notFound(err)
 		}
-		uses, err := q.PaymentMethodUsage(ctx, &id)
+		uses, err := q.PaymentMethodUsage(ctx, store.PaymentMethodUsageParams{ID: &id, UserID: a.UserID})
 		if err != nil {
 			return err
 		}

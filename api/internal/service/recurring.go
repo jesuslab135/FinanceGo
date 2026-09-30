@@ -255,16 +255,16 @@ func (s *Service) DeactivateFixedPayment(ctx context.Context, a Actor, id int64)
 // unedited rows and drops rows that fall outside the template's range.
 func (s *Service) afterIncomeChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
 	from := datex.MonthStart(s.today(a))
-	if err := q.PropagateIncomeSource(ctx, store.PropagateIncomeSourceParams{SourceID: id, FromMonth: from}); err != nil {
+	if err := q.PropagateIncomeSource(ctx, store.PropagateIncomeSourceParams{SourceID: id, FromMonth: from, UserID: a.UserID}); err != nil {
 		return err
 	}
-	return q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: id, FromMonth: from})
+	return q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: id, FromMonth: from, UserID: a.UserID})
 }
 
 func (s *Service) afterFixedChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
 	from := datex.MonthStart(s.today(a))
-	if err := q.PropagateFixedPayment(ctx, store.PropagateFixedPaymentParams{SourceID: id, FromMonth: from}); err != nil {
+	if err := q.PropagateFixedPayment(ctx, store.PropagateFixedPaymentParams{SourceID: id, FromMonth: from, UserID: a.UserID}); err != nil {
 		return err
 	}
-	return q.PruneFixedEntries(ctx, store.PruneFixedEntriesParams{SourceID: id, FromMonth: from})
+	return q.PruneFixedEntries(ctx, store.PruneFixedEntriesParams{SourceID: id, FromMonth: from, UserID: a.UserID})
 }

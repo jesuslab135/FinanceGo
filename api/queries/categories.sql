@@ -17,26 +17,26 @@ WHERE id = @id AND user_id = @user_id
 RETURNING *;
 
 -- name: CategoryUsage :one
-SELECT ((SELECT count(*) FROM expenses e WHERE e.category_id = @id)
-      + (SELECT count(*) FROM fixed_payments f WHERE f.category_id = @id)
-      + (SELECT count(*) FROM income_sources i WHERE i.category_id = @id)
-      + (SELECT count(*) FROM monthly_entries m WHERE m.category_id = @id)
-      + (SELECT count(*) FROM installment_plans p WHERE p.category_id = @id))::bigint AS uses;
+SELECT ((SELECT count(*) FROM expenses e WHERE e.category_id = @id AND e.user_id = @user_id)
+      + (SELECT count(*) FROM fixed_payments f WHERE f.category_id = @id AND f.user_id = @user_id)
+      + (SELECT count(*) FROM income_sources i WHERE i.category_id = @id AND i.user_id = @user_id)
+      + (SELECT count(*) FROM monthly_entries m WHERE m.category_id = @id AND m.user_id = @user_id)
+      + (SELECT count(*) FROM installment_plans p WHERE p.category_id = @id AND p.user_id = @user_id))::bigint AS uses;
 
 -- name: ReassignExpensesCategory :exec
-UPDATE expenses SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id;
+UPDATE expenses SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id AND user_id = @user_id;
 
 -- name: ReassignFixedCategory :exec
-UPDATE fixed_payments SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id;
+UPDATE fixed_payments SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id AND user_id = @user_id;
 
 -- name: ReassignIncomeCategory :exec
-UPDATE income_sources SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id;
+UPDATE income_sources SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id AND user_id = @user_id;
 
 -- name: ReassignEntriesCategory :exec
-UPDATE monthly_entries SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id;
+UPDATE monthly_entries SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id AND user_id = @user_id;
 
 -- name: ReassignPlansCategory :exec
-UPDATE installment_plans SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id;
+UPDATE installment_plans SET category_id = @to_id, updated_at = now() WHERE category_id = @from_id AND user_id = @user_id;
 
 -- name: DeleteCategory :execrows
 DELETE FROM categories WHERE id = @id AND user_id = @user_id;
