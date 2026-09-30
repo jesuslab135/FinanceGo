@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toISODate } from "@/lib/dates";
 import { renderWithProviders } from "@/test/render";
+import { QuickAdd } from "@/components/expenses/quick-add";
 import { QuickAddFlow } from "./quick-add-flow";
+
+const media = vi.hoisted(() => ({ desktop: true }));
+vi.mock("@/lib/use-media-query", () => ({ useMediaQuery: () => media.desktop }));
 
 const h = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
@@ -70,5 +74,48 @@ describe("QuickAddFlow", () => {
     await userEvent.click(await screen.findByRole("button", { name: "¿Categoría: Comida?" }));
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ category_id: 1, description: "tacos" })));
+  });
+
+  it("shows a back arrow on details even with a prefill, and it leads to the category step", async () => {
+    renderWithProviders(<QuickAddFlow prefill={{ amount: 500, category_id: 2 }} onDone={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    expect(await screen.findByRole("radiogroup", { name: "Categoría" })).toBeInTheDocument();
+  });
+
+  it("drops a remembered card that no longer exists", async () => {
+    localStorage.setItem("fin:recents:1", JSON.stringify({ categories: [1], cardByCategory: { "1": 99 }, lastCard: 99 }));
+    renderWithProviders(<QuickAddFlow onDone={vi.fn()} />);
+    await userEvent.keyboard("5{Enter}");
+    await userEvent.click(await screen.findByRole("radio", { name: "Comida" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ payment_method_id: null })));
+  });
+
+  it("ignores malformed stored recents", async () => {
+    localStorage.setItem("fin:recents:1", JSON.stringify({ categories: "x" }));
+    renderWithProviders(<QuickAddFlow onDone={vi.fn()} />);
+    await userEvent.keyboard("5{Enter}");
+    expect(await screen.findByRole("radio", { name: "Comida" })).toBeInTheDocument();
+  });
+
+  for (const desktop of [true, false]) {
+    it(`inside the real dialog (${desktop ? "dialog" : "drawer"}): focus starts on the heading, Enter continues, and the next heading gets focus`, async () => {
+      media.desktop = desktop;
+      renderWithProviders(<QuickAdd variant="none" open onOpenChange={vi.fn()} />);
+      const heading = await screen.findByRole("heading", { name: "¿Cuánto?" });
+      await waitFor(() => expect(heading).toHaveFocus());
+      await userEvent.keyboard("5{Enter}");
+      const next = await screen.findByRole("heading", { name: "¿En qué?" });
+      expect(screen.queryByRole("heading", { name: "¿Cuánto?" })).not.toBeInTheDocument();
+      await waitFor(() => expect(next).toHaveFocus());
+    });
+  }
+
+  it("Enter on a focused keypad key continues instead of pressing the key", async () => {
+    renderWithProviders(<QuickAddFlow onDone={vi.fn()} />);
+    await userEvent.keyboard("5");
+    screen.getByRole("button", { name: "1" }).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(await screen.findByRole("radiogroup", { name: "Categoría" })).toBeInTheDocument();
   });
 });

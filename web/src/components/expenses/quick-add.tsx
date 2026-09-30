@@ -33,7 +33,16 @@ export function QuickAdd({ variant, prefill, open, onOpenChange }: {
         </Button>
       )}
       {variant === "button" && <Button className="w-full" onClick={() => setOpen(true)}><Plus /> {t("nav.quickAdd")}</Button>}
-      <ResponsiveDialog open={isOpen} onOpenChange={setOpen} title={t("expenses.new")}>
+      <ResponsiveDialog
+        open={isOpen}
+        onOpenChange={setOpen}
+        title={t("expenses.new")}
+        onOpenAutoFocus={(e) => {
+          // Keep focus off the keypad keys (Enter would press a digit); land on the step heading instead.
+          const heading = document.querySelector<HTMLElement>("[data-qa-heading]");
+          if (heading) { e.preventDefault(); heading.focus(); }
+        }}
+      >
         <QuickAddFlow
           prefill={prefill}
           onDone={() => {

@@ -21,12 +21,12 @@ export function Keypad({ cents, onChange, onSubmit }: { cents: number; onChange:
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
       const el = e.target instanceof HTMLElement ? e.target : null;
-      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable || el.closest("[role=menuitem]"))) return;
       if (e.key === "Enter") {
-        // A focused button already activates itself on Enter.
-        if (el?.tagName === "BUTTON" || el?.tagName === "A") return;
+        // Any other focused button or link activates itself on Enter; a focused keypad key means "continue", not "press it".
+        if ((el?.tagName === "BUTTON" || el?.tagName === "A") && !el.hasAttribute("data-keypad-key")) return;
         e.preventDefault();
         latest.current.onSubmit?.();
         return;
@@ -43,7 +43,7 @@ export function Keypad({ cents, onChange, onSubmit }: { cents: number; onChange:
   const press = (k: KeypadKey) => onChange(pressKey(cents, k));
   return (
     <div className="space-y-4">
-      <div className="flex min-h-16 items-center justify-center overflow-hidden" role="status" aria-live="polite" aria-label={t("amount")}>
+      <div className="flex min-h-16 items-center justify-center overflow-hidden" role="status" aria-live="polite" aria-atomic="true" aria-label={t("amount")}>
         <m.span
           key={cents}
           className="num font-display text-5xl"
@@ -56,9 +56,9 @@ export function Keypad({ cents, onChange, onSubmit }: { cents: number; onChange:
       </div>
       <div className="grid grid-cols-3 gap-2">
         {DIGITS.map((k) => (
-          <button key={k} type="button" className={KEY_CLASS} onClick={() => press(k)}>{k}</button>
+          <button key={k} type="button" data-keypad-key className={KEY_CLASS} onClick={() => press(k)}>{k}</button>
         ))}
-        <button type="button" className={KEY_CLASS} aria-label={t("backspace")} onClick={() => press("back")}>
+        <button type="button" data-keypad-key className={KEY_CLASS} aria-label={t("backspace")} onClick={() => press("back")}>
           <Delete className="size-6" />
         </button>
       </div>

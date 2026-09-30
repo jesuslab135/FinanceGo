@@ -34,7 +34,9 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const update = useUpdateExpense();
   const remove = useDeleteExpense();
   const [editing, setEditing] = useState<Expense | null>(null);
+  // `repeating` outlives the close so the dialog can animate out; `repeatOpen` drives visibility.
   const [repeating, setRepeating] = useState<Expense | null>(null);
+  const [repeatOpen, setRepeatOpen] = useState(false);
   const { hidden, request } = useUndoableDelete({ remove: (id) => remove.mutateAsync(id) });
 
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -56,7 +58,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
 
   const actionsFor = (e: Expense): RowAction[] => [
     { label: t("common.edit"), icon: Pencil, onSelect: () => setEditing(e) },
-    { label: t("quickAdd.repeat"), icon: Copy, onSelect: () => setRepeating(e) },
+    { label: t("quickAdd.repeat"), icon: Copy, onSelect: () => { setRepeating(e); setRepeatOpen(true); } },
     { label: t("common.delete"), icon: Trash2, destructive: true, onSelect: () => request(e.id, t("common.deleted")) },
   ];
 
@@ -100,8 +102,8 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
       {repeating && (
         <QuickAdd
           variant="none"
-          open
-          onOpenChange={(o) => !o && setRepeating(null)}
+          open={repeatOpen}
+          onOpenChange={setRepeatOpen}
           prefill={{
             amount: repeating.amount,
             category_id: repeating.category_id,

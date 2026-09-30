@@ -2,7 +2,7 @@
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CategoryGrid } from "@/components/quick-add/category-grid";
 import { CardChips } from "@/components/quick-add/card-chips";
@@ -46,7 +46,8 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
   const [suggested, setSuggested] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const go = (to: Step) => { setDir(to > step ? 1 : -1); setStep(to); };
+  const focusHeading = useRef(false);
+  const go = (to: Step) => { focusHeading.current = true; setDir(to > step ? 1 : -1); setStep(to); };
 
   // Suggest the category of the most recent expense whose description matches.
   useEffect(() => {
@@ -98,7 +99,14 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
           <ArrowLeft />
         </Button>
       )}
-      <h3 className="font-display text-lg font-bold">{label}</h3>
+      <h3
+        data-qa-heading
+        tabIndex={-1}
+        ref={(el) => { if (el && focusHeading.current) { focusHeading.current = false; el.focus(); } }}
+        className="font-display text-lg font-bold outline-none"
+      >
+        {label}
+      </h3>
       {step > 1 && <span className="num ml-auto font-display text-lg">{fmt(cents)}</span>}
     </div>
   );
@@ -122,14 +130,19 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
           categories={categories}
           recent={recents.categories}
           value={categoryId}
-          onSelect={(id) => { setCategoryId(id); setCardId(defaultCard(recents, id)); go(3); }}
+          onSelect={(id) => {
+            const card = defaultCard(recents, id);
+            setCategoryId(id);
+            setCardId(card !== null && methods.some((p) => p.id === card && p.active) ? card : null);
+            go(3);
+          }}
         />
       </div>
     );
   } else {
     body = (
       <form className="space-y-4" noValidate onSubmit={(e) => { e.preventDefault(); void save(); }}>
-        {heading(t("quickAdd.details"), prefill ? undefined : 2)}
+        {heading(t("quickAdd.details"), 2)}
         <div className="space-y-2">
           <Label>{t("expenses.paymentMethod")}</Label>
           <CardChips methods={methods} value={cardId} onChange={setCardId} />
@@ -156,8 +169,9 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
     );
   }
 
+  // overflow-x-clip (not hidden) keeps the sticky footer pinned to the dialog scroll body; px-4 gives its -mx-4 bleed room.
   return (
-    <div className="overflow-x-hidden">
+    <div className="-mx-4 overflow-x-clip px-4">
       <AnimatePresence mode="wait" initial={false}>
         <m.div
           key={step}
