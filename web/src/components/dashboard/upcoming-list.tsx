@@ -55,7 +55,7 @@ export function UpcomingList() {
                 <p className="flex items-center gap-1 text-xs text-muted-foreground">
                   {day(u.date)}
                   {u.overdue && (
-                    <span className="flex items-center gap-1 font-medium text-critical">
+                    <span className="flex items-center gap-1 font-medium text-destructive">
                       <AlertTriangle className="size-3" aria-hidden /> {t("dashboard.overdue")}
                     </span>
                   )}

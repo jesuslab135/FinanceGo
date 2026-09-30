@@ -17,7 +17,7 @@ export function budgetStatus(pct: number): "ok" | "warn" | "over" {
 const STYLE = {
   ok: { Icon: CheckCircle2, bar: "bg-good", text: "text-foreground" },
   warn: { Icon: AlertTriangle, bar: "bg-warning", text: "text-foreground" },
-  over: { Icon: XCircle, bar: "bg-critical", text: "text-critical" },
+  over: { Icon: XCircle, bar: "bg-critical", text: "text-destructive" },
 } as const;
 
 /** `budgets` is `undefined` while the summary is loading. */

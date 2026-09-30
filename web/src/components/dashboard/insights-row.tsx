@@ -53,7 +53,7 @@ export function InsightsRow({ insights }: { insights: Insight[] }) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`tone.${i.tone}`)}</p>
                   <p className="text-sm font-medium">{t(i.messageKey.replace(/^insights\./, ""), i.values)}</p>
                   {i.href && (
-                    <Link href={i.href} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-2 hover:underline">
+                    <Link href={i.href} className="inline-flex min-h-11 items-center text-sm font-semibold text-foreground underline decoration-brand decoration-2 underline-offset-4">
                       {t("view")}
                     </Link>
                   )}

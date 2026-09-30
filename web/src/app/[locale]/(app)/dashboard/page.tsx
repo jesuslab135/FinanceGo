@@ -96,7 +96,7 @@ function Dashboard() {
         <PeriodControls period={period} anchor={anchorStr} onChange={onChange} />
       </div>
       {summary.data ? <HeroAvailable summary={summary.data} /> : summary.error ? null : <HeroSkeleton />}
-      {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
+      {summary.error && <p role="alert" className="rounded-2xl bg-card p-4 text-sm text-destructive shadow-card">{errMsg(summary.error)}</p>}
       {insights.length > 0 && <InsightsRow insights={insights} />}
       {summary.data ? <KpiChips summary={summary.data} spent={spent} period={period} spentStale={current.isPlaceholderData} /> : summary.error ? null : <ChipsSkeleton />}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
