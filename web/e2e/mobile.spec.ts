@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { register, uniqueEmail } from "./helpers";
+import { register, typeDigits, uniqueEmail } from "./helpers";
 
 const LONG_CARD = "Tarjeta de crédito departamental con nombre larguísimo";
 const LONG_CATEGORY = "Entretenimiento, suscripciones y salidas";
@@ -44,6 +44,35 @@ async function seed(page: Page) {
   return { month, longCardId: longCard.id as number };
 }
 
+/** Walks the quick-add sheet step by step; it must never overflow sideways and its primary action stays in view. */
+async function expectQuickAddFits(page: Page) {
+  const width = page.viewportSize()!.width;
+  const overflow = async (label: string) => {
+    const over = await page.evaluate(() => document.documentElement.scrollWidth) - width;
+    expect.soft(over, `quick-add ${label} overflows by ${over}px`).toBeLessThanOrEqual(0);
+    const dialog = page.getByRole("dialog");
+    const inner = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect.soft(inner, `quick-add ${label}: sheet scrolls sideways by ${inner}px`).toBeLessThanOrEqual(0);
+  };
+  await page.getByRole("navigation", { name: "Navegación principal" }).getByRole("button", { name: "Agregar gasto" }).click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByRole("heading", { name: "¿Cuánto?" })).toBeVisible();
+  await typeDigits(page, "1250");
+  await overflow("keypad");
+  await expect(sheet.getByRole("button", { name: "Continuar" })).toBeInViewport({ ratio: 1 });
+  await sheet.getByRole("button", { name: "Continuar" }).click();
+  await expect(sheet.getByRole("radiogroup", { name: "Categoría" })).toBeVisible();
+  await overflow("categories");
+  await sheet.getByRole("radio").first().click();
+  const save = sheet.getByRole("button", { name: "Guardar" });
+  await expect(save).toBeVisible();
+  await overflow("details");
+  // Sticky footer: Guardar is on screen without scrolling the sheet.
+  await expect(save).toBeInViewport({ ratio: 1 });
+  await page.keyboard.press("Escape");
+  await expect(sheet).toBeHidden();
+}
+
 test("mobile: bottom navigation, quick add sheet, no horizontal scroll", async ({ page }) => {
   await register(page, uniqueEmail("mobile"));
   const { month, longCardId } = await seed(page);
@@ -54,9 +83,10 @@ test("mobile: bottom navigation, quick add sheet, no horizontal scroll", async (
   await expect(page.getByRole("dialog").getByTestId("drawer-handle")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();
+  await expectQuickAddFits(page);
   for (const path of [
     "/es/dashboard", "/es/expenses", `/es/month/${month}`, "/es/cards", `/es/cards/${longCardId}`,
-    "/es/recurring", "/es/categories", "/es/settings",
+    "/es/recurring", "/es/categories", "/es/settings", "/es/welcome",
   ]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -70,7 +100,8 @@ test("mobile: bottom navigation, quick add sheet, no horizontal scroll", async (
 test("mobile: a tall form in the bottom sheet can reach and click its submit button", async ({ page }) => {
   await register(page, uniqueEmail("mobile-sheet"));
   await page.goto("/es/cards");
-  await page.getByRole("button", { name: "Nuevo método de pago" }).click();
+  // The empty state repeats the header's call to action; scope to the page header (the heading's row).
+  await page.getByRole("heading", { level: 1 }).locator("..").getByRole("button", { name: "Nuevo método de pago" }).click();
   const dialog = page.getByRole("dialog", { name: "Nuevo método de pago" });
   await expect(dialog.getByTestId("drawer-handle")).toBeVisible();
   await dialog.getByLabel("Alias").fill("Tarjeta móvil");
@@ -80,4 +111,40 @@ test("mobile: a tall form in the bottom sheet can reach and click its submit but
   await save.click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Tarjeta móvil")).toBeVisible();
+});
+
+test.describe("short phone (360x640)", () => {
+  test.use({ viewport: { width: 360, height: 640 } });
+
+  test("the quick-add sheet keeps Continuar and Guardar visible", async ({ page }) => {
+    await register(page, uniqueEmail("short-qa"));
+    await expectQuickAddFits(page);
+  });
+
+  test("the tall card form in the bottom sheet scrolls to its submit button, which can be clicked", async ({ page }) => {
+    await register(page, uniqueEmail("short-card"));
+    await page.goto("/es/cards");
+    // The empty state repeats the header's call to action; scope to the page header (the heading's row).
+    await page.getByRole("heading", { level: 1 }).locator("..").getByRole("button", { name: "Nuevo método de pago" }).click();
+    const dialog = page.getByRole("dialog", { name: "Nuevo método de pago" });
+    await expect(dialog.getByTestId("drawer-handle")).toBeVisible();
+    await expect(dialog.getByLabel("Alias")).toBeVisible();
+    // A credit card adds the statement, due-day and limit fields, which makes the form taller than a 640px sheet.
+    await dialog.getByLabel("Tipo").selectOption("credit");
+    await expect(dialog.getByLabel("Día de corte")).toBeAttached();
+    await dialog.evaluate((el) => { for (const n of el.querySelectorAll<HTMLElement>("*")) n.scrollTop = 0; });
+    await page.waitForTimeout(600); // let the sheet finish sliding in and settle
+    const save = dialog.getByRole("button", { name: "Guardar" });
+    // At 640px the form is taller than the sheet: the button starts below the fold and only scrolling reaches it.
+    await expect(save).not.toBeInViewport({ ratio: 1 });
+    await save.scrollIntoViewIfNeeded();
+    await expect(save).toBeInViewport({ ratio: 1 });
+    await dialog.getByLabel("Alias").fill("Tarjeta corta");
+    await dialog.getByLabel("Día de corte").fill("15");
+    await dialog.getByLabel("Día límite de pago").fill("5");
+    await save.scrollIntoViewIfNeeded();
+    await save.click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("Tarjeta corta")).toBeVisible();
+  });
 });

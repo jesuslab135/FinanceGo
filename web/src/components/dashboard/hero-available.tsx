@@ -39,7 +39,7 @@ export function HeroAvailable({ summary: s, className }: { summary: Summary; cla
           <p className={cn(pill, "font-semibold")}><AlertTriangle className="size-4" aria-hidden /> {t("overspent")}</p>
         ) : (
           s.safe_to_spend_per_day != null && (
-            <p className={pill}>{t("heroHint", { amount: fmt(s.safe_to_spend_per_day), days: s.days_remaining ?? 0 })}</p>
+            <p data-dynamic className={pill}>{t("heroHint", { amount: fmt(s.safe_to_spend_per_day), days: s.days_remaining ?? 0 })}</p>
           )
         )}
         <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />

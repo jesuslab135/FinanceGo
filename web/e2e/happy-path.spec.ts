@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { pick, register, uniqueEmail } from "./helpers";
+import { pick, register, typeDigits, uniqueEmail } from "./helpers";
 
 test("register → income + card fixed payment → card expense → Available → card payment → English", async ({ page }) => {
   await register(page, uniqueEmail("happy"));
@@ -7,7 +7,8 @@ test("register → income + card fixed payment → card expense → Available �
 
   // Credit card
   await page.goto("/es/cards");
-  await page.getByRole("button", { name: "Nuevo método de pago" }).click();
+  // The empty state repeats the header's call to action; scope to the page header (the heading's row).
+  await page.getByRole("heading", { level: 1, name: "Tarjetas" }).locator("..").getByRole("button", { name: "Nuevo método de pago" }).click();
   await page.getByLabel("Alias").fill("Visa Oro");
   await page.getByLabel("Tipo").selectOption("credit");
   await page.getByLabel("Últimos 4 dígitos").fill("4242");
@@ -18,7 +19,8 @@ test("register → income + card fixed payment → card expense → Available �
 
   // Income and a fixed payment charged to the card
   await page.goto("/es/recurring");
-  await page.getByRole("button", { name: "Nueva fuente de ingreso" }).click();
+  const header = page.getByRole("heading", { level: 1, name: "Recurrentes" }).locator("..");
+  await header.getByRole("button", { name: "Nueva fuente de ingreso" }).click();
   await page.getByLabel("Nombre").fill("Salario");
   await page.getByLabel("Monto").fill("30,000");
   await page.getByLabel("Día del mes").fill("1");
@@ -27,7 +29,7 @@ test("register → income + card fixed payment → card expense → Available �
   await expect(page.locator("p", { hasText: "Salario" }).first()).toBeVisible();
 
   await page.getByRole("tab", { name: "Pagos fijos" }).click();
-  await page.getByRole("button", { name: "Nuevo pago fijo" }).click();
+  await header.getByRole("button", { name: "Nuevo pago fijo" }).click();
   await page.getByLabel("Nombre").fill("Renta");
   await page.getByLabel("Monto").fill("10000");
   await page.getByLabel("Día del mes").fill("5");
@@ -37,17 +39,22 @@ test("register → income + card fixed payment → card expense → Available �
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.locator("p", { hasText: "Renta" }).first()).toBeVisible();
 
-  // Card expense via quick add
+  // Card expense via the keypad quick add: 5,0,0,0,0 is $500.00
   await page.getByRole("button", { name: "Agregar gasto" }).first().click();
-  await page.getByLabel("Monto").fill("500");
-  await pick(page, "Categoría", "Comida");
-  await pick(page, "Método de pago", /Visa Oro/);
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByRole("heading", { name: "¿Cuánto?" })).toBeFocused();
+  await typeDigits(page, "50000");
+  await expect(sheet.getByRole("status", { name: "¿Cuánto?" })).toHaveText("$500.00");
+  await sheet.getByRole("button", { name: "Continuar" }).click();
+  await sheet.getByRole("radio", { name: "Comida" }).click();
+  await sheet.getByRole("radio", { name: /Visa Oro/ }).click();
+  await sheet.getByRole("button", { name: "Guardar" }).click();
+  await expect(sheet).toBeHidden();
 
   // Available = 30,000 − 10,000 − 500
   await page.goto("/es/dashboard");
-  await expect(page.locator("[data-kpi='available']")).toContainText("$19,500.00");
+  await expect(page.getByLabel("$19,500.00")).toBeVisible();
+  await expect(page.locator("[data-tone='brand']")).toContainText("$19,500");
 
   // Card: current balance 500, then pay it off
   await page.goto("/es/cards");
@@ -63,7 +70,7 @@ test("register → income + card fixed payment → card expense → Available �
   await page.getByRole("button", { name: "E2E" }).click();
   await page.getByRole("menuitem", { name: "English" }).click();
   await expect(page).toHaveURL(/\/en\/dashboard/);
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening), E2E!$/ })).toBeVisible();
 });
 
 test("cards: a card with records can't be deleted, an unused one can", async ({ page }) => {

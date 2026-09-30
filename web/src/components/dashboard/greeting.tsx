@@ -27,7 +27,7 @@ export function Greeting({ now = new Date() }: { now?: Date }) {
   return (
     <div>
       <h1 className="font-display text-2xl font-extrabold md:text-3xl">{t(greetingMessageKey(now.getHours(), first), { name: first })}</h1>
-      <p className="text-sm capitalize text-muted-foreground">{format(now, "LLLL yyyy", { locale: locale === "en" ? enUS : es })}</p>
+      <p data-dynamic className="text-sm capitalize text-muted-foreground">{format(now, "LLLL yyyy", { locale: locale === "en" ? enUS : es })}</p>
     </div>
   );
 }
