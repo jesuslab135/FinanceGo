@@ -229,11 +229,20 @@ func (s *Service) DeactivateFixedPayment(ctx context.Context, a Actor, id int64)
 	return out, err
 }
 
-// afterIncomeChange / afterFixedChange propagate template edits to generated
-// months. Task 9 implements them; until then they are no-ops.
+// afterIncomeChange pushes template edits into this and future months' pending,
+// unedited rows and drops rows that fall outside the template's range.
 func (s *Service) afterIncomeChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
-	return nil
+	from := datex.MonthStart(s.today(a))
+	if err := q.PropagateIncomeSource(ctx, store.PropagateIncomeSourceParams{SourceID: id, FromMonth: from}); err != nil {
+		return err
+	}
+	return q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: id, FromMonth: from})
 }
+
 func (s *Service) afterFixedChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
-	return nil
+	from := datex.MonthStart(s.today(a))
+	if err := q.PropagateFixedPayment(ctx, store.PropagateFixedPaymentParams{SourceID: id, FromMonth: from}); err != nil {
+		return err
+	}
+	return q.PruneFixedEntries(ctx, store.PruneFixedEntriesParams{SourceID: id, FromMonth: from})
 }

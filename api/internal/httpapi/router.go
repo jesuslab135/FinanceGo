@@ -76,4 +76,7 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.POST("/fixed-payments", h.createFixedPayment)
 	p.PUT("/fixed-payments/:id", h.updateFixedPayment)
 	p.DELETE("/fixed-payments/:id", h.deleteFixedPayment)
+
+	p.GET("/months/:month/entries", h.monthEntries)
+	p.PUT("/entries/:id", h.updateEntry)
 }
