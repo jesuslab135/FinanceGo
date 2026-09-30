@@ -196,7 +196,7 @@ Rules (priority high to low):
 
 1. `overdue`: pending fixed payments with `due_date` < today (from upcoming). Tone critical.
 2. `card_due`: a card with `amount_due` > 0 and a due date within 3 days (from cards overview). Tone warn.
-3. `budget`: a budget with pct ≥ 100 is critical; pct ≥ 80 is warn.
+3. `budget`: a budget with pct > 100 is critical; 80 ≤ pct ≤ 100 is warn. This matches the budget meters' `budgetStatus`.
 4. `category_change`: compare expense-category spending month-to-date with the same day-range last month (breakdown by category for both ranges). Emit when |Δ| ≥ 20 % and the current amount is ≥ 1 % of income. Only the largest increase and the largest decrease are shown. An increase is warn, a decrease is good.
 5. `streak`: consecutive days up to yesterday where daily expenses ≤ the current safe-to-spend per day (from the day series). Emit when ≥ 3. Tone good.
 6. `setup`: onboarding was skipped and there is no income source.
