@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryForIcon, needsOnboarding } from "./onboarding";
+import { categoryForIcon, FIXED_SUGGESTIONS, needsOnboarding } from "./onboarding";
 
 describe("needsOnboarding", () => {
   const base = { status: "authenticated" as const, incomeCount: 0, skipped: false, pathname: "/dashboard" };
@@ -27,5 +27,20 @@ describe("categoryForIcon", () => {
     expect(categoryForIcon(cats, "home")).toBe(2);
     expect(categoryForIcon(cats, "wifi")).toBe(1);
     expect(categoryForIcon([], "home")).toBeUndefined();
+  });
+});
+
+describe("FIXED_SUGGESTIONS", () => {
+  const seeded = [
+    { id: 1, kind: "expense", icon: "utensils" }, { id: 2, kind: "expense", icon: "home" },
+    { id: 3, kind: "expense", icon: "zap" }, { id: 4, kind: "expense", icon: "tag" },
+  ] as never[];
+  it("resolves water, internet and phone to the utilities (zap) category even though they display other icons", () => {
+    for (const key of ["water", "internet", "phone"]) {
+      const s = FIXED_SUGGESTIONS.find((x) => x.key === key)!;
+      expect(categoryForIcon(seeded, s.categoryIcon)).toBe(3);
+    }
+    expect(FIXED_SUGGESTIONS.find((x) => x.key === "internet")!.icon).toBe("wifi");
+    expect(FIXED_SUGGESTIONS.find((x) => x.key === "phone")!.icon).toBe("smartphone");
   });
 });

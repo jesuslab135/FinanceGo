@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { StepActions } from "./progress";
 
 type RowErrors = { name?: string; amount?: string; day?: string; form?: string };
-export type FixedRow = { key: string; name: string; icon: string; custom: boolean; amount: string; day: string; savedId?: number; errors: RowErrors };
+export type FixedRow = { key: string; name: string; categoryIcon: string; custom: boolean; amount: string; day: string; savedId?: number; errors: RowErrors };
 export type FixedDraft = { rows: FixedRow[]; removedIds: number[]; customCount: number };
 
 const chipCls = "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]";
@@ -43,10 +43,10 @@ export function StepFixed({ draft, onChange, onBack, onDone, today }: {
   const toggle = (s: (typeof FIXED_SUGGESTIONS)[number]) => {
     const existing = draft.rows.find((r) => r.key === s.key);
     if (existing) return remove(existing);
-    onChange({ ...draft, rows: [...draft.rows, { key: s.key, name: t(s.labelKey), icon: s.icon, custom: false, amount: "", day: "1", errors: {} }] });
+    onChange({ ...draft, rows: [...draft.rows, { key: s.key, name: t(s.labelKey), categoryIcon: s.categoryIcon, custom: false, amount: "", day: "1", errors: {} }] });
   };
   const addCustom = () =>
-    onChange({ ...draft, customCount: draft.customCount + 1, rows: [...draft.rows, { key: `custom-${draft.customCount}`, name: "", icon: "tag", custom: true, amount: "", day: "1", errors: {} }] });
+    onChange({ ...draft, customCount: draft.customCount + 1, rows: [...draft.rows, { key: `custom-${draft.customCount}`, name: "", categoryIcon: "tag", custom: true, amount: "", day: "1", errors: {} }] });
   const patch = (key: string, p: Partial<FixedRow>) =>
     onChange({ ...draft, rows: draft.rows.map((r) => (r.key === key ? { ...r, ...p, errors: {} } : r)) });
 
@@ -75,7 +75,7 @@ export function StepFixed({ draft, onChange, onBack, onDone, today }: {
         // Generated types are `T | undefined`; the Go API takes JSON null for these pointer fields.
         const body = {
           name: r.name.trim(), amount: cents, day_of_month: day, start_month: toMonthKey(today),
-          category_id: categoryForIcon(cats, r.icon), payment_method_id: null, active: true, end_month: null,
+          category_id: categoryForIcon(cats, r.categoryIcon), payment_method_id: null, active: true, end_month: null,
         } as unknown as FixedPaymentInput;
         return r.savedId !== undefined ? update.mutateAsync({ id: r.savedId, ...body }) : create.mutateAsync(body);
       }),

@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/render";
-import { markOnboardingSettled } from "@/lib/onboarding";
+import { markOnboardingSettled, resetOnboardingSession } from "@/lib/onboarding";
 import AppLayout from "../../app/[locale]/(app)/layout";
 
 const h = vi.hoisted(() => ({
@@ -19,6 +19,7 @@ const page = () => renderWithProviders(<AppLayout><p>dashboard</p></AppLayout>);
 describe("(app) layout onboarding gate", () => {
   beforeEach(() => {
     localStorage.clear();
+    resetOnboardingSession();
     h.replace.mockReset();
     h.pathname = "/dashboard";
     h.incomes = { isPending: false, failureCount: 0, data: [] };
