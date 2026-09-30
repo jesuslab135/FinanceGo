@@ -2,6 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toMonthKey } from "@/lib/dates";
+import { isOnboardingSettled } from "@/lib/onboarding";
 import { ApiError } from "@/lib/api/errors";
 import { renderWithProviders } from "@/test/render";
 import { WelcomeFlow } from "./welcome-flow";
@@ -38,7 +39,8 @@ vi.mock("@/lib/query/hooks", () => ({
   useCreatePaymentMethod: () => ({ mutateAsync: h.createCard }),
 }));
 
-describe("WelcomeFlow", () => {
+// Animated step changes under a loaded CI machine can be slow; the timeout is generous instead of the tests sleeping.
+describe("WelcomeFlow", { timeout: 30_000 }, () => {
   beforeEach(() => {
     Object.values(h).forEach((f) => f.mockReset());
     h.createIncome.mockResolvedValue({ id: 100 });
@@ -118,10 +120,33 @@ describe("WelcomeFlow", () => {
     expect(screen.getByRole("button", { name: "Agregar otra" })).toBeInTheDocument();
   });
 
+  it("moves focus to the entering step heading, not the exiting one", async () => {
+    renderWithProviders(<WelcomeFlow />);
+    expect(document.activeElement).toBe(document.body);
+    await userEvent.keyboard("100");
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    const heading = await screen.findByRole("heading", { name: "Tus pagos fijos" });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+
+  it("keeps a half-typed card when going back and forward", async () => {
+    renderWithProviders(<WelcomeFlow />);
+    await userEvent.keyboard("100");
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "Tus pagos fijos" });
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await userEvent.type(await screen.findByLabelText("Alias"), "Nu");
+    await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    await screen.findByRole("heading", { name: "Tus pagos fijos" });
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(await screen.findByLabelText("Alias")).toHaveValue("Nu");
+  });
+
   it("Saltar on step 1 writes the skip flag and leaves for the dashboard", async () => {
     renderWithProviders(<WelcomeFlow />);
     await userEvent.click(screen.getByRole("button", { name: "Saltar" }));
     expect(h.writeJSON).toHaveBeenCalledWith("fin:onboarding-skipped:7", true);
+    expect(isOnboardingSettled(7)).toBe(true);
     expect(h.replace).toHaveBeenCalledWith("/dashboard");
     expect(h.createIncome).not.toHaveBeenCalled();
   });

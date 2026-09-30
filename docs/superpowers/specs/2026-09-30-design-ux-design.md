@@ -156,7 +156,7 @@ Rules:
 
 ## 5. Guided first-run
 
-- **Trigger:** status is authenticated, the user has 0 income sources, and `localStorage["fin_onboarding_skipped:<userId>"]` is not set. The (app) layout then redirects to `/[locale]/welcome`.
+- **Trigger:** status is authenticated, the user has 0 income sources, and `localStorage["fin:onboarding-skipped:<userId>"]` is not set. The (app) layout then redirects to `/[locale]/welcome`.
 - **Steps**, each a full-screen card with a progress bar, "Atrás" (back), "Saltar" (skip) and "Continuar" (continue):
   1. **Income:**
      - name, prefilled "Salario" / "Salary"

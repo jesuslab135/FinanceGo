@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { IncomeSourceInput } from "@/lib/api/types";
 import { toMonthKey } from "@/lib/dates";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { markOnboardingSettled } from "@/lib/onboarding";
 import { applyApiError } from "@/lib/forms";
 import { useCategories, useCreateIncomeSource, useUpdateIncomeSource } from "@/lib/query/hooks";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,7 @@ export function StepIncome({ draft, onChange, onDone, today }: {
   const categories = useCategories();
   const create = useCreateIncomeSource();
   const update = useUpdateIncomeSource();
+  const { user } = useAuth();
   const form = useForm();
   const errors = form.formState.errors as Record<string, { message?: string } | undefined>;
   const [other, setOther] = useState(() => !PAYDAYS.includes(draft.day));
@@ -52,6 +55,8 @@ export function StepIncome({ draft, onChange, onDone, today }: {
     try {
       // Coming back to this step must not create a second income source.
       const saved = draft.savedId !== undefined ? await update.mutateAsync({ id: draft.savedId, ...body }) : await create.mutateAsync(body);
+      // A saved income means /welcome is done with this user even if the refetch that follows fails.
+      if (user) markOnboardingSettled(user.id);
       onChange({ ...draft, savedId: saved.id });
       onDone();
     } catch (e) {

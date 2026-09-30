@@ -1,17 +1,17 @@
 "use client";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToday } from "@/hooks/use-today";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { celebrate } from "@/lib/celebrate";
 import { duration, ease } from "@/lib/motion";
-import { ONBOARDING_SKIPPED } from "@/lib/onboarding";
+import { markOnboardingSettled, ONBOARDING_SKIPPED } from "@/lib/onboarding";
 import { userKey, writeJSON } from "@/lib/storage";
 import { Progress } from "./progress";
-import { StepCards, type AddedCard } from "./step-cards";
+import { EMPTY_CARD_DRAFT, StepCards, type AddedCard, type CardDraft } from "./step-cards";
 import { StepFixed, type FixedDraft } from "./step-fixed";
 import { StepIncome, type IncomeDraft } from "./step-income";
 
@@ -27,17 +27,18 @@ export function WelcomeFlow() {
   const [income, setIncome] = useState<IncomeDraft>({ name: t("welcome.salary"), cents: 0, day: 15 });
   const [fixed, setFixed] = useState<FixedDraft>({ rows: [], removedIds: [], customCount: 0 });
   const [cards, setCards] = useState<AddedCard[]>([]);
-  const heading = useRef<HTMLHeadingElement>(null);
-  const moved = useRef(false);
+  const [cardDraft, setCardDraft] = useState<CardDraft>(EMPTY_CARD_DRAFT);
+  // Focus the heading of the step that is entering (not the exiting one, which AnimatePresence keeps mounted),
+  // and never on first load.
+  const focusHeading = useRef(false);
 
-  useEffect(() => {
-    if (moved.current) heading.current?.focus();
-  }, [step]);
-
-  const go = (to: number) => { moved.current = true; setDir(to > step ? 1 : -1); setStep(to); };
+  const go = (to: number) => { focusHeading.current = true; setDir(to > step ? 1 : -1); setStep(to); };
 
   const skip = () => {
-    if (user) writeJSON(userKey(user.id, ONBOARDING_SKIPPED), true);
+    if (user) {
+      markOnboardingSettled(user.id);
+      writeJSON(userKey(user.id, ONBOARDING_SKIPPED), true);
+    }
     router.replace("/dashboard");
   };
   const finish = () => {
@@ -64,12 +65,12 @@ export function WelcomeFlow() {
           transition={reduce ? { duration: 0 } : { duration: duration.page, ease: ease.enter }}
         >
           <div className="space-y-2">
-            <h1 ref={heading} tabIndex={-1} className="font-display text-2xl font-extrabold outline-none">{t(`welcome.title${step}`)}</h1>
+            <h1 ref={(el) => { if (el && focusHeading.current) { focusHeading.current = false; el.focus(); } }} tabIndex={-1} className="font-display text-2xl font-extrabold outline-none">{t(`welcome.title${step}`)}</h1>
             <p className="text-sm text-muted-foreground">{t(`welcome.subtitle${step}`)}</p>
           </div>
           {step === 1 && <StepIncome draft={income} onChange={setIncome} today={today} onDone={() => go(2)} />}
           {step === 2 && <StepFixed draft={fixed} onChange={setFixed} today={today} onBack={() => go(1)} onDone={() => go(3)} />}
-          {step === 3 && <StepCards cards={cards} onAdded={(c) => setCards((l) => [...l, c])} onBack={() => go(2)} onFinish={finish} />}
+          {step === 3 && <StepCards cards={cards} draft={cardDraft} onDraft={setCardDraft} onAdded={(c) => setCards((l) => [...l, c])} onBack={() => go(2)} onFinish={finish} />}
         </m.section>
       </AnimatePresence>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 import { CreditCard, Landmark } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { FieldError } from "@/components/common/field-error";
@@ -15,15 +15,21 @@ import { useCreatePaymentMethod } from "@/lib/query/hooks";
 import { StepActions } from "./progress";
 
 export type AddedCard = { id: number; nickname: string; type: "credit" | "debit"; last4: string };
-type Values = { nickname: string; type: "credit" | "debit"; last4: string; statement_day: string; payment_due_day: string };
+export type CardDraft = { nickname: string; type: "credit" | "debit"; last4: string; statement_day: string; payment_due_day: string };
+type Values = CardDraft;
 const EMPTY: Values = { nickname: "", type: "credit", last4: "", statement_day: "1", payment_due_day: "20" };
 
-export function StepCards({ cards, onAdded, onBack, onFinish }: {
-  cards: AddedCard[]; onAdded: (c: AddedCard) => void; onBack: () => void; onFinish: () => void;
+export const EMPTY_CARD_DRAFT = EMPTY;
+
+export function StepCards({ cards, draft, onDraft, onAdded, onBack, onFinish }: {
+  cards: AddedCard[]; draft: CardDraft; onDraft: (d: CardDraft) => void; onAdded: (c: AddedCard) => void; onBack: () => void; onFinish: () => void;
 }) {
   const t = useTranslations();
   const create = useCreatePaymentMethod();
-  const form = useForm<Values>({ defaultValues: EMPTY });
+  const form = useForm<Values>({ defaultValues: draft });
+  // The half-typed card lives in the flow so it survives Back and forward.
+  const values = useWatch({ control: form.control }) as Values;
+  useEffect(() => { onDraft({ ...EMPTY, ...values }); }, [values, onDraft]);
   const type = useWatch({ control: form.control, name: "type" });
   const { errors } = form.formState;
   const [busy, setBusy] = useState(false);
