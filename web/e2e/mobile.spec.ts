@@ -66,3 +66,18 @@ test("mobile: bottom navigation, quick add sheet, no horizontal scroll", async (
     expect.soft(overflow, `${path} overflows horizontally by ${overflow}px`).toBeLessThanOrEqual(0);
   }
 });
+
+test("mobile: a tall form in the bottom sheet can reach and click its submit button", async ({ page }) => {
+  await register(page, uniqueEmail("mobile-sheet"));
+  await page.goto("/es/cards");
+  await page.getByRole("button", { name: "Nuevo método de pago" }).click();
+  const dialog = page.getByRole("dialog", { name: "Nuevo método de pago" });
+  await expect(dialog.getByTestId("drawer-handle")).toBeVisible();
+  await dialog.getByLabel("Alias").fill("Tarjeta móvil");
+  const save = dialog.getByRole("button", { name: "Guardar" });
+  await save.scrollIntoViewIfNeeded();
+  await expect(save).toBeInViewport();
+  await save.click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Tarjeta móvil")).toBeVisible();
+});

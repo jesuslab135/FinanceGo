@@ -5,9 +5,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/lib/use-media-query";
 
-/** Dialog on desktop, draggable bottom sheet (Vaul) on mobile; `size="full"` skips the 55% snap for tall forms. Without a visible `description` a screen-reader-only hint is announced. */
-export function ResponsiveDialog({ open, onOpenChange, title, description, size = "auto", children }: {
-  open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; size?: "auto" | "full"; children: ReactNode;
+/** Dialog on desktop, draggable bottom sheet (Vaul) on mobile; sized to its content (max 96dvh) with a scrolling body. Without a visible `description` a screen-reader-only hint is announced. */
+export function ResponsiveDialog({ open, onOpenChange, title, description, children }: {
+  open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; children: ReactNode;
 }) {
   const t = useTranslations("common");
   const desktop = useMediaQuery("(min-width: 768px)");
@@ -24,18 +24,15 @@ export function ResponsiveDialog({ open, onOpenChange, title, description, size 
       </Dialog>
     );
   }
-  const content = (
-    <DrawerContent className="max-h-[96dvh] rounded-t-[20px] bg-card px-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
-      <DrawerHeader className="px-0 text-left">
-        <DrawerTitle className="font-display text-lg">{title}</DrawerTitle>
-        <DrawerDescription className={description ? undefined : "sr-only"}>{description ?? t("dialogHint")}</DrawerDescription>
-      </DrawerHeader>
-      <div className="overflow-y-auto">{children}</div>
-    </DrawerContent>
-  );
-  return size === "auto" ? (
-    <Drawer open={open} onOpenChange={onOpenChange} snapPoints={[0.55, 1]} fadeFromIndex={0}>{content}</Drawer>
-  ) : (
-    <Drawer open={open} onOpenChange={onOpenChange}>{content}</Drawer>
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="bg-card px-4">
+        <DrawerHeader className="px-0">
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription className={description ? undefined : "sr-only"}>{description ?? t("dialogHint")}</DrawerDescription>
+        </DrawerHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))]">{children}</div>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -34,11 +34,4 @@ describe("ResponsiveDialog", () => {
     const handle = screen.getByTestId("drawer-handle");
     expect(handle).toHaveAttribute("data-slot", "drawer-handle");
   });
-
-  it("size=full still renders a drawer", () => {
-    media.desktop = false;
-    renderWithProviders(<ResponsiveDialog open onOpenChange={() => {}} title="Nuevo gasto" size="full"><p>body</p></ResponsiveDialog>);
-    expect(screen.getByRole("dialog", { name: "Nuevo gasto" })).toBeInTheDocument();
-    expect(screen.getByTestId("drawer-handle")).toBeInTheDocument();
-  });
 });

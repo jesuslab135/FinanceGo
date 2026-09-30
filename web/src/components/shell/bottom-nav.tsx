@@ -43,14 +43,14 @@ export function BottomNav() {
         </button>
       </nav>
       <Drawer open={more} onOpenChange={setMore}>
-        <DrawerContent className="rounded-t-[20px] bg-card pb-[max(2rem,env(safe-area-inset-bottom))]">
-          <DrawerHeader className="text-left">
-            <DrawerTitle className="font-display text-lg">{t("nav.more")}</DrawerTitle>
+        <DrawerContent className="bg-card pb-[max(2rem,env(safe-area-inset-bottom))]">
+          <DrawerHeader>
+            <DrawerTitle>{t("nav.more")}</DrawerTitle>
             <DrawerDescription className="sr-only">{t("common.dialogHint")}</DrawerDescription>
           </DrawerHeader>
           <div className="flex flex-col gap-1 px-4">
             {rest.map((item) => (
-              <Link key={item.key} href={item.href} onClick={() => setMore(false)} className="flex items-center gap-3 rounded-md px-2 py-3 hover:bg-accent">
+              <Link key={item.key} href={item.href} onClick={() => setMore(false)} className="flex min-h-11 items-center gap-3 rounded-md px-2 py-3 hover:bg-accent">
                 <item.icon className="size-5" aria-hidden />
                 {t(`nav.${item.key}`)}
               </Link>
