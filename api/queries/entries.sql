@@ -3,7 +3,9 @@ INSERT INTO monthly_entries (user_id, month, kind, income_source_id, name, categ
 SELECT s.user_id, sqlc.arg(month)::date, 'income', s.id, s.name, s.category_id, s.amount,
        sqlc.arg(month)::date + (LEAST(s.day_of_month, EXTRACT(DAY FROM (sqlc.arg(month)::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
 FROM income_sources s
-WHERE s.user_id = @user_id AND s.active
+-- Inactive templates keep generating up to their (clamped) end_month; an inactive
+-- template without one never started (see DeactivateIncomeSource).
+WHERE s.user_id = @user_id AND (s.active OR s.end_month IS NOT NULL)
   AND s.start_month <= sqlc.arg(month)::date AND (s.end_month IS NULL OR s.end_month >= sqlc.arg(month)::date)
 ON CONFLICT DO NOTHING;
 
@@ -12,7 +14,7 @@ INSERT INTO monthly_entries (user_id, month, kind, fixed_payment_id, name, categ
 SELECT f.user_id, sqlc.arg(month)::date, 'fixed', f.id, f.name, f.category_id, f.payment_method_id, f.amount,
        sqlc.arg(month)::date + (LEAST(f.day_of_month, EXTRACT(DAY FROM (sqlc.arg(month)::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
 FROM fixed_payments f
-WHERE f.user_id = @user_id AND f.active
+WHERE f.user_id = @user_id AND (f.active OR f.end_month IS NOT NULL)
   AND f.start_month <= sqlc.arg(month)::date AND (f.end_month IS NULL OR f.end_month >= sqlc.arg(month)::date)
 ON CONFLICT DO NOTHING;
 

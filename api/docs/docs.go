@@ -1167,7 +1167,7 @@ const docTemplate = `{
                 "tags": [
                     "recurring"
                 ],
-                "summary": "Deactivate a fixed payment",
+                "summary": "Deactivate a fixed payment; end_month becomes the current month (null if it has not started), so past months keep it",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1311,7 +1311,7 @@ const docTemplate = `{
                 "tags": [
                     "recurring"
                 ],
-                "summary": "Deactivate an income source",
+                "summary": "Deactivate an income source; end_month becomes the current month (null if it has not started), so past months keep it",
                 "parameters": [
                     {
                         "type": "integer",

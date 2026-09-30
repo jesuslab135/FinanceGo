@@ -104,18 +104,22 @@ func (q *Queries) CreateIncomeSource(ctx context.Context, arg CreateIncomeSource
 }
 
 const deactivateFixedPayment = `-- name: DeactivateFixedPayment :one
-UPDATE fixed_payments SET active = false, updated_at = now()
-WHERE id = $1 AND user_id = $2
+UPDATE fixed_payments SET active = false,
+    end_month = CASE WHEN start_month <= $1::date THEN LEAST(end_month, $1::date) END,
+    updated_at = now()
+WHERE id = $2 AND user_id = $3
 RETURNING id, user_id, category_id, payment_method_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at
 `
 
 type DeactivateFixedPaymentParams struct {
-	ID     int64
-	UserID int64
+	CurrentMonth time.Time
+	ID           int64
+	UserID       int64
 }
 
+// Ends the template at the current month (NULL when it has not started yet: nothing to keep).
 func (q *Queries) DeactivateFixedPayment(ctx context.Context, arg DeactivateFixedPaymentParams) (FixedPayment, error) {
-	row := q.db.QueryRow(ctx, deactivateFixedPayment, arg.ID, arg.UserID)
+	row := q.db.QueryRow(ctx, deactivateFixedPayment, arg.CurrentMonth, arg.ID, arg.UserID)
 	var i FixedPayment
 	err := row.Scan(
 		&i.ID,
@@ -135,18 +139,22 @@ func (q *Queries) DeactivateFixedPayment(ctx context.Context, arg DeactivateFixe
 }
 
 const deactivateIncomeSource = `-- name: DeactivateIncomeSource :one
-UPDATE income_sources SET active = false, updated_at = now()
-WHERE id = $1 AND user_id = $2
+UPDATE income_sources SET active = false,
+    end_month = CASE WHEN start_month <= $1::date THEN LEAST(end_month, $1::date) END,
+    updated_at = now()
+WHERE id = $2 AND user_id = $3
 RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at
 `
 
 type DeactivateIncomeSourceParams struct {
-	ID     int64
-	UserID int64
+	CurrentMonth time.Time
+	ID           int64
+	UserID       int64
 }
 
+// Ends the template at the current month (NULL when it has not started yet: nothing to keep).
 func (q *Queries) DeactivateIncomeSource(ctx context.Context, arg DeactivateIncomeSourceParams) (IncomeSource, error) {
-	row := q.db.QueryRow(ctx, deactivateIncomeSource, arg.ID, arg.UserID)
+	row := q.db.QueryRow(ctx, deactivateIncomeSource, arg.CurrentMonth, arg.ID, arg.UserID)
 	var i IncomeSource
 	err := row.Scan(
 		&i.ID,

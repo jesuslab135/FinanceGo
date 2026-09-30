@@ -1261,7 +1261,8 @@ paths:
             $ref: '#/definitions/service.FixedPayment'
       security:
       - BearerAuth: []
-      summary: Deactivate a fixed payment
+      summary: Deactivate a fixed payment; end_month becomes the current month (null
+        if it has not started), so past months keep it
       tags:
       - recurring
     put:
@@ -1350,7 +1351,8 @@ paths:
             $ref: '#/definitions/service.IncomeSource'
       security:
       - BearerAuth: []
-      summary: Deactivate an income source
+      summary: Deactivate an income source; end_month becomes the current month (null
+        if it has not started), so past months keep it
       tags:
       - recurring
     put:

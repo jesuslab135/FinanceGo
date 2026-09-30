@@ -71,7 +71,7 @@ func (h *handlers) updateIncomeSource(c *gin.Context) {
 }
 
 // deleteIncomeSource godoc
-// @Summary  Deactivate an income source
+// @Summary  Deactivate an income source; end_month becomes the current month (null if it has not started), so past months keep it
 // @Tags     recurring
 // @Produce  json
 // @Security BearerAuth
@@ -154,7 +154,7 @@ func (h *handlers) updateFixedPayment(c *gin.Context) {
 }
 
 // deleteFixedPayment godoc
-// @Summary  Deactivate a fixed payment
+// @Summary  Deactivate a fixed payment; end_month becomes the current month (null if it has not started), so past months keep it
 // @Tags     recurring
 // @Produce  json
 // @Security BearerAuth
