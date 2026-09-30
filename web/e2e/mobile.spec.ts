@@ -51,7 +51,7 @@ test("mobile: bottom navigation, quick add sheet, no horizontal scroll", async (
   await expect(nav.getByRole("link", { name: "Gastos" })).toBeVisible();
   await nav.getByRole("button", { name: "Agregar gasto" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("dialog").getByRole("button", { name: "Cerrar" })).toBeVisible();
+  await expect(page.getByRole("dialog").getByTestId("drawer-handle")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();
   for (const path of [
