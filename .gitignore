@@ -13,3 +13,5 @@ web/test-results/
 web/playwright-report/
 
 .superpowers/
+
+/docs/
