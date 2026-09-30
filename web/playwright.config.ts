@@ -8,6 +8,6 @@ export default defineConfig({
   use: { baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000", trace: "retain-on-failure", locale: "es-MX", timezoneId: "America/Tijuana" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] }, testMatch: /happy-path/ },
-    { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile/ },
+    { name: "mobile", use: { ...devices["Pixel 7"], viewport: { width: 360, height: 780 } }, testMatch: /mobile/ },
   ],
 });

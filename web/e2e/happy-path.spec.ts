@@ -3,7 +3,7 @@ import { pick, register, uniqueEmail } from "./helpers";
 
 test("register → income + card fixed payment → card expense → Available → card payment → English", async ({ page }) => {
   await register(page, uniqueEmail("happy"));
-  const month = new Date().toISOString().slice(0, 7);
+  const month = new Date().toLocaleDateString("sv", { timeZone: "America/Tijuana" }).slice(0, 7);
 
   // Credit card
   await page.goto("/es/cards");
@@ -43,6 +43,7 @@ test("register → income + card fixed payment → card expense → Available �
   await pick(page, "Categoría", "Comida");
   await pick(page, "Método de pago", /Visa Oro/);
   await page.getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
 
   // Available = 30,000 − 10,000 − 500
   await page.goto("/es/dashboard");

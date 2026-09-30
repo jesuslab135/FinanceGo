@@ -52,11 +52,14 @@ func NewRouter(cfg config.Config, svc *service.Service, log *slog.Logger) *gin.E
 // routes is the single place endpoints are registered; each task adds its lines here.
 func (h *handlers) routes(v1 *gin.RouterGroup) {
 	authLimit := rateLimit(h.cfg.AuthRatePerMin)
-	a := v1.Group("/auth", authLimit)
-	a.POST("/register", h.register)
-	a.POST("/login", h.login)
-	a.POST("/refresh", h.refresh)
-	a.POST("/logout", h.logout)
+	// Refresh and logout run on every page load, so they get their own, looser limiter
+	// instead of sharing the credential-guessing budget of login/register.
+	sessionLimit := rateLimit(max(h.cfg.AuthRatePerMin*12, 120))
+	a := v1.Group("/auth")
+	a.POST("/register", authLimit, h.register)
+	a.POST("/login", authLimit, h.login)
+	a.POST("/refresh", sessionLimit, h.refresh)
+	a.POST("/logout", sessionLimit, h.logout)
 
 	p := v1.Group("", requireAuth(h.svc))
 	p.GET("/me", h.getMe)
