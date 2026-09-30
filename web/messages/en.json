@@ -71,7 +71,7 @@
     "title": "Categories", "new": "New category", "edit": "Edit category", "kind": "Type",
     "kinds": { "expense": "Expense", "income": "Income" }, "color": "Color", "name": "Name",
     "inUse": "This category is in use. Choose where to move its records:", "reassignTo": "Move to",
-    "budget": "Monthly limit", "noBudget": "No limit", "removeBudget": "Remove limit"
+    "budget": "Monthly limit", "budgetFor": "Monthly limit for {name}", "noBudget": "No limit", "removeBudget": "Remove limit"
   },
   "settings": {
     "title": "Settings", "profile": "Profile", "export": "Export data", "exportExpenses": "Expenses (CSV)",

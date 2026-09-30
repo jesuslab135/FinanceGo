@@ -34,6 +34,7 @@ export default function SettingsPage() {
   const [from, setFrom] = useState(`${new Date().getFullYear()}-01-01`);
   const [to, setTo] = useState(toISODate(new Date()));
   const [password, setPassword] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [deleteError, setDeleteError] = useState<string>();
 
   const saveProfile = async (e: React.FormEvent) => {
@@ -51,16 +52,31 @@ export default function SettingsPage() {
 
   const download = async (kind: "expenses" | "entries") => {
     const path = kind === "expenses" ? "/export/expenses.csv" : "/export/entries.csv";
-    const { data, error, response } = await api.GET(path, { params: { query: { from, to } }, parseAs: "blob" });
-    if (!response.ok || !data) return toast.error(toApiError(response.status, error).message);
-    saveBlob(data as Blob, `${kind}_${from}_${to}.csv`);
+    setExporting(true);
+    try {
+      const { data, error, response } = await api.GET(path, { params: { query: { from, to } }, parseAs: "blob" });
+      if (!response.ok || !data) {
+        let body: unknown = error;
+        const raw: unknown = error;
+        if (raw instanceof Blob) {
+          try { body = JSON.parse(await raw.text()); } catch { body = undefined; }
+        }
+        return toast.error(toApiError(response.status, body).message);
+      }
+      saveBlob(data as Blob, `${kind}_${from}_${to}.csv`);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const deleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setDeleteError(undefined);
     const { error, response } = await api.DELETE("/me", { body: { password } });
-    if (!response.ok) return setDeleteError(toApiError(response.status, error).fields.password ?? toApiError(response.status, error).message);
+    if (!response.ok) {
+      const err = toApiError(response.status, error);
+      return setDeleteError(err.fields.password ?? err.message);
+    }
     await logout();
     router.replace("/register");
   };
@@ -113,8 +129,8 @@ export default function SettingsPage() {
             <Label htmlFor="x-to">{t("common.to")}</Label>
             <Input id="x-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
-          <Button variant="outline" onClick={() => download("expenses")}>{t("settings.exportExpenses")}</Button>
-          <Button variant="outline" onClick={() => download("entries")}>{t("settings.exportEntries")}</Button>
+          <Button variant="outline" disabled={exporting} onClick={() => download("expenses")}>{t("settings.exportExpenses")}</Button>
+          <Button variant="outline" disabled={exporting} onClick={() => download("entries")}>{t("settings.exportEntries")}</Button>
         </CardContent>
       </Card>
       <Card className="border-destructive/50">

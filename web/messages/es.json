@@ -71,7 +71,7 @@
     "title": "Categorías", "new": "Nueva categoría", "edit": "Editar categoría", "kind": "Tipo",
     "kinds": { "expense": "Gasto", "income": "Ingreso" }, "color": "Color", "name": "Nombre",
     "inUse": "Esta categoría está en uso. Elige a cuál mover sus movimientos:", "reassignTo": "Mover a",
-    "budget": "Límite mensual", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
+    "budget": "Límite mensual", "budgetFor": "Límite mensual de {name}", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
   },
   "settings": {
     "title": "Ajustes", "profile": "Perfil", "export": "Exportar datos", "exportExpenses": "Gastos (CSV)",

@@ -4,45 +4,23 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BudgetField } from "@/components/categories/budget-field";
 import { CategoryForm } from "@/components/categories/category-form";
 import { CategorySelect } from "@/components/common/category-select";
-import { MoneyInput } from "@/components/common/money-input";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api/errors";
 import type { Category } from "@/lib/api/types";
-import { centsToInput, parseMoney } from "@/lib/money";
 import {
-  useBudgets, useCategories, useCreateCategory, useDeleteBudget, useDeleteCategory, usePutBudget, useUpdateCategory,
+  useBudgets, useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory,
 } from "@/lib/query/hooks";
-
-function BudgetField({ category, limit }: { category: Category; limit?: number }) {
-  const t = useTranslations();
-  const put = usePutBudget();
-  const del = useDeleteBudget();
-  const [value, setValue] = useState(limit ? centsToInput(limit) : "");
-  const save = () => {
-    if (value.trim() === "") {
-      if (limit) del.mutate(category.id, { onSuccess: () => toast.success(t("common.saved")) });
-      return;
-    }
-    const cents = parseMoney(value);
-    if (cents === null) return toast.error(t("validation.amount"));
-    if (cents !== limit) put.mutate({ categoryId: category.id, limit: cents }, { onSuccess: () => toast.success(t("common.saved")) });
-  };
-  return (
-    <div className="w-40">
-      <Label htmlFor={`budget-${category.id}`} className="sr-only">{t("categories.budget")}</Label>
-      <MoneyInput id={`budget-${category.id}`} placeholder={t("categories.noBudget")} value={value} onChange={(e) => setValue(e.target.value)} onBlur={save} />
-    </div>
-  );
-}
 
 export default function CategoriesPage() {
   const t = useTranslations();
   const { data: categories = [] } = useCategories();
-  const { data: budgets = [] } = useBudgets();
+  const budgetsQuery = useBudgets();
+  const budgets = budgetsQuery.data ?? [];
   const create = useCreateCategory();
   const update = useUpdateCategory();
   const remove = useDeleteCategory();
@@ -63,7 +41,10 @@ export default function CategoriesPage() {
           <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
             <span className="size-3 rounded-full" style={{ background: c.color }} aria-hidden />
             <span className="min-w-0 flex-1 truncate">{c.name}</span>
-            {kind === "expense" && <BudgetField category={c} limit={budgets.find((b) => b.category_id === c.id)?.monthly_limit} />}
+            {kind === "expense" && budgetsQuery.isSuccess && (() => {
+              const limit = budgets.find((b) => b.category_id === c.id)?.monthly_limit;
+              return <BudgetField key={`${c.id}-${limit ?? "none"}`} category={c} limit={limit} />;
+            })()}
             <Button size="icon" variant="ghost" aria-label={t("common.edit")} onClick={() => setDialog({ cat: c })}><Pencil /></Button>
             <Button size="icon" variant="ghost" aria-label={t("common.delete")} onClick={() => tryDelete(c)}><Trash2 /></Button>
           </li>
@@ -99,7 +80,7 @@ export default function CategoriesPage() {
           <div className="space-y-4">
             <p className="text-sm">{t("categories.inUse")}</p>
             <Label htmlFor="reassign-to">{t("categories.reassignTo")}</Label>
-            <CategorySelect id="reassign-to" kind={reassign.cat.kind as "expense" | "income"} value={reassign.to} onChange={(to) => setReassign({ ...reassign, to })} />
+            <CategorySelect id="reassign-to" exclude={reassign.cat.id} kind={reassign.cat.kind as "expense" | "income"} value={reassign.to} onChange={(to) => setReassign({ ...reassign, to })} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setReassign(null)}>{t("common.cancel")}</Button>
               <Button
