@@ -46,7 +46,7 @@ export default function CardsPage() {
       {credit.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground">{t("cards.creditCards")}</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
             {credit.map((c) => {
               const s = summaryOf(c.id);
               return (
@@ -62,7 +62,7 @@ export default function CardsPage() {
                         <p className="text-xs text-muted-foreground">{t("cards.currentBalance")}</p>
                         <p className="text-xl font-semibold"><Money cents={s.current_balance} /></p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="break-words text-xs text-muted-foreground">
                         {t("cards.amountDue")}: <Money cents={s.amount_due} className="text-foreground" /> · {format(parseISODate(s.due_on), "d MMM", { locale: locale === "en" ? enUS : es })}
                       </p>
                       {s.credit_limit != null && <Meter value={s.current_balance} max={s.credit_limit} label={t("cards.utilization")} />}

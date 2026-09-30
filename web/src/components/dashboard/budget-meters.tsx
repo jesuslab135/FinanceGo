@@ -22,7 +22,7 @@ export function BudgetMeters({ budgets }: { budgets: Budget[] }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
   return (
-    <section className="space-y-3 rounded-xl border p-4">
+    <section className="min-w-0 space-y-3 rounded-xl border p-4">
       <h2 className="font-medium">{t("budgets")}</h2>
       {budgets.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noData")}</p>
@@ -33,12 +33,12 @@ export function BudgetMeters({ budgets }: { budgets: Budget[] }) {
             const { Icon, bar, text } = STYLE[status];
             return (
               <li key={b.category_id} className="space-y-1">
-                <div className="flex items-center justify-between gap-2 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-x-2 text-sm">
                   <span className="flex min-w-0 items-center gap-2 truncate">
                     <span className="size-2.5 rounded-full" style={{ background: b.color }} aria-hidden />
                     {b.name}
                   </span>
-                  <span className="tabular-nums text-muted-foreground">{fmt(b.spent)} / {fmt(b.limit)}</span>
+                  <span className="ml-auto break-words text-right tabular-nums text-muted-foreground">{fmt(b.spent)} / {fmt(b.limit)}</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted" role="meter" aria-valuemin={0} aria-valuemax={b.limit} aria-valuenow={b.spent} aria-label={b.name}>
                   <div className={`h-2 rounded-full ${bar}`} style={{ width: `${Math.min(100, b.pct)}%` }} />

@@ -57,7 +57,7 @@ export function StatementView({ cardId }: { cardId: number }) {
         q.isError ? <p role="alert" className="text-sm text-destructive">{errMsg(q.error)}</p> : <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : (
       <>
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*]:min-w-0">
         <div className="col-span-2 rounded-lg border p-4 lg:col-span-1">
           <dt className="text-xs text-muted-foreground">{t("cards.amountDue")}</dt>
           <dd className="text-2xl font-semibold"><Money cents={s.amount_due} /></dd>
@@ -65,20 +65,20 @@ export function StatementView({ cardId }: { cardId: number }) {
         </div>
         <div className="rounded-lg border p-4">
           <dt className="text-xs text-muted-foreground">{t("cards.billed")}</dt>
-          <dd className="text-lg font-semibold"><Money cents={s.billed_balance} /></dd>
+          <dd className="break-words text-lg font-semibold"><Money cents={s.billed_balance} /></dd>
         </div>
         <div className="rounded-lg border p-4">
           <dt className="text-xs text-muted-foreground">{t("cards.currentBalance")}</dt>
-          <dd className="text-lg font-semibold"><Money cents={s.current_balance} /></dd>
+          <dd className="break-words text-lg font-semibold"><Money cents={s.current_balance} /></dd>
         </div>
         {s.credit_limit != null && (
           <div className="col-span-2 space-y-2 rounded-lg border p-4 lg:col-span-1">
             <Meter value={s.current_balance} max={s.credit_limit} label={t("cards.utilization")} />
-            <p className="text-xs text-muted-foreground">{t("cards.available")}: <Money cents={s.available_credit ?? 0} /></p>
+            <p className="break-words text-xs text-muted-foreground">{t("cards.available")}: <Money cents={s.available_credit ?? 0} /></p>
           </div>
         )}
       </dl>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <div className="space-y-2 lg:col-span-2">
           <h3 className="text-sm font-medium text-muted-foreground">{t("cards.charges")}</h3>
           {(s.charges ?? []).length === 0 && (s.installments ?? []).length === 0 ? (

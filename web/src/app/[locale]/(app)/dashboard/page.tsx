@@ -48,17 +48,17 @@ function Dashboard() {
       </div>
       {summary.data ? <KpiCards summary={summary.data} spent={spent} period={period} /> : <Skeleton className="h-28 w-full" />}
       {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
+        <div className="min-w-0 lg:col-span-2">
           {series.data ? <SpendingChart points={series.data} period={period} /> : <Skeleton className="h-80 w-full" />}
         </div>
         <UpcomingList />
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
         <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} />
         <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
         <BudgetMeters budgets={summary.data?.budgets ?? []} />
         <CardsDebt />
       </div>

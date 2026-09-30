@@ -15,7 +15,7 @@ export function CardsDebt() {
   const locale = useLocale();
   const { data = [] } = useCardsOverview();
   return (
-    <section className="space-y-3 rounded-xl border p-4">
+    <section className="min-w-0 space-y-3 rounded-xl border p-4">
       <h2 className="font-medium">{td("cardsDebt")}</h2>
       {data.length === 0 ? (
         <p className="text-sm text-muted-foreground">{td("noData")}</p>
@@ -25,10 +25,10 @@ export function CardsDebt() {
             <li key={c.payment_method_id}>
               <Link href={`/cards/${c.payment_method_id}`} className="block space-y-1 rounded-md hover:bg-accent/40">
                 <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="truncate font-medium">{c.nickname}{c.last4 ? ` ···· ${c.last4}` : ""}</span>
+                  <span className="min-w-0 truncate font-medium">{c.nickname}{c.last4 ? ` ···· ${c.last4}` : ""}</span>
                   <Money cents={c.current_balance} className="font-semibold" />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="break-words text-xs text-muted-foreground">
                   {t("amountDue")}: <Money cents={c.amount_due} className="text-foreground" /> · {t("dueOn")} {format(parseISODate(c.due_on), "d MMM yyyy", { locale: locale === "en" ? enUS : es })}
                 </p>
                 {c.credit_limit != null && <Meter value={c.current_balance} max={c.credit_limit} label={t("utilization")} />}
