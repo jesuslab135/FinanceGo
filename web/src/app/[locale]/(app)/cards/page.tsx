@@ -42,7 +42,7 @@ export default function CardsPage() {
         <h1 className="text-2xl font-semibold">{t("cards.title")}</h1>
         <Button onClick={() => setDialog({})}><Plus /> {t("cards.new")}</Button>
       </div>
-      {!isPending && methods.length === 0 && <EmptyState>{t("common.empty")}</EmptyState>}
+      {!isPending && methods.length === 0 && <EmptyState illustration="cards" action={<Button onClick={() => setDialog({})}><Plus /> {t("cards.new")}</Button>}>{t("common.empty")}</EmptyState>}
       {credit.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground">{t("cards.creditCards")}</h2>

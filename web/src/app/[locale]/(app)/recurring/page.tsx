@@ -20,11 +20,11 @@ import { useErrorMessage } from "@/lib/api/error-messages";
 
 type Row = (IncomeSource | FixedPayment) & { id: number };
 
-function TemplateList({ rows, onEdit, onToggle }: {
-  rows: Row[]; onEdit: (r: Row) => void; onToggle: (r: Row) => void;
+function TemplateList({ rows, onEdit, onToggle, onAdd, addLabel }: {
+  rows: Row[]; onEdit: (r: Row) => void; onToggle: (r: Row) => void; onAdd: () => void; addLabel: string;
 }) {
   const t = useTranslations();
-  if (rows.length === 0) return <EmptyState>{t("common.empty")}</EmptyState>;
+  if (rows.length === 0) return <EmptyState illustration="recurring" action={<Button onClick={onAdd}><Plus /> {addLabel}</Button>}>{t("common.empty")}</EmptyState>;
   return (
     <ul className="space-y-2">
       {rows.map((r) => (
@@ -95,10 +95,10 @@ export default function RecurringPage() {
           <TabsTrigger value="fixed">{t("recurring.fixedPayments")}</TabsTrigger>
         </TabsList>
         <TabsContent value="income" className="pt-4">
-          <TemplateList rows={(incomes.data ?? []) as Row[]} onEdit={(row) => setDialog({ kind: "income", row })} onToggle={(r) => toggle("income", r)} />
+          <TemplateList rows={(incomes.data ?? []) as Row[]} onEdit={(row) => setDialog({ kind: "income", row })} onToggle={(r) => toggle("income", r)} onAdd={() => setDialog({ kind: "income" })} addLabel={t("recurring.newIncome")} />
         </TabsContent>
         <TabsContent value="fixed" className="pt-4">
-          <TemplateList rows={(fixed.data ?? []) as Row[]} onEdit={(row) => setDialog({ kind: "fixed", row })} onToggle={(r) => toggle("fixed", r)} />
+          <TemplateList rows={(fixed.data ?? []) as Row[]} onEdit={(row) => setDialog({ kind: "fixed", row })} onToggle={(r) => toggle("fixed", r)} onAdd={() => setDialog({ kind: "fixed" })} addLabel={t("recurring.newFixed")} />
         </TabsContent>
       </Tabs>
       <ResponsiveDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} title={title}>

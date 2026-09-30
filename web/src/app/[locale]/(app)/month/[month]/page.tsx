@@ -34,7 +34,7 @@ export default function MonthPage() {
       </div>
       {s && <MonthSummary s={s} />}
       {entries.error && <p role="alert" className="text-sm text-destructive">{errMsg(entries.error)}</p>}
-      {entries.data?.length === 0 && <EmptyState>{t("month.empty")}</EmptyState>}
+      {entries.data?.length === 0 && <EmptyState illustration="month">{t("month.empty")}</EmptyState>}
       {groups.map(([title, list]) =>
         list.length === 0 ? null : (
           <section key={title} className="space-y-2">

@@ -130,7 +130,7 @@
     "byCategory": "Por categoría", "byMethod": "Por método de pago", "noMethod": "Sin método",
     "other": "Otros", "budgets": "Límites por categoría", "upcoming": "Próximos pagos", "overdue": "Vencido",
     "cardsDebt": "Deuda de tarjetas", "showTable": "Ver tabla", "showChart": "Ver gráfica",
-    "noData": "Sin movimientos en este periodo",
+    "noData": "Sin movimientos en este periodo", "allCaughtUp": "Estás al día: nada por vencer pronto",
     "budgetStatus": { "ok": "En orden", "warn": "Cerca del límite", "over": "Excedido" },
     "periodColumn": "Periodo", "cardDue": "Pago de tarjeta",
     "next7": "7 días", "next30": "30 días"

@@ -6,6 +6,7 @@ import { AlertTriangle, CreditCard } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/common/empty-state";
 import { Money } from "@/components/common/money";
 import { QueryError } from "@/components/common/query-error";
 import { Segmented } from "@/components/motion/segmented";
@@ -38,7 +39,7 @@ export function UpcomingList() {
       {error ? (
         <QueryError error={error} />
       ) : data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("dashboard.noData")}</p>
+        <EmptyState illustration="caughtUp">{t("dashboard.allCaughtUp")}</EmptyState>
       ) : (
         <ul className="divide-y">
           {data.map((u, i) => (

@@ -54,7 +54,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
 
   if (q.isPending) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
   if (q.isError && rows.length === 0) return <QueryError error={q.error} />;
-  if (rows.length === 0) return <EmptyState>{t("expenses.empty")}</EmptyState>;
+  if (rows.length === 0) return <EmptyState illustration="expenses" action={<QuickAdd variant="button" />}>{t("expenses.empty")}</EmptyState>;
 
   const actionsFor = (e: Expense): RowAction[] => [
     { label: t("common.edit"), icon: Pencil, onSelect: () => setEditing(e) },

@@ -22,6 +22,8 @@ const pairs: Array<[string, string, string, number]> = [
   ["white on hero amount zone (dark)", "#ffffff", "#b64b22", 3],
   ["white on hero amount zone (critical light)", "#ffffff", "#b42828", 3],
   ["white on hero amount zone (critical dark)", "#ffffff", "#8f1f1f", 3],
+  ["white on auth panel wordmark+tagline (light, large bold)", "#ffffff", "#d9602f", 3],
+  ["white on auth panel wordmark+tagline (dark, large bold)", "#ffffff", "#b64b22", 3],
   ["white on hero pill, gradient end (light)", "#ffffff", "#8f5c33", 4.5],
   ["white on hero pill, gradient end (dark)", "#ffffff", "#863e23", 4.5],
   ["white on hero pill, gradient end (critical light)", "#ffffff", "#822c23", 4.5],

@@ -130,7 +130,7 @@
     "byCategory": "By category", "byMethod": "By payment method", "noMethod": "No method",
     "other": "Other", "budgets": "Category limits", "upcoming": "Upcoming payments", "overdue": "Overdue",
     "cardsDebt": "Card debt", "showTable": "Show table", "showChart": "Show chart",
-    "noData": "No activity in this period",
+    "noData": "No activity in this period", "allCaughtUp": "You are all caught up: nothing due soon",
     "budgetStatus": { "ok": "On track", "warn": "Near the limit", "over": "Over the limit" },
     "periodColumn": "Period", "cardDue": "Card payment",
     "next7": "7 days", "next30": "30 days"

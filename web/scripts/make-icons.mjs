@@ -11,7 +11,7 @@ for (const size of [192, 512]) {
 }
 // Maskable: pad to the 80% safe zone on the brand color.
 const inner = await sharp(svg, { density: 384 }).resize(410, 410).png().toBuffer();
-await sharp({ create: { width: 512, height: 512, channels: 4, background: "#2a78d6" } })
+await sharp({ create: { width: 512, height: 512, channels: 4, background: "#d9602f" } })
   .composite([{ input: inner, gravity: "center" }])
   .png()
   .toFile(out("maskable-512.png"));
