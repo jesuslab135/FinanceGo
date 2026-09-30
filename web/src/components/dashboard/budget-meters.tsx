@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useFormatMoney } from "@/components/common/money";
 import { MeterFill } from "@/components/common/meter";
+import { LoadingRows } from "@/components/common/skeletons";
 
 type Budget = { category_id: number; name: string; color: string; limit: number; spent: number; pct: number };
 
@@ -19,13 +20,16 @@ const STYLE = {
   over: { Icon: XCircle, bar: "bg-critical", text: "text-critical" },
 } as const;
 
-export function BudgetMeters({ budgets }: { budgets: Budget[] }) {
+/** `budgets` is `undefined` while the summary is loading. */
+export function BudgetMeters({ budgets }: { budgets: Budget[] | undefined }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
   return (
     <section className="h-full min-w-0 space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <h2 className="font-display text-base font-bold">{t("budgets")}</h2>
-      {budgets.length === 0 ? (
+      {!budgets ? (
+        <LoadingRows />
+      ) : budgets.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
         <ul className="space-y-3">

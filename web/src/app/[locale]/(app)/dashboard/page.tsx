@@ -106,11 +106,11 @@ function Dashboard() {
         <Rise index={1}><UpcomingList /></Rise>
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        <Rise index={2}>{byCat.error ? <QueryError error={byCat.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} icons={icons} />}</Rise>
-        <Rise index={3}>{byPm.error ? <QueryError error={byPm.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}</Rise>
+        <Rise index={2}>{byCat.error ? <QueryError error={byCat.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byCategory")} items={byCat.data} fallbackName={tc("none")} icons={icons} />}</Rise>
+        <Rise index={3}>{byPm.error ? <QueryError error={byPm.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BreakdownBars title={t("byMethod")} items={byPm.data} fallbackName={t("noMethod")} />}</Rise>
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        <Rise index={4}><BudgetMeters budgets={summary.data?.budgets ?? []} /></Rise>
+        <Rise index={4}>{summary.error ? <QueryError error={summary.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BudgetMeters budgets={summary.data ? (summary.data.budgets ?? []) : undefined} />}</Rise>
         <Rise index={5}><CardsDebt /></Rise>
       </div>
     </div>

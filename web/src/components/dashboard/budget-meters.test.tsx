@@ -24,3 +24,14 @@ describe("budgets", () => {
     expect(screen.getByText("Excedido")).toBeInTheDocument();
   });
 });
+
+describe("BudgetMeters loading", () => {
+  it("shows a loading state while budgets are undefined, and 'no activity' only when loaded empty", () => {
+    const { rerender } = renderWithProviders(<BudgetMeters budgets={undefined} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Cargando…");
+    expect(screen.queryByText("Sin movimientos en este periodo")).not.toBeInTheDocument();
+    rerender(<BudgetMeters budgets={[]} />);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByText("Sin movimientos en este periodo")).toBeInTheDocument();
+  });
+});

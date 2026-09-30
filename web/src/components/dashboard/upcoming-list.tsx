@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/common/empty-state";
 import { Money } from "@/components/common/money";
 import { QueryError } from "@/components/common/query-error";
+import { LoadingRows } from "@/components/common/skeletons";
 import { Segmented } from "@/components/motion/segmented";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -21,7 +22,7 @@ export function UpcomingList() {
   const errMsg = useErrorMessage();
   const locale = useLocale();
   const [days, setDays] = useState<7 | 30>(7);
-  const { data = [], error } = useUpcoming(days);
+  const { data, error, isPending } = useUpcoming(days);
   const update = useUpdateEntry();
   const day = (s: string) => format(parseISODate(s), "EEE d MMM", { locale: locale === "en" ? enUS : es });
 
@@ -38,6 +39,8 @@ export function UpcomingList() {
       </div>
       {error ? (
         <QueryError error={error} />
+      ) : isPending || !data ? (
+        <LoadingRows />
       ) : data.length === 0 ? (
         <EmptyState illustration="caughtUp">{t("dashboard.allCaughtUp")}</EmptyState>
       ) : (

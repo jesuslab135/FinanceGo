@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Meter } from "@/components/common/meter";
 import { Money } from "@/components/common/money";
 import { QueryError } from "@/components/common/query-error";
+import { LoadingRows } from "@/components/common/skeletons";
 import { Link } from "@/i18n/navigation";
 import { parseISODate } from "@/lib/dates";
 import { useCardsOverview } from "@/lib/query/hooks";
@@ -14,12 +15,14 @@ export function CardsDebt() {
   const t = useTranslations("cards");
   const td = useTranslations("dashboard");
   const locale = useLocale();
-  const { data = [], error } = useCardsOverview();
+  const { data, error, isPending } = useCardsOverview();
   return (
     <section className="h-full min-w-0 space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <h2 className="font-display text-base font-bold">{td("cardsDebt")}</h2>
       {error ? (
         <QueryError error={error} />
+      ) : isPending || !data ? (
+        <LoadingRows />
       ) : data.length === 0 ? (
         <p className="text-sm text-muted-foreground">{td("noData")}</p>
       ) : (

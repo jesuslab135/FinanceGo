@@ -4,21 +4,25 @@ import { useTranslations } from "next-intl";
 import { CategoryTile } from "@/components/common/category-tile";
 import { MeterFill } from "@/components/common/meter";
 import { useFormatMoney } from "@/components/common/money";
+import { LoadingRows } from "@/components/common/skeletons";
 import type { BreakdownItem } from "@/lib/api/types";
 
 const TOP = 7;
 
-export function BreakdownBars({ title, items, fallbackName, identityDots = true, icons }: { title: string; items: BreakdownItem[]; fallbackName: string; identityDots?: boolean; icons?: Record<number, string> }) {
+export function BreakdownBars({ title, items, fallbackName, identityDots = true, icons }: { title: string; /** `undefined` while loading. */ items: BreakdownItem[] | undefined; fallbackName: string; identityDots?: boolean; icons?: Record<number, string> }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
-  const rest = items.slice(TOP).reduce((a, i) => a + i.amount, 0);
-  const rows = rest > 0 ? [...items.slice(0, TOP), { id: undefined, name: t("other"), color: "#94a3b8", amount: rest }] : items;
+  const list = items ?? [];
+  const rest = list.slice(TOP).reduce((a, i) => a + i.amount, 0);
+  const rows = rest > 0 ? [...list.slice(0, TOP), { id: undefined, name: t("other"), color: "#94a3b8", amount: rest }] : list;
   const total = rows.reduce((a, r) => a + r.amount, 0);
   const max = Math.max(1, ...rows.map((r) => r.amount));
   return (
     <section className="h-full space-y-3 rounded-2xl bg-card p-4 shadow-card md:p-5">
       <h2 className="font-display text-base font-bold">{title}</h2>
-      {rows.length === 0 ? (
+      {!items ? (
+        <LoadingRows />
+      ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
         <ul className="space-y-2.5">

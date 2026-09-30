@@ -10,8 +10,10 @@ import { CategoryTile } from "@/components/common/category-tile";
 import { EmptyState } from "@/components/common/empty-state";
 import { ListRow } from "@/components/common/list-row";
 import { Money } from "@/components/common/money";
+import { QueryError } from "@/components/common/query-error";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { RowMenu } from "@/components/common/row-menu";
+import { LoadingRows } from "@/components/common/skeletons";
 import { FadeInItem, FadeInList } from "@/components/motion/fade-in-list";
 import { TemplateForm } from "@/components/recurring/template-form";
 import { Button } from "@/components/ui/button";
@@ -28,13 +30,16 @@ import { useErrorMessage } from "@/lib/api/error-messages";
 
 type Row = (IncomeSource | FixedPayment) & { id: number };
 
-function TemplateList({ rows, onEdit, onToggle, onAdd, addLabel }: {
-  rows: Row[]; onEdit: (r: Row) => void; onToggle: (r: Row) => void; onAdd: () => void; addLabel: string;
+/** `rows` is `undefined` while loading; the empty state shows only after a successful, empty load. */
+function TemplateList({ rows, error, onEdit, onToggle, onAdd, addLabel }: {
+  rows: Row[] | undefined; error: unknown; onEdit: (r: Row) => void; onToggle: (r: Row) => void; onAdd: () => void; addLabel: string;
 }) {
   const t = useTranslations();
   const locale = useLocale();
   const today = useToday();
   const { data: categories = [] } = useCategories();
+  if (error) return <QueryError error={error} />;
+  if (!rows) return <LoadingRows rows={3} rowClassName="h-16" />;
   if (rows.length === 0) return <EmptyState illustration="recurring" action={<Button size="touch" onClick={onAdd}><Plus /> {addLabel}</Button>}>{t("common.empty")}</EmptyState>;
   return (
     <FadeInList className="space-y-2">
@@ -116,10 +121,10 @@ export default function RecurringPage() {
           <TabsTrigger value="fixed">{t("recurring.fixedPayments")}</TabsTrigger>
         </TabsList>
         <TabsContent value="income" className="pt-4">
-          <TemplateList rows={(incomes.data ?? []) as Row[]} onEdit={(row) => setDialog({ kind: "income", row })} onToggle={(r) => toggle("income", r)} onAdd={() => setDialog({ kind: "income" })} addLabel={t("recurring.newIncome")} />
+          <TemplateList rows={incomes.data as Row[] | undefined} error={incomes.error} onEdit={(row) => setDialog({ kind: "income", row })} onToggle={(r) => toggle("income", r)} onAdd={() => setDialog({ kind: "income" })} addLabel={t("recurring.newIncome")} />
         </TabsContent>
         <TabsContent value="fixed" className="pt-4">
-          <TemplateList rows={(fixed.data ?? []) as Row[]} onEdit={(row) => setDialog({ kind: "fixed", row })} onToggle={(r) => toggle("fixed", r)} onAdd={() => setDialog({ kind: "fixed" })} addLabel={t("recurring.newFixed")} />
+          <TemplateList rows={fixed.data as Row[] | undefined} error={fixed.error} onEdit={(row) => setDialog({ kind: "fixed", row })} onToggle={(r) => toggle("fixed", r)} onAdd={() => setDialog({ kind: "fixed" })} addLabel={t("recurring.newFixed")} />
         </TabsContent>
       </Tabs>
       <ResponsiveDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} title={title}>
