@@ -55,4 +55,15 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p := v1.Group("", requireAuth(h.svc))
 	p.GET("/me", h.getMe)
 	p.PUT("/me", h.putMe)
+
+	p.GET("/categories", h.listCategories)
+	p.POST("/categories", h.createCategory)
+	p.PUT("/categories/:id", h.updateCategory)
+	p.DELETE("/categories/:id", h.deleteCategory)
+
+	p.GET("/payment-methods", h.listPaymentMethods)
+	p.POST("/payment-methods", h.createPaymentMethod)
+	p.GET("/payment-methods/:id", h.getPaymentMethod)
+	p.PUT("/payment-methods/:id", h.updatePaymentMethod)
+	p.DELETE("/payment-methods/:id", h.deletePaymentMethod)
 }
