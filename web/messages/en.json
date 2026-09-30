@@ -109,7 +109,7 @@
     "confirmPassword": "Type your password to confirm", "language": "Language"
   },
   "dashboard": {
-    "title": "Overview", "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date",
+    "title": "Overview", "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date", "periodLabel": "Period",
     "income": "Income this month", "fixed": "Fixed this month", "fixedDetail": "{paid} paid · {pending} pending",
     "installments": "Installments this month",
     "spent": { "day": "Spent this day", "week": "Spent this week", "month": "Spent this month" },

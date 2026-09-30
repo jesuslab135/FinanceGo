@@ -25,9 +25,9 @@ describe("UpcomingList", () => {
     useUpcoming.mockClear();
     renderWithProviders(<UpcomingList />);
     expect(useUpcoming).toHaveBeenLastCalledWith(7);
-    expect(screen.getByRole("button", { name: "7 días" })).toHaveAttribute("aria-pressed", "true");
-    fireEvent.click(screen.getByRole("button", { name: "30 días" }));
+    expect(screen.getByRole("radio", { name: "7 días" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.click(screen.getByRole("radio", { name: "30 días" }));
     expect(useUpcoming).toHaveBeenLastCalledWith(30);
-    expect(screen.getByRole("button", { name: "30 días" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("radio", { name: "30 días" })).toHaveAttribute("aria-checked", "true");
   });
 });

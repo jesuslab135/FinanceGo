@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Money } from "@/components/common/money";
 import { QueryError } from "@/components/common/query-error";
+import { Segmented } from "@/components/motion/segmented";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { parseISODate } from "@/lib/dates";
@@ -27,13 +28,12 @@ export function UpcomingList() {
     <section className="space-y-3 rounded-xl border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-medium">{t("dashboard.upcoming")}</h2>
-        <div className="flex gap-1" role="group" aria-label={t("dashboard.upcoming")}>
-          {([7, 30] as const).map((n) => (
-            <Button key={n} size="sm" variant={days === n ? "secondary" : "ghost"} aria-pressed={days === n} onClick={() => setDays(n)}>
-              {t(n === 7 ? "dashboard.next7" : "dashboard.next30")}
-            </Button>
-          ))}
-        </div>
+        <Segmented
+          ariaLabel={t("dashboard.upcoming")}
+          value={String(days) as "7" | "30"}
+          onChange={(v) => setDays(v === "7" ? 7 : 30)}
+          options={[{ value: "7", label: t("dashboard.next7") }, { value: "30", label: t("dashboard.next30") }]}
+        />
       </div>
       {error ? (
         <QueryError error={error} />

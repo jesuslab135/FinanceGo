@@ -109,7 +109,7 @@
     "confirmPassword": "Escribe tu contraseña para confirmar", "language": "Idioma"
   },
   "dashboard": {
-    "title": "Resumen", "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha",
+    "title": "Resumen", "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha", "periodLabel": "Periodo",
     "income": "Ingresos del mes", "fixed": "Fijos del mes", "fixedDetail": "{paid} pagado · {pending} pendiente",
     "installments": "MSI del mes",
     "spent": { "day": "Gastado este día", "week": "Gastado esta semana", "month": "Gastado este mes" },
