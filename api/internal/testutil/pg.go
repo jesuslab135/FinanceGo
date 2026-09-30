@@ -56,7 +56,7 @@ func setup() {
 		setupErr = err
 		return
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 	if _, err = conn.Exec(ctx, "CREATE DATABASE "+templateDB); err != nil {
 		setupErr = err
 		return
@@ -82,7 +82,7 @@ func NewPool(t *testing.T) *pgxpool.Pool {
 		t.Fatal(err)
 	}
 	_, err = conn.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s TEMPLATE %s", name, templateDB))
-	conn.Close(ctx)
+	_ = conn.Close(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

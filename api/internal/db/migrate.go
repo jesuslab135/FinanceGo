@@ -19,7 +19,7 @@ func Migrate(ctx context.Context, dsn string) error {
 	if err != nil {
 		return err
 	}
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 	p, err := goose.NewProvider(database.DialectPostgres, sqlDB, migrations.FS)
 	if err != nil {
 		return err

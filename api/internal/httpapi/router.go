@@ -7,7 +7,10 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	_ "financego/docs"
 	"financego/internal/apperr"
 	"financego/internal/config"
 	"financego/internal/service"
@@ -40,6 +43,7 @@ func NewRouter(cfg config.Config, svc *service.Service, log *slog.Logger) *gin.E
 		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	r.GET("/api/v1/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	h.routes(r.Group("/api/v1"))
 	return r
 }

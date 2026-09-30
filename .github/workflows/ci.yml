@@ -1,0 +1,40 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l . | grep -v '^internal/store/' | grep -v '^docs/')"
+      - run: go vet ./...
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          working-directory: api
+          version: latest
+      - name: tests (integration via testcontainers)
+        run: go test ./...
+      - name: generated code is current
+        run: |
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.29.0
+          go install github.com/swaggo/swag/cmd/swag@v1.16.4
+          sqlc generate
+          swag init -g cmd/api/main.go -o docs --parseInternal
+          git diff --exit-code -- internal/store docs
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t financego-api ./api

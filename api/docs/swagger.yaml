@@ -1,0 +1,1722 @@
+basePath: /api/v1
+definitions:
+  apperr.Error:
+    properties:
+      code:
+        type: string
+      fields:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+    type: object
+  httpapi.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/apperr.Error'
+    type: object
+  httpapi.budgetInput:
+    properties:
+      monthly_limit:
+        type: integer
+    type: object
+  httpapi.deleteAccountInput:
+    properties:
+      password:
+        type: string
+    type: object
+  httpapi.loginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  service.BreakdownItem:
+    properties:
+      amount:
+        type: integer
+      color:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  service.BudgetStatus:
+    properties:
+      category_id:
+        type: integer
+      color:
+        type: string
+      limit:
+        type: integer
+      name:
+        type: string
+      pct:
+        type: integer
+      spent:
+        type: integer
+    type: object
+  service.CardPayment:
+    properties:
+      amount:
+        type: integer
+      id:
+        type: integer
+      note:
+        type: string
+      paid_on:
+        type: string
+      payment_method_id:
+        type: integer
+    type: object
+  service.CardPaymentInput:
+    properties:
+      amount:
+        type: integer
+      note:
+        type: string
+      paid_on:
+        type: string
+      payment_method_id:
+        type: integer
+    type: object
+  service.CardSummary:
+    properties:
+      amount_due:
+        type: integer
+      available_credit:
+        type: integer
+      color:
+        type: string
+      credit_limit:
+        type: integer
+      current_balance:
+        type: integer
+      cycle:
+        type: string
+      due_on:
+        type: string
+      last4:
+        type: string
+      nickname:
+        type: string
+      payment_method_id:
+        type: integer
+      utilization:
+        type: number
+    type: object
+  service.Category:
+    properties:
+      color:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      kind:
+        type: string
+      name:
+        type: string
+    type: object
+  service.CategoryBudget:
+    properties:
+      category_id:
+        type: integer
+      monthly_limit:
+        type: integer
+    type: object
+  service.CategoryInput:
+    properties:
+      color:
+        type: string
+      icon:
+        type: string
+      kind:
+        type: string
+      name:
+        type: string
+    type: object
+  service.Entry:
+    properties:
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      due_date:
+        type: string
+      edited:
+        type: boolean
+      fixed_payment_id:
+        type: integer
+      id:
+        type: integer
+      income_source_id:
+        type: integer
+      installment_no:
+        type: integer
+      installment_plan_id:
+        type: integer
+      kind:
+        type: string
+      month:
+        type: string
+      name:
+        type: string
+      payment_method_id:
+        type: integer
+      settled_on:
+        type: string
+      status:
+        type: string
+    type: object
+  service.EntryUpdate:
+    properties:
+      amount:
+        type: integer
+      payment_method_id:
+        type: integer
+      settled_on:
+        type: string
+      status:
+        type: string
+    type: object
+  service.Expense:
+    properties:
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      payment_method_id:
+        type: integer
+      spent_on:
+        type: string
+    type: object
+  service.ExpenseInput:
+    properties:
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      description:
+        type: string
+      payment_method_id:
+        type: integer
+      spent_on:
+        type: string
+    type: object
+  service.ExpensePage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/service.Expense'
+        type: array
+      next_cursor:
+        type: string
+    type: object
+  service.FixedPayment:
+    properties:
+      active:
+        type: boolean
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      day_of_month:
+        type: integer
+      end_month:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      payment_method_id:
+        type: integer
+      start_month:
+        type: string
+    type: object
+  service.FixedPaymentInput:
+    properties:
+      active:
+        type: boolean
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      day_of_month:
+        type: integer
+      end_month:
+        type: string
+      name:
+        type: string
+      payment_method_id:
+        type: integer
+      start_month:
+        type: string
+    type: object
+  service.IncomeSource:
+    properties:
+      active:
+        type: boolean
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      day_of_month:
+        type: integer
+      end_month:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      start_month:
+        type: string
+    type: object
+  service.IncomeSourceInput:
+    properties:
+      active:
+        type: boolean
+      amount:
+        type: integer
+      category_id:
+        type: integer
+      day_of_month:
+        type: integer
+      end_month:
+        type: string
+      name:
+        type: string
+      start_month:
+        type: string
+    type: object
+  service.InstallmentPlan:
+    properties:
+      billed_count:
+        type: integer
+      cancelled_on:
+        type: string
+      category_id:
+        type: integer
+      description:
+        type: string
+      first_cycle:
+        type: string
+      id:
+        type: integer
+      installment_amount:
+        type: integer
+      installments:
+        type: integer
+      payment_method_id:
+        type: integer
+      purchased_on:
+        type: string
+      remaining_amount:
+        type: integer
+      total_amount:
+        type: integer
+    type: object
+  service.InstallmentPlanInput:
+    properties:
+      category_id:
+        type: integer
+      description:
+        type: string
+      installments:
+        type: integer
+      payment_method_id:
+        type: integer
+      purchased_on:
+        type: string
+      total_amount:
+        type: integer
+    type: object
+  service.PaymentMethod:
+    properties:
+      active:
+        type: boolean
+      bank:
+        type: string
+      color:
+        type: string
+      credit_limit:
+        type: integer
+      id:
+        type: integer
+      last4:
+        type: string
+      network:
+        type: string
+      nickname:
+        type: string
+      opening_balance:
+        type: integer
+      opening_balance_date:
+        type: string
+      payment_due_day:
+        type: integer
+      statement_day:
+        type: integer
+      type:
+        type: string
+    type: object
+  service.PaymentMethodInput:
+    properties:
+      active:
+        type: boolean
+      bank:
+        type: string
+      color:
+        type: string
+      credit_limit:
+        type: integer
+      last4:
+        type: string
+      network:
+        type: string
+      nickname:
+        type: string
+      opening_balance:
+        type: integer
+      opening_balance_date:
+        type: string
+      payment_due_day:
+        type: integer
+      statement_day:
+        type: integer
+      type:
+        type: string
+    type: object
+  service.ProfileInput:
+    properties:
+      currency:
+        type: string
+      locale:
+        type: string
+      name:
+        type: string
+      timezone:
+        type: string
+    type: object
+  service.RegisterInput:
+    properties:
+      currency:
+        type: string
+      email:
+        type: string
+      locale:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      timezone:
+        type: string
+    type: object
+  service.SeriesPoint:
+    properties:
+      committed:
+        type: integer
+      expenses:
+        type: integer
+      start:
+        type: string
+    type: object
+  service.Session:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/service.User'
+    type: object
+  service.Statement:
+    properties:
+      amount_due:
+        type: integer
+      available_credit:
+        type: integer
+      billed_balance:
+        type: integer
+      charges:
+        items:
+          $ref: '#/definitions/service.StatementCharge'
+        type: array
+      closes_on:
+        type: string
+      credit_limit:
+        type: integer
+      current_balance:
+        type: integer
+      cycle:
+        type: string
+      due_on:
+        type: string
+      installments:
+        items:
+          $ref: '#/definitions/service.StatementInstallment'
+        type: array
+      opens_on:
+        type: string
+      payment_method_id:
+        type: integer
+      payments:
+        items:
+          $ref: '#/definitions/service.CardPayment'
+        type: array
+      utilization:
+        type: number
+    type: object
+  service.StatementCharge:
+    properties:
+      amount:
+        type: integer
+      date:
+        type: string
+      description:
+        type: string
+      source:
+        type: string
+    type: object
+  service.StatementInstallment:
+    properties:
+      amount:
+        type: integer
+      description:
+        type: string
+      "no":
+        type: integer
+      of:
+        type: integer
+      plan_id:
+        type: integer
+    type: object
+  service.Summary:
+    properties:
+      available:
+        type: integer
+      budgets:
+        items:
+          $ref: '#/definitions/service.BudgetStatus'
+        type: array
+      currency:
+        type: string
+      days_remaining:
+        type: integer
+      fixed_committed:
+        type: integer
+      fixed_paid:
+        type: integer
+      income:
+        type: integer
+      installments:
+        type: integer
+      month:
+        type: string
+      safe_to_spend_per_day:
+        type: integer
+      spent:
+        type: integer
+    type: object
+  service.UpcomingItem:
+    properties:
+      amount:
+        type: integer
+      date:
+        type: string
+      entry_id:
+        type: integer
+      name:
+        type: string
+      overdue:
+        type: boolean
+      payment_method_id:
+        type: integer
+      type:
+        type: string
+    type: object
+  service.User:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      locale:
+        type: string
+      name:
+        type: string
+      timezone:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Finance API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.loginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Session'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Log in with email and password
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      summary: Revoke the refresh cookie
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Session'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Exchange the refresh cookie for a new access token (rotates the cookie)
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: account
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.RegisterInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.Session'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Create an account and start a session
+      tags:
+      - auth
+  /card-payments:
+    get:
+      parameters:
+      - description: card
+        in: query
+        name: payment_method_id
+        type: integer
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.CardPayment'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List payments made to credit cards
+      tags:
+      - cards
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: payment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.CardPaymentInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.CardPayment'
+      security:
+      - BearerAuth: []
+      summary: Record a payment to a credit card (a transfer, not spending)
+      tags:
+      - cards
+  /card-payments/{id}:
+    delete:
+      parameters:
+      - description: card payment id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a card payment
+      tags:
+      - cards
+  /categories:
+    get:
+      parameters:
+      - description: expense or income
+        in: query
+        name: kind
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.Category'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List categories
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: category
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.CategoryInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.Category'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a category
+      tags:
+      - categories
+  /categories/{id}:
+    delete:
+      parameters:
+      - description: category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: category that inherits all references
+        in: query
+        name: reassign_to
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a category; if it is in use, pass reassign_to
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: category
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.CategoryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Category'
+      security:
+      - BearerAuth: []
+      summary: Update a category (kind cannot change)
+      tags:
+      - categories
+  /category-budgets:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.CategoryBudget'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List monthly category limits
+      tags:
+      - budgets
+  /category-budgets/{id}:
+    delete:
+      parameters:
+      - description: category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Remove a category's monthly limit
+      tags:
+      - budgets
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: expense category id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: limit in cents
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.budgetInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.CategoryBudget'
+      security:
+      - BearerAuth: []
+      summary: Set (create or replace) a category's monthly limit
+      tags:
+      - budgets
+  /dashboard/breakdown:
+    get:
+      parameters:
+      - description: category or payment_method
+        in: query
+        name: by
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.BreakdownItem'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Spending grouped by category or payment method
+      tags:
+      - dashboard
+  /dashboard/cards:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.CardSummary'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Debt summary per active credit card
+      tags:
+      - dashboard
+  /dashboard/series:
+    get:
+      parameters:
+      - description: day, week or month
+        in: query
+        name: period
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.SeriesPoint'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Spending per day, ISO week or month (empty buckets are 0)
+      tags:
+      - dashboard
+  /dashboard/summary:
+    get:
+      parameters:
+      - description: 'YYYY-MM (default: current month in the user''s timezone)'
+        in: query
+        name: month
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Summary'
+      security:
+      - BearerAuth: []
+      summary: 'Month summary: income, fixed, installments, spent, available, safe-to-spend,
+        budgets'
+      tags:
+      - dashboard
+  /dashboard/upcoming:
+    get:
+      parameters:
+      - description: 7-60, default 7
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.UpcomingItem'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upcoming fixed payments and card payment due dates
+      tags:
+      - dashboard
+  /entries/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: entry id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: changes
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.EntryUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Entry'
+      security:
+      - BearerAuth: []
+      summary: Update one month's row (amount, status, settled_on, payment method)
+      tags:
+      - months
+  /expenses:
+    get:
+      parameters:
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      - description: category
+        in: query
+        name: category_id
+        type: integer
+      - description: payment method
+        in: query
+        name: payment_method_id
+        type: integer
+      - description: search in description
+        in: query
+        name: q
+        type: string
+      - description: next_cursor from the previous page
+        in: query
+        name: cursor
+        type: string
+      - description: 1-200, default 50
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.ExpensePage'
+      security:
+      - BearerAuth: []
+      summary: List expenses, newest first, cursor-paginated
+      tags:
+      - expenses
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: expense
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.ExpenseInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.Expense'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Record an expense
+      tags:
+      - expenses
+  /expenses/{id}:
+    delete:
+      parameters:
+      - description: expense id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete an expense
+      tags:
+      - expenses
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: expense id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: expense
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.ExpenseInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Expense'
+      security:
+      - BearerAuth: []
+      summary: Replace an expense
+      tags:
+      - expenses
+  /export/entries.csv:
+    get:
+      parameters:
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: Download income, fixed and installment rows as CSV
+      tags:
+      - export
+  /export/expenses.csv:
+    get:
+      parameters:
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: Download expenses as CSV
+      tags:
+      - export
+  /fixed-payments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.FixedPayment'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List recurring fixed payments
+      tags:
+      - recurring
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: fixed payment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.FixedPaymentInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.FixedPayment'
+      security:
+      - BearerAuth: []
+      summary: Create a recurring fixed payment
+      tags:
+      - recurring
+  /fixed-payments/{id}:
+    delete:
+      parameters:
+      - description: fixed payment id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.FixedPayment'
+      security:
+      - BearerAuth: []
+      summary: Deactivate a fixed payment
+      tags:
+      - recurring
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: fixed payment id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: fixed payment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.FixedPaymentInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.FixedPayment'
+      security:
+      - BearerAuth: []
+      summary: Replace a fixed payment; pending, unedited rows from the current month
+        on follow the change
+      tags:
+      - recurring
+  /income-sources:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.IncomeSource'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List recurring income sources
+      tags:
+      - recurring
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: income source
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.IncomeSourceInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.IncomeSource'
+      security:
+      - BearerAuth: []
+      summary: Create a recurring income source
+      tags:
+      - recurring
+  /income-sources/{id}:
+    delete:
+      parameters:
+      - description: income source id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.IncomeSource'
+      security:
+      - BearerAuth: []
+      summary: Deactivate an income source
+      tags:
+      - recurring
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: income source id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: income source
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.IncomeSourceInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.IncomeSource'
+      security:
+      - BearerAuth: []
+      summary: Replace an income source; pending, unedited rows from the current month
+        on follow the change
+      tags:
+      - recurring
+  /installment-plans:
+    get:
+      parameters:
+      - description: card
+        in: query
+        name: payment_method_id
+        type: integer
+      - description: exclude cancelled plans
+        in: query
+        name: active_only
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.InstallmentPlan'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List MSI (meses sin intereses) plans
+      tags:
+      - cards
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: plan
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.InstallmentPlanInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.InstallmentPlan'
+      security:
+      - BearerAuth: []
+      summary: Create an MSI plan on a credit card
+      tags:
+      - cards
+  /installment-plans/{id}:
+    delete:
+      parameters:
+      - description: plan id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.InstallmentPlan'
+      security:
+      - BearerAuth: []
+      summary: Cancel an MSI plan (refund/cancellation); unbilled installments leave
+        the debt
+      tags:
+      - cards
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: plan id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: plan
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.InstallmentPlanInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.InstallmentPlan'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Replace an MSI plan (only description/category once billing started)
+      tags:
+      - cards
+  /me:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: current password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.deleteAccountInput'
+      responses:
+        "204":
+          description: No Content
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Permanently delete the account and all its data
+      tags:
+      - me
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.User'
+      security:
+      - BearerAuth: []
+      summary: Current user profile
+      tags:
+      - me
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: profile
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.ProfileInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.User'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update profile (name, currency, locale, timezone)
+      tags:
+      - me
+  /months/{month}/entries:
+    get:
+      parameters:
+      - description: YYYY-MM
+        in: path
+        name: month
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.Entry'
+                type: array
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Income, fixed and installment rows for a month (generated on first
+        read)
+      tags:
+      - months
+  /payment-methods:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.PaymentMethod'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 'List payment methods (cards are reference data: last 4 digits only)'
+      tags:
+      - payment-methods
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: payment method
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.PaymentMethodInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.PaymentMethod'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a payment method
+      tags:
+      - payment-methods
+  /payment-methods/{id}:
+    delete:
+      parameters:
+      - description: payment method id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete an unused payment method (deactivate used ones instead)
+      tags:
+      - payment-methods
+    get:
+      parameters:
+      - description: payment method id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.PaymentMethod'
+      security:
+      - BearerAuth: []
+      summary: Get a payment method
+      tags:
+      - payment-methods
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: payment method id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: payment method
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.PaymentMethodInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.PaymentMethod'
+      security:
+      - BearerAuth: []
+      summary: Replace a payment method's editable fields (type cannot change)
+      tags:
+      - payment-methods
+  /payment-methods/{id}/statement:
+    get:
+      parameters:
+      - description: card id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: YYYY-MM
+        in: query
+        name: cycle
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Statement'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 'Credit-card statement for a cycle (default: the one currently due)'
+      tags:
+      - cards
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
