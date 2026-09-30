@@ -84,4 +84,13 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.POST("/expenses", h.createExpense)
 	p.PUT("/expenses/:id", h.updateExpense)
 	p.DELETE("/expenses/:id", h.deleteExpense)
+
+	p.GET("/payment-methods/:id/statement", h.cardStatement)
+	p.GET("/card-payments", h.listCardPayments)
+	p.POST("/card-payments", h.createCardPayment)
+	p.DELETE("/card-payments/:id", h.deleteCardPayment)
+	p.GET("/installment-plans", h.listInstallmentPlans)
+	p.POST("/installment-plans", h.createInstallmentPlan)
+	p.PUT("/installment-plans/:id", h.updateInstallmentPlan)
+	p.DELETE("/installment-plans/:id", h.cancelInstallmentPlan)
 }

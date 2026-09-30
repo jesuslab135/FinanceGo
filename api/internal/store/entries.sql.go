@@ -10,6 +10,21 @@ import (
 	"time"
 )
 
+const deletePendingInstallmentEntries = `-- name: DeletePendingInstallmentEntries :exec
+DELETE FROM monthly_entries
+WHERE installment_plan_id = $1::bigint AND status = 'pending' AND installment_no >= $2::int
+`
+
+type DeletePendingInstallmentEntriesParams struct {
+	PlanID int64
+	FromNo int32
+}
+
+func (q *Queries) DeletePendingInstallmentEntries(ctx context.Context, arg DeletePendingInstallmentEntriesParams) error {
+	_, err := q.db.Exec(ctx, deletePendingInstallmentEntries, arg.PlanID, arg.FromNo)
+	return err
+}
+
 const ensureFixedEntries = `-- name: EnsureFixedEntries :exec
 INSERT INTO monthly_entries (user_id, month, kind, fixed_payment_id, name, category_id, payment_method_id, amount, due_date)
 SELECT f.user_id, $1::date, 'fixed', f.id, f.name, f.category_id, f.payment_method_id, f.amount,
@@ -85,6 +100,41 @@ func (q *Queries) GetEntry(ctx context.Context, arg GetEntryParams) (MonthlyEntr
 	return i, err
 }
 
+const insertInstallmentEntry = `-- name: InsertInstallmentEntry :exec
+INSERT INTO monthly_entries (user_id, month, kind, installment_plan_id, installment_no, name, category_id,
+    payment_method_id, amount, due_date)
+VALUES ($1, $2::date, 'installment', $3::bigint, $4::int, $5,
+    $6::bigint, $7::bigint, $8, $9::date)
+ON CONFLICT DO NOTHING
+`
+
+type InsertInstallmentEntryParams struct {
+	UserID            int64
+	Month             time.Time
+	InstallmentPlanID int64
+	InstallmentNo     int32
+	Name              string
+	CategoryID        int64
+	PaymentMethodID   int64
+	Amount            int64
+	DueDate           time.Time
+}
+
+func (q *Queries) InsertInstallmentEntry(ctx context.Context, arg InsertInstallmentEntryParams) error {
+	_, err := q.db.Exec(ctx, insertInstallmentEntry,
+		arg.UserID,
+		arg.Month,
+		arg.InstallmentPlanID,
+		arg.InstallmentNo,
+		arg.Name,
+		arg.CategoryID,
+		arg.PaymentMethodID,
+		arg.Amount,
+		arg.DueDate,
+	)
+	return err
+}
+
 const listMonthEntries = `-- name: ListMonthEntries :many
 SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at FROM monthly_entries
 WHERE user_id = $1 AND month = $2
@@ -124,6 +174,58 @@ func (q *Queries) ListMonthEntries(ctx context.Context, arg ListMonthEntriesPara
 			&i.Edited,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPlansForEnsure = `-- name: ListPlansForEnsure :many
+SELECT p.id, p.description, p.total_amount, p.installments, p.purchased_on, p.cancelled_on,
+       p.category_id, p.payment_method_id, pm.statement_day, pm.payment_due_day
+FROM installment_plans p
+JOIN payment_methods pm ON pm.id = p.payment_method_id
+WHERE p.user_id = $1
+`
+
+type ListPlansForEnsureRow struct {
+	ID              int64
+	Description     string
+	TotalAmount     int64
+	Installments    int32
+	PurchasedOn     time.Time
+	CancelledOn     *time.Time
+	CategoryID      int64
+	PaymentMethodID int64
+	StatementDay    *int32
+	PaymentDueDay   *int32
+}
+
+func (q *Queries) ListPlansForEnsure(ctx context.Context, userID int64) ([]ListPlansForEnsureRow, error) {
+	rows, err := q.db.Query(ctx, listPlansForEnsure, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPlansForEnsureRow
+	for rows.Next() {
+		var i ListPlansForEnsureRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Description,
+			&i.TotalAmount,
+			&i.Installments,
+			&i.PurchasedOn,
+			&i.CancelledOn,
+			&i.CategoryID,
+			&i.PaymentMethodID,
+			&i.StatementDay,
+			&i.PaymentDueDay,
 		); err != nil {
 			return nil, err
 		}
@@ -211,6 +313,30 @@ type PruneIncomeEntriesParams struct {
 
 func (q *Queries) PruneIncomeEntries(ctx context.Context, arg PruneIncomeEntriesParams) error {
 	_, err := q.db.Exec(ctx, pruneIncomeEntries, arg.SourceID, arg.FromMonth)
+	return err
+}
+
+const relabelInstallmentEntries = `-- name: RelabelInstallmentEntries :exec
+UPDATE monthly_entries
+SET name = $1::text || ' ' || installment_no::text || '/' || $2::int::text,
+    category_id = $3::bigint, updated_at = now()
+WHERE installment_plan_id = $4::bigint
+`
+
+type RelabelInstallmentEntriesParams struct {
+	Description  string
+	Installments int32
+	CategoryID   int64
+	PlanID       int64
+}
+
+func (q *Queries) RelabelInstallmentEntries(ctx context.Context, arg RelabelInstallmentEntriesParams) error {
+	_, err := q.db.Exec(ctx, relabelInstallmentEntries,
+		arg.Description,
+		arg.Installments,
+		arg.CategoryID,
+		arg.PlanID,
+	)
 	return err
 }
 

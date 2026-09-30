@@ -55,7 +55,10 @@ func (s *Service) ensureMonth(ctx context.Context, q *store.Queries, a Actor, mo
 	if err := q.EnsureIncomeEntries(ctx, store.EnsureIncomeEntriesParams{UserID: a.UserID, Month: month}); err != nil {
 		return err
 	}
-	return q.EnsureFixedEntries(ctx, store.EnsureFixedEntriesParams{UserID: a.UserID, Month: month})
+	if err := q.EnsureFixedEntries(ctx, store.EnsureFixedEntriesParams{UserID: a.UserID, Month: month}); err != nil {
+		return err
+	}
+	return s.ensureInstallments(ctx, q, a.UserID, month)
 }
 
 func (s *Service) MonthEntries(ctx context.Context, a Actor, month time.Time) ([]Entry, error) {

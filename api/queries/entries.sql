@@ -64,3 +64,27 @@ WHERE f.id = @source_id AND m.fixed_payment_id = f.id
   AND ((NOT f.active AND m.month > sqlc.arg(from_month)::date)
        OR (f.end_month IS NOT NULL AND m.month > f.end_month)
        OR m.month < f.start_month);
+
+-- name: ListPlansForEnsure :many
+SELECT p.id, p.description, p.total_amount, p.installments, p.purchased_on, p.cancelled_on,
+       p.category_id, p.payment_method_id, pm.statement_day, pm.payment_due_day
+FROM installment_plans p
+JOIN payment_methods pm ON pm.id = p.payment_method_id
+WHERE p.user_id = @user_id;
+
+-- name: InsertInstallmentEntry :exec
+INSERT INTO monthly_entries (user_id, month, kind, installment_plan_id, installment_no, name, category_id,
+    payment_method_id, amount, due_date)
+VALUES (@user_id, sqlc.arg(month)::date, 'installment', sqlc.arg(installment_plan_id)::bigint, sqlc.arg(installment_no)::int, @name,
+    sqlc.arg(category_id)::bigint, sqlc.arg(payment_method_id)::bigint, @amount, sqlc.arg(due_date)::date)
+ON CONFLICT DO NOTHING;
+
+-- name: DeletePendingInstallmentEntries :exec
+DELETE FROM monthly_entries
+WHERE installment_plan_id = sqlc.arg(plan_id)::bigint AND status = 'pending' AND installment_no >= sqlc.arg(from_no)::int;
+
+-- name: RelabelInstallmentEntries :exec
+UPDATE monthly_entries
+SET name = sqlc.arg(description)::text || ' ' || installment_no::text || '/' || sqlc.arg(installments)::int::text,
+    category_id = sqlc.arg(category_id)::bigint, updated_at = now()
+WHERE installment_plan_id = sqlc.arg(plan_id)::bigint;

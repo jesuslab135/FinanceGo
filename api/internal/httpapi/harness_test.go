@@ -145,3 +145,12 @@ func (h *harness) signup(email string) string {
 	}](h.t, r, 201)
 	return s.AccessToken
 }
+
+// login returns a fresh access token (use after setNow moves the clock).
+func (h *harness) login(email string) string {
+	h.t.Helper()
+	r := h.do("POST", "/api/v1/auth/login", "", M{"email": email, "password": "password123"})
+	return expect[struct {
+		AccessToken string `json:"access_token"`
+	}](h.t, r, 200).AccessToken
+}
