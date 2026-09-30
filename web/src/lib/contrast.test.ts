@@ -57,8 +57,9 @@ for (const [mode, th] of [["light", light], ["dark", dark]] as const) {
     [`white on hero amount zone (critical ${mode})`, "#ffffff", t("--critical-hero-from"), 3],
     [`white on hero pill, gradient end (${mode})`, "#ffffff", mix("#000000", t("--hero-to"), 0.4), 4.5],
     [`white on hero pill, gradient end (critical ${mode})`, "#ffffff", mix("#000000", t("--critical-hero-to"), 0.4), 4.5],
-    // Auth brand panel uses the hero gradient: wordmark at the start color (large bold), tagline on the pill.
-    [`white on auth panel wordmark (${mode})`, "#ffffff", t("--hero-from"), 3],
+    // Auth brand panel: text on a 14% brand tint of the background (BrandPanel).
+    [`fg on auth panel tint (${mode})`, t("--foreground"), mix(t("--brand"), t("--background"), 0.14), 4.5],
+    [`muted on auth panel tint (${mode})`, t("--muted-foreground"), mix(t("--brand"), t("--background"), 0.14), 4.5],
   );
 }
 pairs.push(["white on critical hero (light)", "#ffffff", tok(light, "--critical-hero-from"), 4.5]);

@@ -16,11 +16,14 @@
     "language": "Idioma", "mainNav": "Navegación principal"
   },
   "auth": {
-    "loginTitle": "Inicia sesión", "registerTitle": "Crea tu cuenta", "email": "Correo", "password": "Contraseña",
+    "loginTitle": "Bienvenido de vuelta", "registerTitle": "Crea tu cuenta", "email": "Correo", "password": "Contraseña",
     "name": "Nombre", "currency": "Moneda", "timezone": "Zona horaria", "login": "Entrar", "register": "Crear cuenta",
     "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
     "emailTaken": "Ya existe una cuenta con este correo", "invalidCredentials": "Correo o contraseña incorrectos", "passwordHint": "Mínimo 8 caracteres",
-    "tagline": "Tus ingresos, pagos fijos y gastos en un solo lugar."
+    "tagline": "Ingresos, pagos fijos y gastos en un solo lugar, con lo que te queda siempre a la vista.",
+    "headline": "Tus finanzas, claras cada mes.", "loginSubtitle": "Qué gusto verte. Entra para ver tu mes.", "registerSubtitle": "Empieza en menos de un minuto.",
+    "feature1": "Pagos fijos descontados de tu ingreso", "feature2": "Presupuestos con alertas a tiempo", "feature3": "Tarjetas y deudas bajo control",
+    "previewBudget": "Comida · 72% usado", "footnote": "Tus datos son tuyos. Sin anuncios."
   },
   "validation": {
     "required": "Requerido", "amount": "Escribe un monto válido, p. ej. 1,234.50", "email": "Correo inválido",

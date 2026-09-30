@@ -16,11 +16,14 @@
     "language": "Language", "mainNav": "Main navigation"
   },
   "auth": {
-    "loginTitle": "Log in", "registerTitle": "Create your account", "email": "Email", "password": "Password",
+    "loginTitle": "Welcome back", "registerTitle": "Create your account", "email": "Email", "password": "Password",
     "name": "Name", "currency": "Currency", "timezone": "Time zone", "login": "Log in", "register": "Create account",
     "noAccount": "No account yet?", "haveAccount": "Already have an account?",
     "emailTaken": "An account with this email already exists", "invalidCredentials": "Wrong email or password", "passwordHint": "At least 8 characters",
-    "tagline": "Your income, fixed payments and expenses in one place."
+    "tagline": "Income, fixed payments and expenses in one place, with what you have left always in sight.",
+    "headline": "Your money, clear every month.", "loginSubtitle": "Good to see you. Sign in to see your month.", "registerSubtitle": "Get started in under a minute.",
+    "feature1": "Fixed payments taken from your income", "feature2": "Budgets with timely alerts", "feature3": "Cards and debt under control",
+    "previewBudget": "Food · 72% used", "footnote": "Your data is yours. No ads."
   },
   "validation": {
     "required": "Required", "amount": "Enter a valid amount, e.g. 1,234.50", "email": "Invalid email",

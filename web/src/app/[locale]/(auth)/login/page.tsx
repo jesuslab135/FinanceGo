@@ -41,24 +41,25 @@ export default function LoginPage() {
   });
 
   return (
-    <Card>
+    <Card className="gap-6 rounded-[20px] border-0 py-8 shadow-card sm:px-2">
       <CardHeader>
-        <CardTitle>{t("auth.loginTitle")}</CardTitle>
+        <CardTitle className="font-display text-2xl font-extrabold tracking-tight">{t("auth.loginTitle")}</CardTitle>
+        <p className="text-sm text-muted-foreground">{t("auth.loginSubtitle")}</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="email">{t("auth.email")}</Label>
-            <Input id="email" type="email" autoComplete="email" aria-invalid={!!errors.email} {...form.register("email")} />
+            <Input className="h-11" id="email" type="email" autoComplete="email" aria-invalid={!!errors.email} {...form.register("email")} />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">{t("auth.password")}</Label>
-            <Input id="password" type="password" autoComplete="current-password" aria-invalid={!!errors.password} {...form.register("password")} />
+            <Input className="h-11" id="password" type="password" autoComplete="current-password" aria-invalid={!!errors.password} {...form.register("password")} />
             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
           {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}
-          <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.login")}</Button>
+          <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>{t("auth.login")}</Button>
           <p className="text-center text-sm text-muted-foreground">
             {t("auth.noAccount")} <Link href="/register" className="text-foreground underline underline-offset-4">{t("auth.register")}</Link>
           </p>

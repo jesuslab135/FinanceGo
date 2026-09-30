@@ -54,15 +54,16 @@ export default function RegisterPage() {
   const field = (name: "name" | "email" | "password", label: string, type = "text", auto?: string) => (
     <div className="space-y-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} type={type} autoComplete={auto} aria-invalid={!!errors[name]} {...form.register(name)} />
+      <Input className="h-11" id={name} type={type} autoComplete={auto} aria-invalid={!!errors[name]} {...form.register(name)} />
       {errors[name] && <p className="text-sm text-destructive">{errors[name]?.message}</p>}
     </div>
   );
 
   return (
-    <Card>
+    <Card className="gap-6 rounded-[20px] border-0 py-8 shadow-card sm:px-2">
       <CardHeader>
-        <CardTitle>{t("auth.registerTitle")}</CardTitle>
+        <CardTitle className="font-display text-2xl font-extrabold tracking-tight">{t("auth.registerTitle")}</CardTitle>
+        <p className="text-sm text-muted-foreground">{t("auth.registerSubtitle")}</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
@@ -72,18 +73,18 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="currency">{t("auth.currency")}</Label>
-              <select id="currency" className="h-9 w-full rounded-md border bg-transparent px-2 text-sm" {...form.register("currency")}>
+              <select id="currency" className="h-11 w-full rounded-[10px] border border-input bg-transparent px-3 text-base md:text-sm" {...form.register("currency")}>
                 {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="timezone">{t("auth.timezone")}</Label>
-              <Input id="timezone" list="tz-list" aria-invalid={!!errors.timezone} {...form.register("timezone")} />
+              <Input className="h-11" id="timezone" list="tz-list" aria-invalid={!!errors.timezone} {...form.register("timezone")} />
               <datalist id="tz-list">{timezones().map((z) => <option key={z} value={z} />)}</datalist>
               {errors.timezone && <p className="text-sm text-destructive">{errors.timezone.message}</p>}
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>{t("auth.register")}</Button>
+          <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>{t("auth.register")}</Button>
           <p className="text-center text-sm text-muted-foreground">
             {t("auth.haveAccount")} <Link href="/login" className="text-foreground underline underline-offset-4">{t("auth.login")}</Link>
           </p>
