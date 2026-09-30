@@ -1,12 +1,17 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api/errors";
 import { AuthProvider } from "@/lib/auth/auth-provider";
+
+function ThemedToaster() {
+  const { theme } = useTheme();
+  return <Toaster richColors position="top-center" theme={(theme as "light" | "dark" | "system" | undefined) ?? "system"} />;
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   const [qc] = useState(
@@ -27,7 +32,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
-        <Toaster richColors position="top-center" />
+        <ThemedToaster />
       </QueryClientProvider>
     </ThemeProvider>
   );

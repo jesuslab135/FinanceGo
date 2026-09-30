@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "FinanceGo", "save": "Guardar", "cancel": "Cancelar", "delete": "Eliminar", "edit": "Editar",
+    "appName": "FinanceGo", "appDescription": "Ingresos, pagos fijos, gastos y tarjetas en un solo lugar.", "save": "Guardar", "cancel": "Cancelar", "delete": "Eliminar", "edit": "Editar",
     "add": "Agregar", "close": "Cerrar", "loading": "Cargando…", "retry": "Reintentar",
     "confirmTitle": "¿Estás seguro?", "confirmDelete": "Esta acción no se puede deshacer.", "none": "Ninguno",
     "optional": "opcional", "active": "Activo", "inactive": "Inactivo", "activate": "Activar",
@@ -18,7 +18,7 @@
     "loginTitle": "Inicia sesión", "registerTitle": "Crea tu cuenta", "email": "Correo", "password": "Contraseña",
     "name": "Nombre", "currency": "Moneda", "timezone": "Zona horaria", "login": "Entrar", "register": "Crear cuenta",
     "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
-    "invalidCredentials": "Correo o contraseña incorrectos", "passwordHint": "Mínimo 8 caracteres",
+    "emailTaken": "Ya existe una cuenta con este correo", "invalidCredentials": "Correo o contraseña incorrectos", "passwordHint": "Mínimo 8 caracteres",
     "tagline": "Tus ingresos, pagos fijos y gastos en un solo lugar."
   },
   "validation": {

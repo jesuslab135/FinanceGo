@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { ApiError } from "@/lib/api/errors";
 import { applyApiError } from "@/lib/forms";
 import { CURRENCIES, timezones } from "@/lib/locale-options";
 
@@ -45,7 +46,8 @@ export default function RegisterPage() {
       await signup({ ...v, locale });
       router.replace("/dashboard");
     } catch (e) {
-      applyApiError(e, form.setError, (m) => toast.error(m));
+      if (e instanceof ApiError && e.code === "email_taken") form.setError("email", { type: "server", message: t("auth.emailTaken") });
+      else applyApiError(e, form.setError, (m) => toast.error(m));
     }
   });
 

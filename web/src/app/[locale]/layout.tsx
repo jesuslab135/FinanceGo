@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/providers";
 import "../globals.css";
 
-export const metadata: Metadata = {
-  title: "FinanceGo",
-  description: "Ingresos, pagos fijos, gastos y tarjetas en un solo lugar.",
-  manifest: "/manifest.webmanifest",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "common" });
+  return { title: t("appName"), description: t("appDescription"), manifest: "/manifest.webmanifest" };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

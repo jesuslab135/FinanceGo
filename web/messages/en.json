@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "FinanceGo", "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",
+    "appName": "FinanceGo", "appDescription": "Income, fixed payments, expenses and cards in one place.", "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",
     "add": "Add", "close": "Close", "loading": "Loading…", "retry": "Retry",
     "confirmTitle": "Are you sure?", "confirmDelete": "This cannot be undone.", "none": "None",
     "optional": "optional", "active": "Active", "inactive": "Inactive", "activate": "Activate",
@@ -18,7 +18,7 @@
     "loginTitle": "Log in", "registerTitle": "Create your account", "email": "Email", "password": "Password",
     "name": "Name", "currency": "Currency", "timezone": "Time zone", "login": "Log in", "register": "Create account",
     "noAccount": "No account yet?", "haveAccount": "Already have an account?",
-    "invalidCredentials": "Wrong email or password", "passwordHint": "At least 8 characters",
+    "emailTaken": "An account with this email already exists", "invalidCredentials": "Wrong email or password", "passwordHint": "At least 8 characters",
     "tagline": "Your income, fixed payments and expenses in one place."
   },
   "validation": {
