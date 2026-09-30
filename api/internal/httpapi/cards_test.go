@@ -194,3 +194,28 @@ func TestInstallmentPlanStructuralEditDropsPaidRows(t *testing.T) {
 		t.Fatalf("orphans %d %v", n, err)
 	}
 }
+
+// Changing a card's cut-off day remaps pending installment rows to their new months.
+func TestCardCycleChangeRemapsInstallments(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("cycle@example.com")
+	cc := h.creditCard(tok) // closes 15th, due 5th
+	h.msi(tok, cc, 90000, 3, "2026-03-20")
+	if apr := byKind(h.entries(tok, "2026-04"), "installment"); len(apr) != 1 || apr[0].Name != "TV 1/3" {
+		t.Fatalf("april before change %+v", apr)
+	}
+	expect[paymentMethod](t, h.do("PUT", fmt.Sprintf("/api/v1/payment-methods/%d", cc), tok, M{
+		"nickname": "BBVA Oro", "type": "credit", "bank": "BBVA", "network": "visa", "last4": "4242",
+		"credit_limit": 5000000, "statement_day": 25, "payment_due_day": 5,
+		"opening_balance": 0, "opening_balance_date": "2026-01-01",
+	}), 200)
+	if mar := byKind(h.entries(tok, "2026-03"), "installment"); len(mar) != 1 || mar[0].Name != "TV 1/3" {
+		t.Fatalf("march after change %+v", mar)
+	}
+	if apr := byKind(h.entries(tok, "2026-04"), "installment"); len(apr) != 1 || apr[0].Name != "TV 2/3" {
+		t.Fatalf("april after change %+v", apr)
+	}
+	if s := expect[summary](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-04", tok, nil), 200); s.Installments != 30000 {
+		t.Fatalf("april summary installments %d", s.Installments)
+	}
+}

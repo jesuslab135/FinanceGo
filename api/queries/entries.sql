@@ -90,3 +90,12 @@ UPDATE monthly_entries
 SET name = sqlc.arg(description)::text || ' ' || installment_no::text || '/' || sqlc.arg(installments)::int::text,
     category_id = sqlc.arg(category_id)::bigint, updated_at = now()
 WHERE user_id = @user_id AND installment_plan_id = sqlc.arg(plan_id)::bigint;
+
+-- name: DeleteCardPendingInstallments :exec
+-- After a card's cut-off/due day changes, pending installment rows may sit in the
+-- wrong month; drop them so ensureInstallments regenerates them with the new mapping.
+DELETE FROM monthly_entries m
+USING installment_plans p
+WHERE m.user_id = @user_id AND m.kind = 'installment' AND m.status = 'pending'
+  AND m.installment_plan_id = p.id AND p.user_id = @user_id
+  AND p.payment_method_id = sqlc.arg(payment_method_id)::bigint;

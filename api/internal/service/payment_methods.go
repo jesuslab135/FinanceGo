@@ -163,15 +163,25 @@ func (s *Service) UpdatePaymentMethod(ctx context.Context, a Actor, id int64, in
 	if err := normalizePaymentMethod(&in, s.today(a)); err != nil {
 		return PaymentMethod{}, err
 	}
-	p, err := s.q.UpdatePaymentMethod(ctx, store.UpdatePaymentMethodParams{
-		ID: id, UserID: a.UserID, Nickname: in.Nickname, Bank: in.Bank, Network: in.Network, Last4: in.Last4,
-		Color: in.Color, Active: *in.Active, CreditLimit: in.CreditLimit, StatementDay: in.StatementDay,
-		PaymentDueDay: in.PaymentDueDay, OpeningBalance: in.OpeningBalance, OpeningBalanceDate: dateOrNil(in.OpeningBalanceDate),
+	var out PaymentMethod
+	err = s.inTx(ctx, func(q *store.Queries) error {
+		p, err := q.UpdatePaymentMethod(ctx, store.UpdatePaymentMethodParams{
+			ID: id, UserID: a.UserID, Nickname: in.Nickname, Bank: in.Bank, Network: in.Network, Last4: in.Last4,
+			Color: in.Color, Active: *in.Active, CreditLimit: in.CreditLimit, StatementDay: in.StatementDay,
+			PaymentDueDay: in.PaymentDueDay, OpeningBalance: in.OpeningBalance, OpeningBalanceDate: dateOrNil(in.OpeningBalanceDate),
+		})
+		if err != nil {
+			return notFound(err)
+		}
+		out = toPaymentMethod(p)
+		// A new cut-off or due day remaps installments to other months: drop the
+		// pending rows so ensureInstallments regenerates them lazily.
+		if cur.Type == "credit" && (!eqPtr(cur.StatementDay, p.StatementDay) || !eqPtr(cur.PaymentDueDay, p.PaymentDueDay)) {
+			return q.DeleteCardPendingInstallments(ctx, store.DeleteCardPendingInstallmentsParams{UserID: a.UserID, PaymentMethodID: id})
+		}
+		return nil
 	})
-	if err != nil {
-		return PaymentMethod{}, notFound(err)
-	}
-	return toPaymentMethod(p), nil
+	return out, err
 }
 
 func (s *Service) DeletePaymentMethod(ctx context.Context, a Actor, id int64) error {

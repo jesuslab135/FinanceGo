@@ -10,6 +10,26 @@ import (
 	"time"
 )
 
+const deleteCardPendingInstallments = `-- name: DeleteCardPendingInstallments :exec
+DELETE FROM monthly_entries m
+USING installment_plans p
+WHERE m.user_id = $1 AND m.kind = 'installment' AND m.status = 'pending'
+  AND m.installment_plan_id = p.id AND p.user_id = $1
+  AND p.payment_method_id = $2::bigint
+`
+
+type DeleteCardPendingInstallmentsParams struct {
+	UserID          int64
+	PaymentMethodID int64
+}
+
+// After a card's cut-off/due day changes, pending installment rows may sit in the
+// wrong month; drop them so ensureInstallments regenerates them with the new mapping.
+func (q *Queries) DeleteCardPendingInstallments(ctx context.Context, arg DeleteCardPendingInstallmentsParams) error {
+	_, err := q.db.Exec(ctx, deleteCardPendingInstallments, arg.UserID, arg.PaymentMethodID)
+	return err
+}
+
 const deleteInstallmentEntries = `-- name: DeleteInstallmentEntries :exec
 DELETE FROM monthly_entries
 WHERE user_id = $1 AND installment_plan_id = $2::bigint AND installment_no >= $3::int
