@@ -46,6 +46,7 @@
     "endMonthHint": "Déjalo vacío si no termina"
   },
   "cards": {
+    "msiShort": "MSI", "networkOther": "Otra",
     "paymentsAfterClose": "Pagados después del corte",
     "title": "Tarjetas y cuentas", "new": "Nuevo método de pago", "edit": "Editar método de pago",
     "nickname": "Alias", "type": "Tipo",

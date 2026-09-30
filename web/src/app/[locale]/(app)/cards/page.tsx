@@ -1,7 +1,9 @@
 "use client";
 
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { format } from "date-fns";
+import { enUS, es } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PaymentMethodForm } from "@/components/cards/payment-method-form";
@@ -14,12 +16,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { PaymentMethod } from "@/lib/api/types";
+import { parseISODate } from "@/lib/dates";
 import {
   useCardsOverview, useCreatePaymentMethod, useDeletePaymentMethod, usePaymentMethods, useUpdatePaymentMethod,
 } from "@/lib/query/hooks";
 
 export default function CardsPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const { data: methods = [], isPending } = usePaymentMethods();
   const { data: overview = [] } = useCardsOverview();
   const create = useCreatePaymentMethod();
@@ -57,7 +61,7 @@ export default function CardsPage() {
                         <p className="text-xl font-semibold"><Money cents={s.current_balance} /></p>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {t("cards.amountDue")}: <Money cents={s.amount_due} className="text-foreground" /> · {s.due_on}
+                        {t("cards.amountDue")}: <Money cents={s.amount_due} className="text-foreground" /> · {format(parseISODate(s.due_on), "d MMM", { locale: locale === "en" ? enUS : es })}
                       </p>
                       {s.credit_limit != null && <Meter value={s.current_balance} max={s.credit_limit} label={t("cards.utilization")} />}
                     </>

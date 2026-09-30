@@ -67,6 +67,7 @@ export const useStatement = (pmId: number, cycle?: string) =>
   useQuery({
     queryKey: ["statement", pmId, cycle ?? null],
     queryFn: () => unwrap(api.GET("/payment-methods/{id}/statement", { params: { path: { id: pmId }, query: { cycle } } })),
+    placeholderData: keepPreviousData,
   });
 export const useCardPayments = (pmId: number) =>
   useQuery({

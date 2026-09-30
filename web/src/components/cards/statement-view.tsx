@@ -5,6 +5,7 @@ import { enUS, es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { Meter } from "@/components/common/meter";
 import { Money } from "@/components/common/money";
@@ -26,33 +27,34 @@ export function StatementView({ cardId }: { cardId: number }) {
   const s = q.data;
   const fmt = (d: string, p = "d MMM") => format(parseISODate(d), p, { locale: locale === "en" ? enUS : es });
 
-  if (q.isPending) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
-  if (q.error || !s) return <p role="alert" className="text-sm text-destructive">{q.error?.message}</p>;
-
-  const shift = (n: number) => setCycle(toMonthKey((n > 0 ? addMonths : subMonths)(parseMonthKey(s.cycle), Math.abs(n))));
+  const shift = (n: number) =>
+    setCycle(toMonthKey((n > 0 ? addMonths : subMonths)(parseMonthKey(cycle ?? s?.cycle ?? toMonthKey(new Date())), Math.abs(n))));
 
   const paymentRow = (p: CardPayment) => (
     <li key={p.id} className="flex items-center gap-3 p-3 text-sm">
       <span className="w-16 text-muted-foreground">{fmt(p.paid_on)}</span>
       <span className="min-w-0 flex-1 truncate">{p.note}</span>
       <Money cents={p.amount} />
-      <ConfirmButton onConfirm={() => del.mutate(p.id)}>
+      <ConfirmButton onConfirm={() => del.mutate(p.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(e.message) })}>
         <Button variant="ghost" size="icon" aria-label={t("common.delete")}><Trash2 /></Button>
       </ConfirmButton>
     </li>
   );
-  const afterClose = s.payments_after_close ?? [];
 
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" aria-label={t("common.previous")} onClick={() => shift(-1)}><ChevronLeft /></Button>
-          <span className="text-sm font-medium">{t("cards.cycle", { from: fmt(s.opens_on), to: fmt(s.closes_on) })}</span>
+          <span className="text-sm font-medium">{s ? t("cards.cycle", { from: fmt(s.opens_on), to: fmt(s.closes_on) }) : "…"}</span>
           <Button variant="outline" size="icon" aria-label={t("common.next")} onClick={() => shift(1)}><ChevronRight /></Button>
         </div>
         <Button onClick={() => setPaying(true)}>{t("cards.recordPayment")}</Button>
       </div>
+      {!s ? (
+        q.isError ? <p role="alert" className="text-sm text-destructive">{q.error.message}</p> : <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+      ) : (
+      <>
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="col-span-2 rounded-lg border p-4 lg:col-span-1">
           <dt className="text-xs text-muted-foreground">{t("cards.amountDue")}</dt>
@@ -91,7 +93,7 @@ export function StatementView({ cardId }: { cardId: number }) {
               ))}
               {(s.installments ?? []).map((m) => (
                 <li key={`m${m.plan_id}`} className="flex items-center gap-3 p-3 text-sm">
-                  <span className="w-16 text-muted-foreground">MSI</span>
+                  <span className="w-16 text-muted-foreground">{t("cards.msiShort")}</span>
                   <span className="min-w-0 flex-1 truncate">{m.description}</span>
                   <Badge variant="outline">{t("cards.installmentOf", { no: m.no, of: m.of })}</Badge>
                   <Money cents={m.amount} />
@@ -103,16 +105,18 @@ export function StatementView({ cardId }: { cardId: number }) {
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">{t("cards.payments")}</h3>
           <ul className="divide-y rounded-lg border">{(s.payments ?? []).map(paymentRow)}</ul>
-          {afterClose.length > 0 && (
+          {(s.payments_after_close ?? []).length > 0 && (
             <>
               <h4 className="pt-2 text-xs font-medium text-muted-foreground">{t("cards.paymentsAfterClose")}</h4>
-              <ul className="divide-y rounded-lg border">{afterClose.map(paymentRow)}</ul>
+              <ul className="divide-y rounded-lg border">{(s.payments_after_close ?? []).map(paymentRow)}</ul>
             </>
           )}
         </div>
       </div>
+      </>
+      )}
       <ResponsiveDialog open={paying} onOpenChange={setPaying} title={t("cards.recordPayment")}>
-        <CardPaymentForm cardId={cardId} defaultAmount={s.amount_due} onDone={() => setPaying(false)} />
+        <CardPaymentForm cardId={cardId} defaultAmount={s?.amount_due ?? 0} onDone={() => setPaying(false)} />
       </ResponsiveDialog>
     </section>
   );

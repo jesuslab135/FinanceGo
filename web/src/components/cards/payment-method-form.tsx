@@ -108,7 +108,7 @@ export function PaymentMethodForm({ initial, onSubmit, onCancel }: {
         </div>
         <div className="space-y-2">
           <Label htmlFor="pm-type">{t("cards.type")}</Label>
-          <select id="pm-type" className={selectCls} disabled={editing} {...form.register("type")}>
+          <select id="pm-type" className={`${selectCls} ${editing ? "pointer-events-none opacity-60" : ""}`} aria-disabled={editing} tabIndex={editing ? -1 : undefined} {...form.register("type")}>
             {TYPES.map((ty) => <option key={ty} value={ty}>{t(`cards.types.${ty}`)}</option>)}
           </select>
         </div>
@@ -123,7 +123,7 @@ export function PaymentMethodForm({ initial, onSubmit, onCancel }: {
           <Label htmlFor="pm-network">{t("cards.network")}</Label>
           <select id="pm-network" className={selectCls} {...form.register("network")}>
             <option value="">—</option>
-            {NETWORKS.map((n) => <option key={n} value={n}>{n === "other" ? "…" : n.toUpperCase()}</option>)}
+            {NETWORKS.map((n) => <option key={n} value={n}>{n === "other" ? t("cards.networkOther") : n.toUpperCase()}</option>)}
           </select>
         </div>
         <div className="space-y-2">

@@ -46,6 +46,7 @@
     "endMonthHint": "Leave empty if it never ends"
   },
   "cards": {
+    "msiShort": "Installments", "networkOther": "Other",
     "paymentsAfterClose": "Paid after statement",
     "title": "Cards & accounts", "new": "New payment method", "edit": "Edit payment method",
     "nickname": "Nickname", "type": "Type",

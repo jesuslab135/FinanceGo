@@ -56,3 +56,13 @@ describe("PaymentMethodForm", () => {
     );
   });
 });
+
+describe("PaymentMethodForm editing", () => {
+  it("keeps the type of an existing card when submitting", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(<PaymentMethodForm initial={{ id: 3, type: "debit", nickname: "Nómina", color: "#64748b" }} onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ type: "debit" });
+  });
+});
