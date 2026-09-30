@@ -4,6 +4,7 @@ import { parseISODate, toISODate, periodRange, seriesRange, toMonthKey, parseMon
 describe("dates (TZ=America/Tijuana)", () => {
   it("parses ISO dates as local days", () => {
     const d = parseISODate("2026-03-01");
+    expect(new Date(2026, 0, 1).getTimezoneOffset()).toBe(480);
     expect(d.getDate()).toBe(1);
     expect(d.getMonth()).toBe(2);
     expect(toISODate(d)).toBe("2026-03-01");

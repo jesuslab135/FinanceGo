@@ -24,6 +24,7 @@ export function parseMoney(raw: string): number | null {
       // no decimals: every separator groups thousands ("1,234", "1.234.567")
       if (seps.some((g) => g.ch !== last.ch)) return null;
       if (seps.length === 1 && last.i > 1) return null;
+      if (s.startsWith("0")) return null;
     } else {
       return null;
     }
