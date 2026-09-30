@@ -13,7 +13,7 @@ export function budgetStatus(pct: number): "ok" | "warn" | "over" {
 }
 
 const STYLE = {
-  ok: { Icon: CheckCircle2, bar: "bg-good", text: "text-good" },
+  ok: { Icon: CheckCircle2, bar: "bg-good", text: "text-foreground" },
   warn: { Icon: AlertTriangle, bar: "bg-warning", text: "text-foreground" },
   over: { Icon: XCircle, bar: "bg-critical", text: "text-critical" },
 } as const;
@@ -25,7 +25,7 @@ export function BudgetMeters({ budgets }: { budgets: Budget[] }) {
     <section className="space-y-3 rounded-xl border p-4">
       <h2 className="font-medium">{t("budgets")}</h2>
       {budgets.length === 0 ? (
-        <p className="text-sm text-muted-foreground">—</p>
+        <p className="text-sm text-muted-foreground">{t("noData")}</p>
       ) : (
         <ul className="space-y-3">
           {budgets.map((b) => {
@@ -44,7 +44,7 @@ export function BudgetMeters({ budgets }: { budgets: Budget[] }) {
                   <div className={`h-2 rounded-full ${bar}`} style={{ width: `${Math.min(100, b.pct)}%` }} />
                 </div>
                 <p className={`flex items-center gap-1 text-xs ${text}`}>
-                  <Icon className="size-3.5" aria-hidden /> <span>{t(`budgetStatus.${status}`)}</span> · <span className="tabular-nums">{b.pct}%</span>
+                  <Icon className={`size-3.5 ${status === "ok" ? "text-good" : status === "over" ? "text-critical" : "text-warning"}`} aria-hidden /> <span>{t(`budgetStatus.${status}`)}</span> · <span className="tabular-nums">{b.pct}%</span>
                 </p>
               </li>
             );

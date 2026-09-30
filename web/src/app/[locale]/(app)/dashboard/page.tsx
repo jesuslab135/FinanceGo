@@ -17,6 +17,7 @@ import { useBreakdown, useSeries, useSummary } from "@/lib/query/hooks";
 
 function Dashboard() {
   const t = useTranslations("dashboard");
+  const tc = useTranslations("common");
   const sp = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -52,8 +53,8 @@ function Dashboard() {
         <UpcomingList />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} />
-        <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} />
+        <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} />
+        <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <BudgetMeters budgets={summary.data?.budgets ?? []} />

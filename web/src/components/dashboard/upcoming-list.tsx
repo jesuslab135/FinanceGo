@@ -22,7 +22,7 @@ export function UpcomingList() {
     <section className="space-y-3 rounded-xl border p-4">
       <h2 className="font-medium">{t("dashboard.upcoming")}</h2>
       {data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">—</p>
+        <p className="text-sm text-muted-foreground">{t("dashboard.noData")}</p>
       ) : (
         <ul className="divide-y">
           {data.map((u, i) => (
@@ -50,9 +50,9 @@ export function UpcomingList() {
                   )}>
                   {t("month.markPaid")}
                 </Button>
-              ) : (
+              ) : u.type === "card" && u.payment_method_id != null ? (
                 <Button asChild size="sm" variant="ghost"><Link href={`/cards/${u.payment_method_id}`}>{t("cards.recordPayment")}</Link></Button>
-              )}
+              ) : null}
             </li>
           ))}
         </ul>

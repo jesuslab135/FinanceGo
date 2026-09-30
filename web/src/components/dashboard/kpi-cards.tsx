@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 
 function Tile({ id, label, value, children, valueClass }: { id: string; label: string; value: string; children?: ReactNode; valueClass?: string }) {
   return (
-    <div data-kpi={id} className="space-y-1 rounded-xl border p-4">
+    <div data-kpi={id} className="min-w-0 space-y-1 rounded-xl border p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("text-2xl font-semibold", valueClass)}>{value}</p>
+      <p className={cn("min-w-0 break-words text-xl font-semibold sm:text-2xl", valueClass)}>{value}</p>
       {children}
     </div>
   );

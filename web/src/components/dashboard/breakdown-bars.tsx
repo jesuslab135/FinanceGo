@@ -6,7 +6,7 @@ import type { BreakdownItem } from "@/lib/api/types";
 
 const TOP = 7;
 
-export function BreakdownBars({ title, items, identityDots = true }: { title: string; items: BreakdownItem[]; identityDots?: boolean }) {
+export function BreakdownBars({ title, items, fallbackName, identityDots = true }: { title: string; items: BreakdownItem[]; fallbackName: string; identityDots?: boolean }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
   const rest = items.slice(TOP).reduce((a, i) => a + i.amount, 0);
@@ -21,7 +21,7 @@ export function BreakdownBars({ title, items, identityDots = true }: { title: st
       ) : (
         <ul className="space-y-2.5">
           {rows.map((r, i) => {
-            const name = r.name || t("noMethod");
+            const name = r.name || fallbackName;
             const pct = total ? Math.round((r.amount / total) * 100) : 0;
             return (
               <li key={`${r.id ?? "none"}-${i}`} title={`${name}: ${fmt(r.amount)} (${pct}%)`} className="space-y-1">
