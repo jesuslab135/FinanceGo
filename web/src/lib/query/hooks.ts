@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "@/lib/api/client";
 import type * as T from "@/lib/api/types";
 import { ME_KEY } from "./keys";
@@ -118,6 +118,7 @@ export const useExpenses = (f: ExpenseFilters) =>
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) => unwrap(api.GET("/expenses", { params: { query: { ...f, cursor: pageParam, limit: 50 } } })),
     getNextPageParam: (last: T.ExpensePage) => last.next_cursor ?? undefined,
+    placeholderData: keepPreviousData,
   });
 export const useCreateExpense = () => useFinanceMutation((v: T.ExpenseInput) => unwrap(api.POST("/expenses", { body: v })));
 export const useUpdateExpense = () =>
