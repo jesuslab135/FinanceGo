@@ -112,7 +112,7 @@
     "installments": "Installments this month",
     "spent": { "day": "Spent this day", "week": "Spent this week", "month": "Spent this month" },
     "available": "Available this month", "overspent": "Overspent",
-    "safeToSpend": "You can spend {amount} per day ({days} days left)",
+    "safeToSpend": "You can spend {amount} per day ({days, plural, one {# day} other {# days}} left)",
     "spending": "Spending over time", "expensesSeries": "Expenses", "committedSeries": "Fixed & installments",
     "byCategory": "By category", "byMethod": "By payment method", "noMethod": "No method",
     "other": "Other", "budgets": "Category limits", "upcoming": "Upcoming payments", "overdue": "Overdue",

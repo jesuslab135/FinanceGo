@@ -112,7 +112,7 @@
     "installments": "MSI del mes",
     "spent": { "day": "Gastado este día", "week": "Gastado esta semana", "month": "Gastado este mes" },
     "available": "Disponible del mes", "overspent": "Sobregirado",
-    "safeToSpend": "Puedes gastar {amount} por día ({days} días restantes)",
+    "safeToSpend": "Puedes gastar {amount} por día ({days, plural, one {# día restante} other {# días restantes}})",
     "spending": "Gasto en el tiempo", "expensesSeries": "Gastos", "committedSeries": "Fijos y MSI",
     "byCategory": "Por categoría", "byMethod": "Por método de pago", "noMethod": "Sin método",
     "other": "Otros", "budgets": "Límites por categoría", "upcoming": "Próximos pagos", "overdue": "Vencido",

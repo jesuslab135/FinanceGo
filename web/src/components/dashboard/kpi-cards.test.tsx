@@ -29,6 +29,14 @@ describe("KpiCards", () => {
     expect(screen.queryByText("Sobregirado")).toBeNull();
   });
 
+  it("uses the singular on the last day, in both languages", () => {
+    const summary = { ...base, available: 10000, safe_to_spend_per_day: 10000, days_remaining: 1 };
+    renderWithProviders(<KpiCards summary={summary} spent={0} period="month" />);
+    expect(screen.getByText("Puedes gastar $100.00 por día (1 día restante)")).toBeInTheDocument();
+    renderWithProviders(<KpiCards summary={summary} spent={0} period="month" />, { locale: "en" });
+    expect(screen.getByText("You can spend MX$100.00 per day (1 day left)")).toBeInTheDocument();
+  });
+
   it("shows committed fixed payments with paid/pending detail", () => {
     renderWithProviders(<KpiCards summary={base} spent={0} period="month" />);
     expect(screen.getByText("$300.00 pagado · $500.00 pendiente")).toBeInTheDocument();
