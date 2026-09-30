@@ -2,12 +2,12 @@
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/lib/use-media-query";
 
-/** Dialog on desktop, bottom sheet on mobile. Without a visible `description` a screen-reader-only hint is announced. */
-export function ResponsiveDialog({ open, onOpenChange, title, description, children }: {
-  open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; children: ReactNode;
+/** Dialog on desktop, draggable bottom sheet (Vaul) on mobile; `size="full"` skips the 55% snap for tall forms. Without a visible `description` a screen-reader-only hint is announced. */
+export function ResponsiveDialog({ open, onOpenChange, title, description, size = "auto", children }: {
+  open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; size?: "auto" | "full"; children: ReactNode;
 }) {
   const t = useTranslations("common");
   const desktop = useMediaQuery("(min-width: 768px)");
@@ -24,15 +24,18 @@ export function ResponsiveDialog({ open, onOpenChange, title, description, child
       </Dialog>
     );
   }
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-xl px-4 pb-8" closeLabel={t("close")}>
-        <SheetHeader className="px-0">
-          <SheetTitle>{title}</SheetTitle>
-          <SheetDescription className={description ? undefined : "sr-only"}>{description ?? t("dialogHint")}</SheetDescription>
-        </SheetHeader>
-        {children}
-      </SheetContent>
-    </Sheet>
+  const content = (
+    <DrawerContent className="max-h-[96dvh] rounded-t-[20px] bg-card px-4 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <DrawerHeader className="px-0 text-left">
+        <DrawerTitle className="font-display text-lg">{title}</DrawerTitle>
+        <DrawerDescription className={description ? undefined : "sr-only"}>{description ?? t("dialogHint")}</DrawerDescription>
+      </DrawerHeader>
+      <div className="overflow-y-auto">{children}</div>
+    </DrawerContent>
+  );
+  return size === "auto" ? (
+    <Drawer open={open} onOpenChange={onOpenChange} snapPoints={[0.55, 1]} fadeFromIndex={0}>{content}</Drawer>
+  ) : (
+    <Drawer open={open} onOpenChange={onOpenChange}>{content}</Drawer>
   );
 }
