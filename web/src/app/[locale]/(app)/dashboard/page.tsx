@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { BreakdownBars } from "@/components/dashboard/breakdown-bars";
 import { BudgetMeters } from "@/components/dashboard/budget-meters";
+import { QueryError } from "@/components/common/query-error";
 import { CardsDebt } from "@/components/dashboard/cards-debt";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { PeriodControls } from "@/components/dashboard/period-controls";
@@ -50,13 +51,13 @@ function Dashboard() {
       {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <div className="min-w-0 lg:col-span-2">
-          {series.data ? <SpendingChart points={series.data} period={period} /> : <Skeleton className="h-80 w-full" />}
+          {series.error ? <QueryError error={series.error} className="rounded-xl border p-4" /> : series.data ? <SpendingChart points={series.data} period={period} /> : <Skeleton className="h-80 w-full" />}
         </div>
         <UpcomingList />
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} />
-        <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />
+        {byCat.error ? <QueryError error={byCat.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} />}
+        {byPm.error ? <QueryError error={byPm.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
         <BudgetMeters budgets={summary.data?.budgets ?? []} />

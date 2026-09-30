@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Money } from "@/components/common/money";
+import { QueryError } from "@/components/common/query-error";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { parseISODate } from "@/lib/dates";
@@ -18,7 +19,7 @@ export function UpcomingList() {
   const errMsg = useErrorMessage();
   const locale = useLocale();
   const [days, setDays] = useState<7 | 30>(7);
-  const { data = [] } = useUpcoming(days);
+  const { data = [], error } = useUpcoming(days);
   const update = useUpdateEntry();
   const day = (s: string) => format(parseISODate(s), "EEE d MMM", { locale: locale === "en" ? enUS : es });
 
@@ -34,7 +35,9 @@ export function UpcomingList() {
           ))}
         </div>
       </div>
-      {data.length === 0 ? (
+      {error ? (
+        <QueryError error={error} />
+      ) : data.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("dashboard.noData")}</p>
       ) : (
         <ul className="divide-y">

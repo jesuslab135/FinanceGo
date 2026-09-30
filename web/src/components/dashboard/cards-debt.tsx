@@ -5,6 +5,7 @@ import { enUS, es } from "date-fns/locale";
 import { useLocale, useTranslations } from "next-intl";
 import { Meter } from "@/components/common/meter";
 import { Money } from "@/components/common/money";
+import { QueryError } from "@/components/common/query-error";
 import { Link } from "@/i18n/navigation";
 import { parseISODate } from "@/lib/dates";
 import { useCardsOverview } from "@/lib/query/hooks";
@@ -13,11 +14,13 @@ export function CardsDebt() {
   const t = useTranslations("cards");
   const td = useTranslations("dashboard");
   const locale = useLocale();
-  const { data = [] } = useCardsOverview();
+  const { data = [], error } = useCardsOverview();
   return (
     <section className="min-w-0 space-y-3 rounded-xl border p-4">
       <h2 className="font-medium">{td("cardsDebt")}</h2>
-      {data.length === 0 ? (
+      {error ? (
+        <QueryError error={error} />
+      ) : data.length === 0 ? (
         <p className="text-sm text-muted-foreground">{td("noData")}</p>
       ) : (
         <ul className="space-y-4">

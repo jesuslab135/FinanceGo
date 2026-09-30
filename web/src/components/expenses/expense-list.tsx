@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { EmptyState } from "@/components/common/empty-state";
+import { QueryError } from "@/components/common/query-error";
 import { Money } from "@/components/common/money";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const day = (s: string) => format(parseISODate(s), "EEE d MMM", { locale: locale === "en" ? enUS : es });
 
   if (q.isPending) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
+  if (q.isError && rows.length === 0) return <QueryError error={q.error} />;
   if (rows.length === 0) return <EmptyState>{t("expenses.empty")}</EmptyState>;
 
   const actions = (e: Expense) => (
