@@ -79,4 +79,9 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 
 	p.GET("/months/:month/entries", h.monthEntries)
 	p.PUT("/entries/:id", h.updateEntry)
+
+	p.GET("/expenses", h.listExpenses)
+	p.POST("/expenses", h.createExpense)
+	p.PUT("/expenses/:id", h.updateExpense)
+	p.DELETE("/expenses/:id", h.deleteExpense)
 }
