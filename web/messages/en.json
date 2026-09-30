@@ -4,7 +4,7 @@
     "add": "Add", "close": "Close", "loading": "Loading…", "retry": "Retry",
     "confirmTitle": "Are you sure?", "confirmDelete": "This cannot be undone.", "none": "None",
     "optional": "optional", "active": "Active", "inactive": "Inactive", "activate": "Activate",
-    "error": "Something went wrong", "saved": "Saved", "deleted": "Deleted", "empty": "Nothing here yet",
+    "error": "Something went wrong", "saved": "Saved", "deleted": "Deleted", "undo": "Undo", "more": "More actions", "empty": "Nothing here yet",
     "actions": "Actions", "search": "Search", "from": "From", "to": "To", "all": "All",
     "previous": "Previous", "next": "Next", "today": "Today", "total": "Total",
     "dialogHint": "Press Escape to close."
@@ -55,7 +55,7 @@
   "expenses": {
     "title": "Expenses", "new": "New expense", "edit": "Edit expense", "amount": "Amount", "category": "Category",
     "paymentMethod": "Payment method", "description": "Description", "date": "Date", "noMethod": "No method",
-    "loadMore": "Load more", "empty": "No expenses in this range", "searchPlaceholder": "Search description"
+    "loadMore": "Load more", "dayTotal": "Day total", "empty": "No expenses in this range", "searchPlaceholder": "Search description"
   },
   "month": {
     "title": "Month", "income": "Income", "fixed": "Fixed payments", "installments": "Interest-free installments",

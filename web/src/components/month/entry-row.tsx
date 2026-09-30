@@ -2,17 +2,21 @@
 
 import { format } from "date-fns";
 import { enUS, es } from "date-fns/locale";
-import { Pencil } from "lucide-react";
+import { Check, Pencil, SkipForward, Undo2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ListRow } from "@/components/common/list-row";
 import { Money } from "@/components/common/money";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
+import { RowMenu, type RowAction } from "@/components/common/row-menu";
+import { SwipeRow } from "@/components/common/swipe-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Entry } from "@/lib/api/types";
 import { parseISODate } from "@/lib/dates";
 import { useUpdateEntry } from "@/lib/query/hooks";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 import { entryActions } from "./entry-actions";
 import { EntryForm } from "./entry-form";
@@ -23,6 +27,7 @@ export function EntryRow({ entry }: { entry: Entry }) {
   const tc = useTranslations("common");
   const errMsg = useErrorMessage();
   const locale = useLocale();
+  const coarse = useMediaQuery("(pointer: coarse)");
   const update = useUpdateEntry();
   const [editing, setEditing] = useState(false);
   const due = format(parseISODate(entry.due_date), "d MMM", { locale: locale === "en" ? enUS : es });
@@ -34,27 +39,54 @@ export function EntryRow({ entry }: { entry: Entry }) {
       { onError: (e) => toast.error(errMsg(e)) },
     );
 
-  return (
-    <li className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border p-3", entry.status === "skipped" && "opacity-60")}>
-      <div className="min-w-0 flex-1">
-        <p className={cn("truncate font-medium", entry.status === "skipped" && "line-through")}>{entry.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {t("due", { date: due })}
-          {entry.edited && ` · ${t("edited")}`}
-        </p>
-      </div>
+  const all = entryActions(entry);
+  const isPrimary = (key: string) => key === "markPaid" || key === "markReceived";
+  const first = all[0];
+  const primary = isPrimary(first.key) ? first : undefined;
+  const secondary = all.filter((a) => !isPrimary(a.key));
+  const iconFor = (key: string) => (key === "skip" ? SkipForward : Undo2);
+
+  // Swipe-left actions; the RowMenu repeats them and adds the primary status action.
+  const swipeActions: RowAction[] = [
+    ...(entry.kind !== "installment" ? [{ label: tc("edit"), icon: Pencil, onSelect: () => setEditing(true) }] : []),
+    ...secondary.map((a) => ({ label: t(a.key), icon: iconFor(a.key), onSelect: () => setStatus(a.status) })),
+  ];
+  const menuActions: RowAction[] = [
+    ...(primary ? [{ label: t(primary.key), icon: Check, onSelect: () => setStatus(primary.status) }] : []),
+    ...swipeActions,
+  ];
+
+  const trailing = (
+    <div className="flex shrink-0 items-center gap-1">
       <Badge variant={entry.status === "pending" ? "outline" : "secondary"}>{t(`status.${entry.status}`)}</Badge>
-      <Money cents={entry.amount} className="w-28 text-right font-medium" />
-      <div className="flex gap-1">
-        {entryActions(entry).map((a) => (
-          <Button key={a.key} size="sm" variant={a.key === "markPaid" || a.key === "markReceived" ? "default" : "ghost"} disabled={update.isPending} onClick={() => setStatus(a.status)}>
-            {t(a.key)}
-          </Button>
-        ))}
-        {entry.kind !== "installment" && (
-          <Button size="icon" variant="ghost" aria-label={tc("edit")} onClick={() => setEditing(true)}><Pencil /></Button>
-        )}
-      </div>
+      {coarse ? (
+        <RowMenu actions={menuActions} />
+      ) : (
+        <>
+          {all.map((a) => (
+            <Button key={a.key} size="sm" variant={isPrimary(a.key) ? "default" : "ghost"} disabled={update.isPending} onClick={() => setStatus(a.status)}>
+              {t(a.key)}
+            </Button>
+          ))}
+          {entry.kind !== "installment" && (
+            <Button size="icon" variant="ghost" aria-label={tc("edit")} onClick={() => setEditing(true)}><Pencil /></Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <li>
+      <SwipeRow actions={swipeActions} primary={primary && { label: t(primary.key), onRun: () => setStatus(primary.status) }}>
+        <ListRow
+          muted={entry.status === "skipped"}
+          title={<span className={cn(entry.status === "skipped" && "line-through")}>{entry.name}</span>}
+          meta={`${t("due", { date: due })}${entry.edited ? ` · ${t("edited")}` : ""}`}
+          amount={<Money cents={entry.amount} />}
+          trailing={trailing}
+        />
+      </SwipeRow>
       <ResponsiveDialog open={editing} onOpenChange={setEditing} title={t("editEntry")}>
         <EntryForm entry={entry} onDone={() => setEditing(false)} />
       </ResponsiveDialog>

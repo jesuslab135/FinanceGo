@@ -7,24 +7,25 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CategoryTile } from "@/components/common/category-tile";
-import { ConfirmButton } from "@/components/common/confirm-button";
 import { EmptyState } from "@/components/common/empty-state";
-import { QueryError } from "@/components/common/query-error";
+import { ListRow } from "@/components/common/list-row";
 import { Money } from "@/components/common/money";
+import { QueryError } from "@/components/common/query-error";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
+import { RowMenu, type RowAction } from "@/components/common/row-menu";
+import { SwipeRow } from "@/components/common/swipe-row";
+import { FadeInItem, FadeInList } from "@/components/motion/fade-in-list";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import type { Expense } from "@/lib/api/types";
 import { parseISODate } from "@/lib/dates";
 import {
   useCategories, useDeleteExpense, useExpenses, usePaymentMethods, useUpdateExpense, type ExpenseFilters,
 } from "@/lib/query/hooks";
 import { ExpenseForm } from "./expense-form";
-import { useErrorMessage } from "@/lib/api/error-messages";
 
 export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const t = useTranslations();
-  const errMsg = useErrorMessage();
   const locale = useLocale();
   const q = useExpenses(filters);
   const { data: categories = [] } = useCategories();
@@ -32,83 +33,62 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const update = useUpdateExpense();
   const remove = useDeleteExpense();
   const [editing, setEditing] = useState<Expense | null>(null);
+  const { hidden, request } = useUndoableDelete({ remove: (id) => remove.mutateAsync(id) });
 
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
   const pmById = useMemo(() => new Map(methods.map((p) => [p.id, p])), [methods]);
-  const rows = q.data?.pages.flatMap((p) => p.items ?? []) ?? [];
-  const day = (s: string) => format(parseISODate(s), "EEE d MMM", { locale: locale === "en" ? enUS : es });
+  const rows = useMemo(() => (q.data?.pages.flatMap((p) => p.items ?? []) ?? []).filter((e) => !hidden.has(e.id)), [q.data, hidden]);
+  const groups = useMemo(() => {
+    const byDay = new Map<string, Expense[]>();
+    for (const e of rows) byDay.set(e.spent_on, [...(byDay.get(e.spent_on) ?? []), e]);
+    return [...byDay];
+  }, [rows]);
+  const dayLabel = (s: string) =>
+    locale === "en"
+      ? format(parseISODate(s), "EEEE, MMMM d", { locale: enUS })
+      : format(parseISODate(s), "EEEE d 'de' MMMM", { locale: es });
 
   if (q.isPending) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
   if (q.isError && rows.length === 0) return <QueryError error={q.error} />;
   if (rows.length === 0) return <EmptyState>{t("expenses.empty")}</EmptyState>;
 
-  const actions = (e: Expense) => (
-    <div className="flex justify-end gap-1">
-      <Button variant="ghost" size="icon" aria-label={t("common.edit")} onClick={() => setEditing(e)}><Pencil /></Button>
-      <ConfirmButton
-        onConfirm={() =>
-          remove.mutate(e.id, {
-            onSuccess: () => toast.success(t("common.deleted")),
-            onError: (err) => toast.error(errMsg(err)),
-          })
-        }
-      >
-        <Button variant="ghost" size="icon" aria-label={t("common.delete")}><Trash2 /></Button>
-      </ConfirmButton>
-    </div>
-  );
-  const category = (e: Expense) => {
-    const c = catById.get(e.category_id);
-    return (
-      <span className="inline-flex items-center gap-2">
-        {c?.name}
-      </span>
-    );
-  };
+  const actionsFor = (e: Expense): RowAction[] => [
+    { label: t("common.edit"), icon: Pencil, onSelect: () => setEditing(e) },
+    { label: t("common.delete"), icon: Trash2, destructive: true, onSelect: () => request(e.id, t("common.deleted")) },
+  ];
 
   return (
     <div className="space-y-4">
-      {/* mobile: cards */}
-      <ul className="space-y-2 md:hidden">
-        {rows.map((e) => (
-          <li key={e.id} className="flex items-center gap-3 rounded-lg border p-3">
-            <CategoryTile icon={catById.get(e.category_id)?.icon} color={catById.get(e.category_id)?.color} size="md" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{e.description || catById.get(e.category_id)?.name}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {day(e.spent_on)} · {category(e)}{e.payment_method_id ? ` · ${pmById.get(e.payment_method_id)?.nickname ?? ""}` : ""}
-              </p>
-            </div>
-            <Money cents={e.amount} className="font-medium" />
-            {actions(e)}
-          </li>
-        ))}
-      </ul>
-      {/* desktop: table */}
-      <Table className="hidden md:table">
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("expenses.date")}</TableHead>
-            <TableHead>{t("expenses.description")}</TableHead>
-            <TableHead>{t("expenses.category")}</TableHead>
-            <TableHead>{t("expenses.paymentMethod")}</TableHead>
-            <TableHead className="text-right">{t("expenses.amount")}</TableHead>
-            <TableHead><span className="sr-only">{t("common.actions")}</span></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((e) => (
-            <TableRow key={e.id}>
-              <TableCell className="whitespace-nowrap">{day(e.spent_on)}</TableCell>
-              <TableCell className="max-w-64 truncate">{e.description}</TableCell>
-              <TableCell>{category(e)}</TableCell>
-              <TableCell>{e.payment_method_id ? pmById.get(e.payment_method_id)?.nickname : "—"}</TableCell>
-              <TableCell className="text-right"><Money cents={e.amount} /></TableCell>
-              <TableCell>{actions(e)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {groups.map(([spentOn, items]) => (
+        <section key={spentOn}>
+          <h3 className="sticky top-0 z-10 flex items-baseline justify-between bg-background/90 py-2 text-sm backdrop-blur">
+            <span className="font-medium capitalize">{dayLabel(spentOn)}</span>
+            <span className="text-xs text-muted-foreground">
+              {t("expenses.dayTotal")} <Money cents={items.reduce((a, e) => a + e.amount, 0)} className="font-semibold text-foreground" />
+            </span>
+          </h3>
+          <FadeInList className="space-y-2">
+            {items.map((e) => {
+              const c = catById.get(e.category_id);
+              const method = e.payment_method_id ? pmById.get(e.payment_method_id)?.nickname : undefined;
+              const actions = actionsFor(e);
+              return (
+                <FadeInItem key={e.id}>
+                  <SwipeRow actions={actions}>
+                    <ListRow
+                      leading={<CategoryTile icon={c?.icon} color={c?.color} size="md" />}
+                      title={e.description || c?.name}
+                      meta={[c?.name, method].filter(Boolean).join(" · ")}
+                      amount={<Money cents={e.amount} />}
+                      trailing={<RowMenu actions={actions} />}
+                    />
+                  </SwipeRow>
+                </FadeInItem>
+              );
+            })}
+          </FadeInList>
+        </section>
+      ))}
       {q.hasNextPage && (
         <div className="flex justify-center">
           <Button variant="outline" onClick={() => q.fetchNextPage()} disabled={q.isFetchingNextPage}>{t("expenses.loadMore")}</Button>

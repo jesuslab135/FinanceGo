@@ -4,7 +4,7 @@
     "add": "Agregar", "close": "Cerrar", "loading": "Cargando…", "retry": "Reintentar",
     "confirmTitle": "¿Estás seguro?", "confirmDelete": "Esta acción no se puede deshacer.", "none": "Ninguno",
     "optional": "opcional", "active": "Activo", "inactive": "Inactivo", "activate": "Activar",
-    "error": "Algo salió mal", "saved": "Guardado", "deleted": "Eliminado", "empty": "Aún no hay nada aquí",
+    "error": "Algo salió mal", "saved": "Guardado", "deleted": "Eliminado", "undo": "Deshacer", "more": "Más acciones", "empty": "Aún no hay nada aquí",
     "actions": "Acciones", "search": "Buscar", "from": "Desde", "to": "Hasta", "all": "Todos",
     "previous": "Anterior", "next": "Siguiente", "today": "Hoy", "total": "Total",
     "dialogHint": "Presiona Escape para cerrar."
@@ -55,7 +55,7 @@
   "expenses": {
     "title": "Gastos", "new": "Nuevo gasto", "edit": "Editar gasto", "amount": "Monto", "category": "Categoría",
     "paymentMethod": "Método de pago", "description": "Descripción", "date": "Fecha", "noMethod": "Sin método",
-    "loadMore": "Cargar más", "empty": "No hay gastos en este rango", "searchPlaceholder": "Buscar descripción"
+    "loadMore": "Cargar más", "dayTotal": "Total del día", "empty": "No hay gastos en este rango", "searchPlaceholder": "Buscar descripción"
   },
   "month": {
     "title": "Mes", "income": "Ingresos", "fixed": "Pagos fijos", "installments": "Meses sin intereses",
