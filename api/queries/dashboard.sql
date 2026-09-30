@@ -96,3 +96,19 @@ SELECT * FROM monthly_entries
 WHERE user_id = @user_id AND kind = 'fixed' AND status = 'pending'
   AND due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
 ORDER BY due_date, id;
+
+-- name: ExportExpenses :many
+SELECT e.spent_on, c.name AS category, pm.nickname AS payment_method, e.description, e.amount
+FROM expenses e
+JOIN categories c ON c.id = e.category_id
+LEFT JOIN payment_methods pm ON pm.id = e.payment_method_id
+WHERE e.user_id = @user_id AND e.spent_on BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+ORDER BY e.spent_on, e.id;
+
+-- name: ExportEntries :many
+SELECT m.month, m.kind, m.name, c.name AS category, pm.nickname AS payment_method, m.due_date, m.status, m.amount
+FROM monthly_entries m
+LEFT JOIN categories c ON c.id = m.category_id
+LEFT JOIN payment_methods pm ON pm.id = m.payment_method_id
+WHERE m.user_id = @user_id AND m.due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+ORDER BY m.due_date, m.id;

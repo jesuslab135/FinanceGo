@@ -147,3 +147,29 @@ func (h *handlers) putMe(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, u)
 }
+
+type deleteAccountInput struct {
+	Password string `json:"password"`
+}
+
+// deleteMe godoc
+// @Summary  Permanently delete the account and all its data
+// @Tags     me
+// @Accept   json
+// @Security BearerAuth
+// @Param    body body deleteAccountInput true "current password"
+// @Success  204
+// @Failure  422 {object} ErrorResponse
+// @Router   /me [delete]
+func (h *handlers) deleteMe(c *gin.Context) {
+	var in deleteAccountInput
+	if !bind(c, &in) {
+		return
+	}
+	if err := h.svc.DeleteAccount(c.Request.Context(), actorOf(c), in.Password); err != nil {
+		fail(c, err)
+		return
+	}
+	h.setRefreshCookie(c, "", -1)
+	c.Status(http.StatusNoContent)
+}

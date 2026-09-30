@@ -186,6 +186,110 @@ func (q *Queries) DeleteCategoryBudget(ctx context.Context, arg DeleteCategoryBu
 	return result.RowsAffected(), nil
 }
 
+const exportEntries = `-- name: ExportEntries :many
+SELECT m.month, m.kind, m.name, c.name AS category, pm.nickname AS payment_method, m.due_date, m.status, m.amount
+FROM monthly_entries m
+LEFT JOIN categories c ON c.id = m.category_id
+LEFT JOIN payment_methods pm ON pm.id = m.payment_method_id
+WHERE m.user_id = $1 AND m.due_date BETWEEN $2::date AND $3::date
+ORDER BY m.due_date, m.id
+`
+
+type ExportEntriesParams struct {
+	UserID   int64
+	FromDate time.Time
+	ToDate   time.Time
+}
+
+type ExportEntriesRow struct {
+	Month         time.Time
+	Kind          string
+	Name          string
+	Category      *string
+	PaymentMethod *string
+	DueDate       time.Time
+	Status        string
+	Amount        int64
+}
+
+func (q *Queries) ExportEntries(ctx context.Context, arg ExportEntriesParams) ([]ExportEntriesRow, error) {
+	rows, err := q.db.Query(ctx, exportEntries, arg.UserID, arg.FromDate, arg.ToDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ExportEntriesRow
+	for rows.Next() {
+		var i ExportEntriesRow
+		if err := rows.Scan(
+			&i.Month,
+			&i.Kind,
+			&i.Name,
+			&i.Category,
+			&i.PaymentMethod,
+			&i.DueDate,
+			&i.Status,
+			&i.Amount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const exportExpenses = `-- name: ExportExpenses :many
+SELECT e.spent_on, c.name AS category, pm.nickname AS payment_method, e.description, e.amount
+FROM expenses e
+JOIN categories c ON c.id = e.category_id
+LEFT JOIN payment_methods pm ON pm.id = e.payment_method_id
+WHERE e.user_id = $1 AND e.spent_on BETWEEN $2::date AND $3::date
+ORDER BY e.spent_on, e.id
+`
+
+type ExportExpensesParams struct {
+	UserID   int64
+	FromDate time.Time
+	ToDate   time.Time
+}
+
+type ExportExpensesRow struct {
+	SpentOn       time.Time
+	Category      string
+	PaymentMethod *string
+	Description   string
+	Amount        int64
+}
+
+func (q *Queries) ExportExpenses(ctx context.Context, arg ExportExpensesParams) ([]ExportExpensesRow, error) {
+	rows, err := q.db.Query(ctx, exportExpenses, arg.UserID, arg.FromDate, arg.ToDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ExportExpensesRow
+	for rows.Next() {
+		var i ExportExpensesRow
+		if err := rows.Scan(
+			&i.SpentOn,
+			&i.Category,
+			&i.PaymentMethod,
+			&i.Description,
+			&i.Amount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCategoryBudgets = `-- name: ListCategoryBudgets :many
 SELECT id, user_id, category_id, monthly_limit, created_at, updated_at FROM category_budgets WHERE user_id = $1 ORDER BY category_id
 `

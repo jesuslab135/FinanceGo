@@ -102,4 +102,7 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.GET("/dashboard/breakdown", h.dashboardBreakdown)
 	p.GET("/dashboard/cards", h.dashboardCards)
 	p.GET("/dashboard/upcoming", h.dashboardUpcoming)
+	p.DELETE("/me", h.deleteMe)
+	p.GET("/export/expenses.csv", h.exportExpenses)
+	p.GET("/export/entries.csv", h.exportEntries)
 }
