@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CardTile } from "@/components/cards/card-tile";
 import { PaymentMethodForm } from "@/components/cards/payment-method-form";
+import { CategoryTile } from "@/components/common/category-tile";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { EmptyState } from "@/components/common/empty-state";
 import { ListRow } from "@/components/common/list-row";
@@ -55,11 +56,7 @@ export default function CardsPage() {
               <li key={m.id}>
                 <ListRow
                   muted={!m.active}
-                  leading={
-                    <span aria-hidden className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--tile)_15%,transparent)] dark:bg-[color-mix(in_srgb,var(--tile)_22%,transparent)]" style={{ ["--tile" as string]: m.color, color: m.color }}>
-                      {m.type === "cash" ? <Wallet className="size-5" /> : <ArrowLeftRight className="size-5" />}
-                    </span>
-                  }
+                  leading={<CategoryTile Icon={m.type === "cash" ? Wallet : ArrowLeftRight} color={m.color} />}
                   title={`${m.nickname}${m.last4 ? ` ···· ${m.last4}` : ""}`}
                   meta={`${t(`cards.types.${m.type}`)}${m.active ? "" : ` · ${t("common.inactive")}`}`}
                   trailing={

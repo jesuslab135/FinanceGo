@@ -116,7 +116,7 @@
     "budget": "Límite mensual", "budgetFor": "Límite mensual de {name}", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
   },
   "settings": {
-    "theme": "Apariencia", "themeLight": "Claro", "themeDark": "Oscuro", "themeSystem": "Sistema",
+    "theme": "Apariencia",
     "title": "Ajustes", "profile": "Perfil", "export": "Exportar datos", "exportExpenses": "Gastos (CSV)",
     "exportEntries": "Ingresos y pagos fijos (CSV)", "danger": "Zona de peligro", "deleteAccount": "Eliminar cuenta",
     "deleteWarning": "Se borrarán tu cuenta y todos tus datos. No se puede deshacer.",
@@ -125,11 +125,11 @@
   "dashboard": {
     "heroLabel": "Te quedan este mes", "heroHint": "≈ {amount} al día · {days, plural, one {# día} other {# días}}",
     "greeting": { "morning": "¡Buenos días, {name}!", "afternoon": "¡Buenas tardes, {name}!", "evening": "¡Buenas noches, {name}!", "morningNoName": "¡Buenos días!", "afternoonNoName": "¡Buenas tardes!", "eveningNoName": "¡Buenas noches!" },
-    "title": "Resumen", "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha", "periodLabel": "Periodo",
+    "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha", "periodLabel": "Periodo",
     "income": "Ingresos del mes", "fixed": "Fijos del mes", "fixedDetail": "{paid} pagado · {pending} pendiente",
     "installments": "MSI del mes",
     "spent": { "day": "Gastado este día", "week": "Gastado esta semana", "month": "Gastado este mes" },
-    "available": "Disponible del mes", "overspent": "Sobregirado",
+    "overspent": "Sobregirado",
     "spending": "Gasto en el tiempo", "expensesSeries": "Gastos", "committedSeries": "Fijos y MSI",
     "byCategory": "Por categoría", "byMethod": "Por método de pago", "noMethod": "Sin método",
     "other": "Otros", "budgets": "Límites por categoría", "upcoming": "Próximos pagos", "overdue": "Vencido",

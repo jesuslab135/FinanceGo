@@ -7,6 +7,5 @@ export const stagger = { chips: 0.04, bars: 0.06 } as const;
 export const riseIn = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, height: 0, marginTop: 0, marginBottom: 0 },
   transition: { duration: duration.small, ease: ease.enter },
 };

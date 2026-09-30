@@ -23,9 +23,9 @@ import { fieldMessageKey, localizeFields, useErrorMessage } from "@/lib/api/erro
 const cardCls = "rounded-2xl shadow-card ring-0";
 
 const THEMES = [
-  { value: "light", key: "settings.themeLight", preview: "#f6efe7" },
-  { value: "dark", key: "settings.themeDark", preview: "#1c1714" },
-  { value: "system", key: "settings.themeSystem", preview: "linear-gradient(90deg, #f6efe7 50%, #1c1714 50%)" },
+  { value: "light", key: "nav.themeLight", preview: "#f6efe7" },
+  { value: "dark", key: "nav.themeDark", preview: "#1c1714" },
+  { value: "system", key: "nav.themeSystem", preview: "linear-gradient(90deg, #f6efe7 50%, #1c1714 50%)" },
 ] as const;
 
 /** Persisted by next-themes (localStorage + class on <html>, applied before paint); "system" is the default. */

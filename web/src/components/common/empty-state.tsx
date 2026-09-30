@@ -16,19 +16,17 @@ const illustrations = {
 
 export type EmptyIllustration = keyof typeof illustrations;
 
-/** The illustration is decorative (aria-hidden); the text, title and action carry the meaning. */
-export function EmptyState({ children, action, illustration, title }: {
+/** The illustration is decorative (aria-hidden); the text and action carry the meaning. */
+export function EmptyState({ children, action, illustration }: {
   children: ReactNode;
   action?: ReactNode;
   illustration?: EmptyIllustration;
-  title?: string;
 }) {
   const Art = illustration ? illustrations[illustration] : null;
   return (
     <FadeInList as="div">
       <FadeInItem as="div" layout={false} className="flex flex-col items-center gap-3 rounded-2xl bg-card p-8 text-center text-sm shadow-card">
         {Art && <Art className="h-auto w-40 max-w-full text-muted-foreground" />}
-        {title && <p className="font-display text-base font-bold">{title}</p>}
         <p className="text-muted-foreground">{children}</p>
         {action && <div className="flex w-full max-w-xs flex-col items-stretch">{action}</div>}
       </FadeInItem>

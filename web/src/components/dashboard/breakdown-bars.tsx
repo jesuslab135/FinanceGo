@@ -9,7 +9,7 @@ import type { BreakdownItem } from "@/lib/api/types";
 
 const TOP = 7;
 
-export function BreakdownBars({ title, items, fallbackName, identityDots = true, icons }: { title: string; /** `undefined` while loading. */ items: BreakdownItem[] | undefined; fallbackName: string; identityDots?: boolean; icons?: Record<number, string> }) {
+export function BreakdownBars({ title, items, fallbackName, icons }: { title: string; /** `undefined` while loading. */ items: BreakdownItem[] | undefined; fallbackName: string; icons?: Record<number, string> }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
   const list = items ?? [];
@@ -36,7 +36,7 @@ export function BreakdownBars({ title, items, fallbackName, identityDots = true,
                     {icons ? (
                       <CategoryTile icon={r.id != null ? icons[r.id] : undefined} color={r.color} size="sm" />
                     ) : (
-                      identityDots && <span className="size-2.5 shrink-0 rounded-full" style={{ background: r.color }} aria-hidden />
+                      <span className="size-2.5 shrink-0 rounded-full" style={{ background: r.color }} aria-hidden />
                     )}
                     {name}
                   </span>

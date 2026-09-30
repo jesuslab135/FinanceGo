@@ -38,6 +38,3 @@ export function KpiChips({ summary: s, spent, period, spentStale = false }: { su
     </FadeInList>
   );
 }
-
-/** Alias kept until every import uses KpiChips. */
-export const KpiCards = KpiChips;

@@ -165,7 +165,6 @@
 }
 
 @utility num { font-variant-numeric: tabular-nums; }
-@utility font-display { font-family: var(--font-display); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

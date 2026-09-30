@@ -116,7 +116,7 @@
     "budget": "Monthly limit", "budgetFor": "Monthly limit for {name}", "noBudget": "No limit", "removeBudget": "Remove limit"
   },
   "settings": {
-    "theme": "Appearance", "themeLight": "Light", "themeDark": "Dark", "themeSystem": "System",
+    "theme": "Appearance",
     "title": "Settings", "profile": "Profile", "export": "Export data", "exportExpenses": "Expenses (CSV)",
     "exportEntries": "Income & fixed payments (CSV)", "danger": "Danger zone", "deleteAccount": "Delete account",
     "deleteWarning": "Your account and all your data will be deleted. This cannot be undone.",
@@ -125,11 +125,11 @@
   "dashboard": {
     "heroLabel": "Left this month", "heroHint": "≈ {amount} a day · {days, plural, one {# day} other {# days}}",
     "greeting": { "morning": "Good morning, {name}!", "afternoon": "Good afternoon, {name}!", "evening": "Good evening, {name}!", "morningNoName": "Good morning!", "afternoonNoName": "Good afternoon!", "eveningNoName": "Good evening!" },
-    "title": "Overview", "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date", "periodLabel": "Period",
+    "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date", "periodLabel": "Period",
     "income": "Income this month", "fixed": "Fixed this month", "fixedDetail": "{paid} paid · {pending} pending",
     "installments": "Installments this month",
     "spent": { "day": "Spent this day", "week": "Spent this week", "month": "Spent this month" },
-    "available": "Available this month", "overspent": "Overspent",
+    "overspent": "Overspent",
     "spending": "Spending over time", "expensesSeries": "Expenses", "committedSeries": "Fixed & installments",
     "byCategory": "By category", "byMethod": "By payment method", "noMethod": "No method",
     "other": "Other", "budgets": "Category limits", "upcoming": "Upcoming payments", "overdue": "Overdue",
