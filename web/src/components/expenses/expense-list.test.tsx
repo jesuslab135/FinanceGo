@@ -1,12 +1,12 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
 import { renderWithProviders } from "@/test/render";
 import { ExpenseList } from "./expense-list";
 
-const toastMock = vi.hoisted(() => vi.fn());
-vi.mock("sonner", () => ({ toast: Object.assign(toastMock, { error: vi.fn(), success: vi.fn() }) }));
+const toastMock = vi.hoisted(() => Object.assign(vi.fn<(label: string, opts: { action: { onClick: () => void } }) => string>(() => "tid"), { error: vi.fn(), success: vi.fn(), dismiss: vi.fn() }));
+vi.mock("sonner", () => ({ toast: toastMock }));
 
 const state = vi.hoisted(() => ({ expenses: { isPending: false, isError: false, error: null, data: undefined, hasNextPage: false } as Record<string, unknown> }));
 const removeAsync = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
@@ -27,6 +27,8 @@ describe("ExpenseList", () => {
     removeAsync.mockClear();
     vi.stubGlobal("matchMedia", (query: string) => ({ matches: false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   });
+
+  afterEach(() => vi.unstubAllGlobals());
 
   it("shows a localized load error instead of the empty state", () => {
     state.expenses = { isPending: false, isError: true, error: new ApiError(500, "internal", "pq: connection refused"), data: undefined };

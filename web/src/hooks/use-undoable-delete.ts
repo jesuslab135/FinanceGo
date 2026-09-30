@@ -4,56 +4,65 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { toast } from "sonner";
 import { useErrorMessage } from "@/lib/api/error-messages";
 
+type Pending = { timer: ReturnType<typeof setTimeout>; toastId: string | number };
+
 /** Optimistic delete with an undo window; the API call happens when the window closes or on unmount. */
 export function useUndoableDelete({ remove, delayMs = 5000 }: { remove: (id: number) => Promise<unknown>; delayMs?: number }) {
   const t = useTranslations("common");
   const errMsg = useErrorMessage();
   const [hidden, setHidden] = useState<Set<number>>(() => new Set());
-  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+  const pending = useRef(new Map<number, Pending>());
   const removeRef = useRef(remove);
-  useLayoutEffect(() => { removeRef.current = remove; });
+  const errMsgRef = useRef(errMsg);
+  useLayoutEffect(() => { removeRef.current = remove; errMsgRef.current = errMsg; });
 
   const unhide = useCallback((id: number) => setHidden((h) => { const n = new Set(h); n.delete(id); return n; }), []);
 
-  const commit = useCallback(async (id: number) => {
-    timers.current.delete(id);
-    try {
-      await removeRef.current(id);
-    } catch (e) {
-      unhide(id);
-      toast.error(errMsg(e));
-    }
-  }, [errMsg, unhide]);
+  /** Runs the API delete; on failure the row comes back (unless unmounted) and a global toast explains. */
+  const run = useCallback((id: number, restore: boolean) => {
+    void new Promise((resolve) => resolve(removeRef.current(id)))
+      .catch((e: unknown) => {
+        if (restore) unhide(id);
+        toast.error(errMsgRef.current(e));
+      });
+  }, [unhide]);
+
+  const cancel = useCallback((id: number) => {
+    const p = pending.current.get(id);
+    if (!p) return;
+    clearTimeout(p.timer);
+    toast.dismiss(p.toastId);
+    pending.current.delete(id);
+  }, []);
 
   const request = useCallback((id: number, label: string) => {
+    cancel(id); // a repeated request must not schedule a second DELETE
     setHidden((h) => new Set(h).add(id));
-    timers.current.set(id, setTimeout(() => void commit(id), delayMs));
-    toast(label, {
+    const timer = setTimeout(() => {
+      cancel(id);
+      run(id, true);
+    }, delayMs);
+    const toastId = toast(label, {
       duration: delayMs,
       action: {
         label: t("undo"),
-        onClick: () => {
-          const tm = timers.current.get(id);
-          if (tm) clearTimeout(tm);
-          timers.current.delete(id);
-          unhide(id);
-        },
+        onClick: () => { cancel(id); unhide(id); },
       },
     });
-  }, [commit, delayMs, t, unhide]);
+    pending.current.set(id, { timer, toastId });
+  }, [cancel, delayMs, run, t, unhide]);
 
   useEffect(() => {
-    const pending = timers.current;
+    const map = pending.current;
     const flush = () => {
-      for (const [id, tm] of pending) {
-        clearTimeout(tm);
-        void removeRef.current(id);
+      for (const id of [...map.keys()]) {
+        cancel(id);
+        run(id, false);
       }
-      pending.clear();
     };
     window.addEventListener("pagehide", flush);
     return () => { window.removeEventListener("pagehide", flush); flush(); };
-  }, []);
+  }, [cancel, run]);
 
   return { hidden, request };
 }

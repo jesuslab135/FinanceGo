@@ -33,11 +33,14 @@ export function EntryRow({ entry }: { entry: Entry }) {
   const due = format(parseISODate(entry.due_date), "d MMM", { locale: locale === "en" ? enUS : es });
 
   // Status-only change: settled_on is omitted so the server defaults it (today for paid/received).
-  const setStatus = (status: string) =>
+  // Guarded by isPending so swipe and menu actions behave like the disabled desktop buttons.
+  const setStatus = (status: string) => {
+    if (update.isPending) return;
     update.mutate(
       { id: entry.id, amount: entry.amount, status, payment_method_id: entry.payment_method_id ?? undefined },
       { onError: (e) => toast.error(errMsg(e)) },
     );
+  };
 
   const all = entryActions(entry);
   const isPrimary = (key: string) => key === "markPaid" || key === "markReceived";

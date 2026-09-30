@@ -15,7 +15,7 @@ export function RowMenu({ actions }: { actions: RowAction[] }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {actions.map((a) => (
-          <DropdownMenuItem key={a.label} onSelect={a.onSelect} className={a.destructive ? "text-critical focus:text-critical" : undefined}>
+          <DropdownMenuItem key={a.label} onSelect={a.onSelect} className={a.destructive ? "min-h-11 text-critical focus:text-critical" : "min-h-11"}>
             <a.icon /> {a.label}
           </DropdownMenuItem>
         ))}
