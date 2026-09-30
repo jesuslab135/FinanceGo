@@ -13,11 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api/client";
 import { useErrorMessage } from "@/lib/api/error-messages";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { celebrate } from "@/lib/celebrate";
 import type { ExpenseInput } from "@/lib/api/types";
 import { toISODate } from "@/lib/dates";
 import { duration, ease } from "@/lib/motion";
 import { useCategories, useCreateExpense, useDeleteExpense, usePaymentMethods } from "@/lib/query/hooks";
 import { defaultCard, useRecents } from "@/lib/recents";
+import { readJSON, userKey, writeJSON } from "@/lib/storage";
 
 type Step = 1 | 2 | 3;
 
@@ -35,6 +38,7 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
   const create = useCreateExpense();
   const remove = useDeleteExpense();
   const [recents, record] = useRecents();
+  const { user } = useAuth();
 
   const [step, setStep] = useState<Step>(prefill ? 3 : 1);
   const [dir, setDir] = useState<1 | -1>(1);
@@ -69,10 +73,29 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
     ? categories.find((c) => c.id === suggested)
     : undefined;
 
+  /** True only when the user has never logged an expense and was never celebrated; a Repetir (prefill) save is never the first. */
+  const isFirstExpense = async (): Promise<boolean> => {
+    if (prefill || !user) return false;
+    const key = userKey(user.id, "celebrated-first");
+    if (readJSON(key, false)) return false;
+    try {
+      const res = await api.GET("/expenses", { params: { query: { limit: 1 } } });
+      if (!res.data) return false;
+      if ((res.data.items ?? []).length > 0) {
+        writeJSON(key, true); // an established user: never check again
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const save = async () => {
     if (categoryId === null || cents <= 0 || saving) return;
     setSaving(true);
     try {
+      const first = await isFirstExpense();
       const created = await create.mutateAsync({
         amount: cents,
         category_id: categoryId,
@@ -85,7 +108,10 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
       navigator.vibrate?.(10);
       toast(t("common.saved"), { action: { label: t("common.undo"), onClick: () => remove.mutate(created.id) } });
       onDone();
-      // Task 10: celebrate("firstExpense") when this was the user's first expense
+      if (first && user) {
+        writeJSON(userKey(user.id, "celebrated-first"), true);
+        void celebrate("firstExpense", t("celebrate.firstExpense"), { reduceMotion: reduce ?? undefined });
+      }
     } catch (e) {
       toast.error(errMsg(e));
       setSaving(false);

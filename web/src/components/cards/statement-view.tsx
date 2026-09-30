@@ -18,7 +18,7 @@ import { useDeleteCardPayment, useStatement } from "@/lib/query/hooks";
 import { CardPaymentForm } from "./card-payment-form";
 import { useErrorMessage } from "@/lib/api/error-messages";
 
-export function StatementView({ cardId }: { cardId: number }) {
+export function StatementView({ cardId, cardName }: { cardId: number; cardName: string }) {
   const t = useTranslations();
   const errMsg = useErrorMessage();
   const locale = useLocale();
@@ -118,7 +118,7 @@ export function StatementView({ cardId }: { cardId: number }) {
       </>
       )}
       <ResponsiveDialog open={paying} onOpenChange={setPaying} title={t("cards.recordPayment")}>
-        <CardPaymentForm cardId={cardId} defaultAmount={s?.amount_due ?? 0} onDone={() => setPaying(false)} />
+        <CardPaymentForm cardId={cardId} cardName={cardName} cycle={cycle} defaultAmount={s?.amount_due ?? 0} onDone={() => setPaying(false)} />
       </ResponsiveDialog>
     </section>
   );

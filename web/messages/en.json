@@ -147,5 +147,6 @@
     "setup": "Finish setting up to see your real numbers",
     "tone": { "info": "Notice", "good": "Good news", "warn": "Heads up", "critical": "Urgent" }
   },
+  "celebrate": { "firstExpense":"First expense logged, great start 🎉", "cardPaidOff":"{name} is paid off 🎉", "monthUnderBudget":"You closed {month} within budget 🎉", "welcome":"All set, here are your numbers 🎉" },
   "icons": {"food":"Food","coffee":"Coffee","drinks":"Drinks","groceries":"Groceries","car":"Car","fuel":"Fuel","transit":"Transit","bike":"Bike","travel":"Travel","home":"Home","utilities":"Utilities","internet":"Internet","phone":"Phone","repairs":"Repairs","health":"Health","pharmacy":"Pharmacy","gym":"Gym","personalCare":"Personal care","entertainment":"Entertainment","music":"Music","games":"Games","books":"Books","education":"Education","kids":"Kids","pets":"Pets","cat":"Cat","clothing":"Clothing","shopping":"Shopping","gifts":"Gifts","tech":"Tech","subscriptions":"Subscriptions","fees":"Fees","card":"Card","bills":"Bills","taxes":"Taxes","savings":"Savings","delivery":"Delivery","salary":"Salary","otherIncome":"Other income","other":"Other"}
 }

@@ -9,6 +9,9 @@ import { QuickAddFlow } from "./quick-add-flow";
 const media = vi.hoisted(() => ({ desktop: true }));
 vi.mock("@/lib/use-media-query", () => ({ useMediaQuery: () => media.desktop }));
 
+const celebrateMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/celebrate", () => ({ celebrate: celebrateMock }));
+
 const h = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
   del: vi.fn(),
@@ -33,6 +36,7 @@ vi.mock("@/lib/query/hooks", () => ({
 describe("QuickAddFlow", () => {
   beforeEach(() => {
     localStorage.clear();
+    celebrateMock.mockReset();
     h.mutateAsync.mockReset().mockResolvedValue({ id: 50 });
     h.get.mockReset().mockResolvedValue({ data: { items: [] } });
   });
@@ -117,5 +121,46 @@ describe("QuickAddFlow", () => {
     screen.getByRole("button", { name: "1" }).focus();
     await userEvent.keyboard("{Enter}");
     expect(await screen.findByRole("radiogroup", { name: "Categoría" })).toBeInTheDocument();
+  });
+
+  describe("first expense celebration", () => {
+    const saveNew = async () => {
+      renderWithProviders(<QuickAddFlow onDone={vi.fn()} />);
+      await userEvent.keyboard("500");
+      await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+      await userEvent.click(await screen.findByRole("radio", { name: "Comida" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Guardar" }));
+      await waitFor(() => expect(h.mutateAsync).toHaveBeenCalled());
+    };
+
+    it("celebrates once when the user has no expenses yet, and never again", async () => {
+      await saveNew();
+      await waitFor(() => expect(celebrateMock).toHaveBeenCalledWith("firstExpense", "¡Primer gasto registrado! Vas muy bien 🎉", expect.anything()));
+      expect(JSON.parse(localStorage.getItem("fin:celebrated-first:1")!)).toBe(true);
+      celebrateMock.mockReset();
+      document.body.innerHTML = "";
+      await saveNew();
+      expect(celebrateMock).not.toHaveBeenCalled();
+    });
+
+    it("does not celebrate an established user, and remembers not to ask again", async () => {
+      h.get.mockResolvedValue({ data: { items: [{ id: 9, category_id: 1 }] } });
+      await saveNew();
+      expect(celebrateMock).not.toHaveBeenCalled();
+      expect(JSON.parse(localStorage.getItem("fin:celebrated-first:1")!)).toBe(true);
+    });
+
+    it("never celebrates a Repetir (prefill) save", async () => {
+      renderWithProviders(<QuickAddFlow prefill={{ amount: 500, category_id: 2 }} onDone={vi.fn()} />);
+      await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
+      await waitFor(() => expect(h.mutateAsync).toHaveBeenCalled());
+      expect(celebrateMock).not.toHaveBeenCalled();
+    });
+
+    it("does not celebrate when the check fails", async () => {
+      h.get.mockRejectedValue(new Error("offline"));
+      await saveNew();
+      expect(celebrateMock).not.toHaveBeenCalled();
+    });
   });
 });

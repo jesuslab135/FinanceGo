@@ -147,5 +147,6 @@
     "setup": "Completa tu configuración para ver tus números reales",
     "tone": { "info": "Aviso", "good": "Buena noticia", "warn": "Atención", "critical": "Urgente" }
   },
+  "celebrate": { "firstExpense":"¡Primer gasto registrado! Vas muy bien 🎉", "cardPaidOff":"¡{name} al corriente! 🎉", "monthUnderBudget":"¡Cerraste {month} dentro de tu presupuesto! 🎉", "welcome":"¡Todo listo! Estos son tus números 🎉" },
   "icons": {"food":"Comida","coffee":"Café","drinks":"Bebidas","groceries":"Súper","car":"Auto","fuel":"Gasolina","transit":"Transporte público","bike":"Bici","travel":"Viajes","home":"Hogar","utilities":"Servicios","internet":"Internet","phone":"Teléfono","repairs":"Reparaciones","health":"Salud","pharmacy":"Farmacia","gym":"Gimnasio","personalCare":"Cuidado personal","entertainment":"Entretenimiento","music":"Música","games":"Juegos","books":"Libros","education":"Educación","kids":"Hijos","pets":"Mascotas","cat":"Gato","clothing":"Ropa","shopping":"Compras","gifts":"Regalos","tech":"Tecnología","subscriptions":"Suscripciones","fees":"Comisiones","card":"Tarjeta","bills":"Recibos","taxes":"Impuestos","savings":"Ahorro","delivery":"Envíos","salary":"Salario","otherIncome":"Otros ingresos","other":"Otros"}
 }

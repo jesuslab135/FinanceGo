@@ -36,7 +36,7 @@ export default function CardPage() {
       </div>
       {pm.type === "credit" ? (
         <>
-          <StatementView cardId={id} />
+          <StatementView cardId={id} cardName={pm.nickname} />
           <PlansList cardId={id} />
         </>
       ) : (
