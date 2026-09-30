@@ -36,3 +36,63 @@ SELECT * FROM category_budgets WHERE user_id = @user_id ORDER BY category_id;
 
 -- name: DeleteCategoryBudget :execrows
 DELETE FROM category_budgets WHERE user_id = @user_id AND category_id = @category_id;
+
+-- name: SpendingSeries :many
+WITH buckets AS (
+    SELECT gs::date AS start
+    FROM generate_series(date_trunc(sqlc.arg(period)::text, sqlc.arg(from_date)::date::timestamp),
+                         date_trunc(sqlc.arg(period)::text, sqlc.arg(to_date)::date::timestamp),
+                         ('1 ' || sqlc.arg(period)::text)::interval) AS gs
+),
+ex AS (
+    SELECT date_trunc(sqlc.arg(period)::text, e.spent_on::timestamp)::date AS start, SUM(e.amount) AS total
+    FROM expenses e
+    WHERE e.user_id = @user_id AND e.spent_on BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+    GROUP BY 1
+),
+fx AS (
+    SELECT date_trunc(sqlc.arg(period)::text, m.due_date::timestamp)::date AS start, SUM(m.amount) AS total
+    FROM monthly_entries m
+    WHERE m.user_id = @user_id AND m.kind IN ('fixed', 'installment') AND m.status <> 'skipped'
+      AND m.due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+    GROUP BY 1
+)
+SELECT b.start::date AS start, COALESCE(ex.total, 0)::bigint AS expenses, COALESCE(fx.total, 0)::bigint AS committed
+FROM buckets b
+LEFT JOIN ex ON ex.start = b.start
+LEFT JOIN fx ON fx.start = b.start
+ORDER BY b.start;
+
+-- name: BreakdownByCategory :many
+SELECT c.id, c.name, c.color, SUM(x.amount)::bigint AS amount
+FROM (
+    SELECT e.category_id, e.amount FROM expenses e
+    WHERE e.user_id = @user_id AND e.spent_on BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+    UNION ALL
+    SELECT m.category_id, m.amount FROM monthly_entries m
+    WHERE m.user_id = @user_id AND m.kind IN ('fixed', 'installment') AND m.status <> 'skipped'
+      AND m.due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+) x
+JOIN categories c ON c.id = x.category_id
+GROUP BY c.id, c.name, c.color
+ORDER BY amount DESC, c.name;
+
+-- name: BreakdownByPaymentMethod :many
+SELECT pm.id, pm.nickname, pm.color, SUM(x.amount)::bigint AS amount
+FROM (
+    SELECT e.payment_method_id, e.amount FROM expenses e
+    WHERE e.user_id = @user_id AND e.spent_on BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+    UNION ALL
+    SELECT m.payment_method_id, m.amount FROM monthly_entries m
+    WHERE m.user_id = @user_id AND m.kind IN ('fixed', 'installment') AND m.status <> 'skipped'
+      AND m.due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+) x
+LEFT JOIN payment_methods pm ON pm.id = x.payment_method_id
+GROUP BY pm.id, pm.nickname, pm.color
+ORDER BY amount DESC;
+
+-- name: UpcomingFixedEntries :many
+SELECT * FROM monthly_entries
+WHERE user_id = @user_id AND kind = 'fixed' AND status = 'pending'
+  AND due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
+ORDER BY due_date, id;

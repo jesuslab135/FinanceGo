@@ -10,6 +10,112 @@ import (
 	"time"
 )
 
+const breakdownByCategory = `-- name: BreakdownByCategory :many
+SELECT c.id, c.name, c.color, SUM(x.amount)::bigint AS amount
+FROM (
+    SELECT e.category_id, e.amount FROM expenses e
+    WHERE e.user_id = $1 AND e.spent_on BETWEEN $2::date AND $3::date
+    UNION ALL
+    SELECT m.category_id, m.amount FROM monthly_entries m
+    WHERE m.user_id = $1 AND m.kind IN ('fixed', 'installment') AND m.status <> 'skipped'
+      AND m.due_date BETWEEN $2::date AND $3::date
+) x
+JOIN categories c ON c.id = x.category_id
+GROUP BY c.id, c.name, c.color
+ORDER BY amount DESC, c.name
+`
+
+type BreakdownByCategoryParams struct {
+	UserID   int64
+	FromDate time.Time
+	ToDate   time.Time
+}
+
+type BreakdownByCategoryRow struct {
+	ID     int64
+	Name   string
+	Color  string
+	Amount int64
+}
+
+func (q *Queries) BreakdownByCategory(ctx context.Context, arg BreakdownByCategoryParams) ([]BreakdownByCategoryRow, error) {
+	rows, err := q.db.Query(ctx, breakdownByCategory, arg.UserID, arg.FromDate, arg.ToDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BreakdownByCategoryRow
+	for rows.Next() {
+		var i BreakdownByCategoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Color,
+			&i.Amount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const breakdownByPaymentMethod = `-- name: BreakdownByPaymentMethod :many
+SELECT pm.id, pm.nickname, pm.color, SUM(x.amount)::bigint AS amount
+FROM (
+    SELECT e.payment_method_id, e.amount FROM expenses e
+    WHERE e.user_id = $1 AND e.spent_on BETWEEN $2::date AND $3::date
+    UNION ALL
+    SELECT m.payment_method_id, m.amount FROM monthly_entries m
+    WHERE m.user_id = $1 AND m.kind IN ('fixed', 'installment') AND m.status <> 'skipped'
+      AND m.due_date BETWEEN $2::date AND $3::date
+) x
+LEFT JOIN payment_methods pm ON pm.id = x.payment_method_id
+GROUP BY pm.id, pm.nickname, pm.color
+ORDER BY amount DESC
+`
+
+type BreakdownByPaymentMethodParams struct {
+	UserID   int64
+	FromDate time.Time
+	ToDate   time.Time
+}
+
+type BreakdownByPaymentMethodRow struct {
+	ID       *int64
+	Nickname *string
+	Color    *string
+	Amount   int64
+}
+
+func (q *Queries) BreakdownByPaymentMethod(ctx context.Context, arg BreakdownByPaymentMethodParams) ([]BreakdownByPaymentMethodRow, error) {
+	rows, err := q.db.Query(ctx, breakdownByPaymentMethod, arg.UserID, arg.FromDate, arg.ToDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BreakdownByPaymentMethodRow
+	for rows.Next() {
+		var i BreakdownByPaymentMethodRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Nickname,
+			&i.Color,
+			&i.Amount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const budgetStatus = `-- name: BudgetStatus :many
 SELECT b.category_id, c.name, c.color, b.monthly_limit,
     (COALESCE((SELECT SUM(e.amount) FROM expenses e
@@ -145,6 +251,71 @@ func (q *Queries) MonthTotals(ctx context.Context, arg MonthTotalsParams) (Month
 	return i, err
 }
 
+const spendingSeries = `-- name: SpendingSeries :many
+WITH buckets AS (
+    SELECT gs::date AS start
+    FROM generate_series(date_trunc($1::text, $2::date::timestamp),
+                         date_trunc($1::text, $3::date::timestamp),
+                         ('1 ' || $1::text)::interval) AS gs
+),
+ex AS (
+    SELECT date_trunc($1::text, e.spent_on::timestamp)::date AS start, SUM(e.amount) AS total
+    FROM expenses e
+    WHERE e.user_id = $4 AND e.spent_on BETWEEN $2::date AND $3::date
+    GROUP BY 1
+),
+fx AS (
+    SELECT date_trunc($1::text, m.due_date::timestamp)::date AS start, SUM(m.amount) AS total
+    FROM monthly_entries m
+    WHERE m.user_id = $4 AND m.kind IN ('fixed', 'installment') AND m.status <> 'skipped'
+      AND m.due_date BETWEEN $2::date AND $3::date
+    GROUP BY 1
+)
+SELECT b.start::date AS start, COALESCE(ex.total, 0)::bigint AS expenses, COALESCE(fx.total, 0)::bigint AS committed
+FROM buckets b
+LEFT JOIN ex ON ex.start = b.start
+LEFT JOIN fx ON fx.start = b.start
+ORDER BY b.start
+`
+
+type SpendingSeriesParams struct {
+	Period   string
+	FromDate time.Time
+	ToDate   time.Time
+	UserID   int64
+}
+
+type SpendingSeriesRow struct {
+	Start     time.Time
+	Expenses  int64
+	Committed int64
+}
+
+func (q *Queries) SpendingSeries(ctx context.Context, arg SpendingSeriesParams) ([]SpendingSeriesRow, error) {
+	rows, err := q.db.Query(ctx, spendingSeries,
+		arg.Period,
+		arg.FromDate,
+		arg.ToDate,
+		arg.UserID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SpendingSeriesRow
+	for rows.Next() {
+		var i SpendingSeriesRow
+		if err := rows.Scan(&i.Start, &i.Expenses, &i.Committed); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const spentBetween = `-- name: SpentBetween :one
 SELECT COALESCE(SUM(amount), 0)::bigint AS spent
 FROM expenses
@@ -162,6 +333,58 @@ func (q *Queries) SpentBetween(ctx context.Context, arg SpentBetweenParams) (int
 	var spent int64
 	err := row.Scan(&spent)
 	return spent, err
+}
+
+const upcomingFixedEntries = `-- name: UpcomingFixedEntries :many
+SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at FROM monthly_entries
+WHERE user_id = $1 AND kind = 'fixed' AND status = 'pending'
+  AND due_date BETWEEN $2::date AND $3::date
+ORDER BY due_date, id
+`
+
+type UpcomingFixedEntriesParams struct {
+	UserID   int64
+	FromDate time.Time
+	ToDate   time.Time
+}
+
+func (q *Queries) UpcomingFixedEntries(ctx context.Context, arg UpcomingFixedEntriesParams) ([]MonthlyEntry, error) {
+	rows, err := q.db.Query(ctx, upcomingFixedEntries, arg.UserID, arg.FromDate, arg.ToDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MonthlyEntry
+	for rows.Next() {
+		var i MonthlyEntry
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Month,
+			&i.Kind,
+			&i.IncomeSourceID,
+			&i.FixedPaymentID,
+			&i.InstallmentPlanID,
+			&i.InstallmentNo,
+			&i.Name,
+			&i.CategoryID,
+			&i.PaymentMethodID,
+			&i.Amount,
+			&i.DueDate,
+			&i.Status,
+			&i.SettledOn,
+			&i.Edited,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const upsertCategoryBudget = `-- name: UpsertCategoryBudget :one

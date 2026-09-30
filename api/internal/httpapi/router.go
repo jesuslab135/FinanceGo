@@ -98,4 +98,8 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.GET("/category-budgets", h.listCategoryBudgets)
 	p.PUT("/category-budgets/:id", h.putCategoryBudget)
 	p.DELETE("/category-budgets/:id", h.deleteCategoryBudget)
+	p.GET("/dashboard/series", h.dashboardSeries)
+	p.GET("/dashboard/breakdown", h.dashboardBreakdown)
+	p.GET("/dashboard/cards", h.dashboardCards)
+	p.GET("/dashboard/upcoming", h.dashboardUpcoming)
 }
