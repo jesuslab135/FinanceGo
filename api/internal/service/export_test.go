@@ -9,3 +9,14 @@ func TestFormatCents(t *testing.T) {
 		}
 	}
 }
+
+func TestSafeCell(t *testing.T) {
+	for in, want := range map[string]string{
+		"": "", "plain": "plain", "=SUM(A1)": "'=SUM(A1)", "+1": "'+1", "-1": "'-1", "@x": "'@x",
+		"\tx": "'\tx", "\rx": "'\rx", "a=b": "a=b",
+	} {
+		if got := safeCell(in); got != want {
+			t.Errorf("safeCell(%q)=%q want %q", in, got, want)
+		}
+	}
+}

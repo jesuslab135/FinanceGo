@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"financego/internal/apperr"
@@ -54,7 +55,7 @@ func (s *Service) ExportExpensesCSV(ctx context.Context, a Actor, from, to time.
 		return err
 	}
 	for _, r := range rows {
-		if err := cw.Write([]string{r.SpentOn.Format(time.DateOnly), r.Category, deref(r.PaymentMethod), r.Description, FormatCents(r.Amount)}); err != nil {
+		if err := cw.Write([]string{r.SpentOn.Format(time.DateOnly), safeCell(r.Category), safeCell(deref(r.PaymentMethod)), safeCell(r.Description), FormatCents(r.Amount)}); err != nil {
 			return err
 		}
 	}
@@ -75,7 +76,7 @@ func (s *Service) ExportEntriesCSV(ctx context.Context, a Actor, from, to time.T
 		return err
 	}
 	for _, r := range rows {
-		if err := cw.Write([]string{r.Month.Format("2006-01"), r.Kind, r.Name, deref(r.Category), deref(r.PaymentMethod),
+		if err := cw.Write([]string{r.Month.Format("2006-01"), r.Kind, safeCell(r.Name), safeCell(deref(r.Category)), safeCell(deref(r.PaymentMethod)),
 			r.DueDate.Format(time.DateOnly), r.Status, FormatCents(r.Amount)}); err != nil {
 			return err
 		}
@@ -99,4 +100,13 @@ func (s *Service) DeleteAccount(ctx context.Context, a Actor, password string) e
 	}
 	_, err = s.q.DeleteUser(ctx, a.UserID)
 	return err
+}
+
+// safeCell defuses spreadsheet formula injection: text starting with a formula
+// trigger gets a leading apostrophe so Excel/Sheets treat it as plain text.
+func safeCell(s string) string {
+	if s != "" && strings.ContainsRune("=+-@\t\r", rune(s[0])) {
+		return "'" + s
+	}
+	return s
 }
