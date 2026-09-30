@@ -11,7 +11,7 @@ import (
 )
 
 type budgetInput struct {
-	MonthlyLimit int64 `json:"monthly_limit"`
+	MonthlyLimit int64 `json:"monthly_limit" validate:"required"`
 }
 
 // dashboardSummary godoc

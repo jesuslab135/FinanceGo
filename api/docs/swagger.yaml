@@ -20,11 +20,15 @@ definitions:
     properties:
       monthly_limit:
         type: integer
+    required:
+    - monthly_limit
     type: object
   httpapi.deleteAccountInput:
     properties:
       password:
         type: string
+    required:
+    - password
     type: object
   httpapi.loginInput:
     properties:
@@ -32,6 +36,9 @@ definitions:
         type: string
       password:
         type: string
+    required:
+    - email
+    - password
     type: object
   service.BreakdownItem:
     properties:
@@ -43,6 +50,10 @@ definitions:
         type: integer
       name:
         type: string
+    required:
+    - amount
+    - color
+    - name
     type: object
   service.BudgetStatus:
     properties:
@@ -58,6 +69,13 @@ definitions:
         type: integer
       spent:
         type: integer
+    required:
+    - category_id
+    - color
+    - limit
+    - name
+    - pct
+    - spent
     type: object
   service.CardPayment:
     properties:
@@ -71,6 +89,12 @@ definitions:
         type: string
       payment_method_id:
         type: integer
+    required:
+    - amount
+    - id
+    - note
+    - paid_on
+    - payment_method_id
     type: object
   service.CardPaymentInput:
     properties:
@@ -82,6 +106,11 @@ definitions:
         type: string
       payment_method_id:
         type: integer
+    required:
+    - amount
+    - note
+    - paid_on
+    - payment_method_id
     type: object
   service.CardSummary:
     properties:
@@ -107,6 +136,14 @@ definitions:
         type: integer
       utilization:
         type: number
+    required:
+    - amount_due
+    - color
+    - current_balance
+    - cycle
+    - due_on
+    - nickname
+    - payment_method_id
     type: object
   service.Category:
     properties:
@@ -120,6 +157,12 @@ definitions:
         type: string
       name:
         type: string
+    required:
+    - color
+    - icon
+    - id
+    - kind
+    - name
     type: object
   service.CategoryBudget:
     properties:
@@ -127,6 +170,9 @@ definitions:
         type: integer
       monthly_limit:
         type: integer
+    required:
+    - category_id
+    - monthly_limit
     type: object
   service.CategoryInput:
     properties:
@@ -138,6 +184,11 @@ definitions:
         type: string
       name:
         type: string
+    required:
+    - color
+    - icon
+    - kind
+    - name
     type: object
   service.Entry:
     properties:
@@ -171,6 +222,15 @@ definitions:
         type: string
       status:
         type: string
+    required:
+    - amount
+    - due_date
+    - edited
+    - id
+    - kind
+    - month
+    - name
+    - status
     type: object
   service.EntryUpdate:
     properties:
@@ -182,6 +242,9 @@ definitions:
         type: string
       status:
         type: string
+    required:
+    - amount
+    - status
     type: object
   service.Expense:
     properties:
@@ -199,6 +262,13 @@ definitions:
         type: integer
       spent_on:
         type: string
+    required:
+    - amount
+    - category_id
+    - created_at
+    - description
+    - id
+    - spent_on
     type: object
   service.ExpenseInput:
     properties:
@@ -212,6 +282,11 @@ definitions:
         type: integer
       spent_on:
         type: string
+    required:
+    - amount
+    - category_id
+    - description
+    - spent_on
     type: object
   service.ExpensePage:
     properties:
@@ -221,6 +296,8 @@ definitions:
         type: array
       next_cursor:
         type: string
+    required:
+    - items
     type: object
   service.FixedPayment:
     properties:
@@ -242,6 +319,14 @@ definitions:
         type: integer
       start_month:
         type: string
+    required:
+    - active
+    - amount
+    - category_id
+    - day_of_month
+    - id
+    - name
+    - start_month
     type: object
   service.FixedPaymentInput:
     properties:
@@ -261,6 +346,12 @@ definitions:
         type: integer
       start_month:
         type: string
+    required:
+    - amount
+    - category_id
+    - day_of_month
+    - name
+    - start_month
     type: object
   service.IncomeSource:
     properties:
@@ -280,6 +371,13 @@ definitions:
         type: string
       start_month:
         type: string
+    required:
+    - active
+    - amount
+    - day_of_month
+    - id
+    - name
+    - start_month
     type: object
   service.IncomeSourceInput:
     properties:
@@ -297,6 +395,11 @@ definitions:
         type: string
       start_month:
         type: string
+    required:
+    - amount
+    - day_of_month
+    - name
+    - start_month
     type: object
   service.InstallmentPlan:
     properties:
@@ -324,6 +427,18 @@ definitions:
         type: integer
       total_amount:
         type: integer
+    required:
+    - billed_count
+    - category_id
+    - description
+    - first_cycle
+    - id
+    - installment_amount
+    - installments
+    - payment_method_id
+    - purchased_on
+    - remaining_amount
+    - total_amount
     type: object
   service.InstallmentPlanInput:
     properties:
@@ -339,6 +454,13 @@ definitions:
         type: string
       total_amount:
         type: integer
+    required:
+    - category_id
+    - description
+    - installments
+    - payment_method_id
+    - purchased_on
+    - total_amount
     type: object
   service.PaymentMethod:
     properties:
@@ -368,6 +490,13 @@ definitions:
         type: integer
       type:
         type: string
+    required:
+    - active
+    - color
+    - id
+    - nickname
+    - opening_balance
+    - type
     type: object
   service.PaymentMethodInput:
     properties:
@@ -395,6 +524,11 @@ definitions:
         type: integer
       type:
         type: string
+    required:
+    - color
+    - nickname
+    - opening_balance
+    - type
     type: object
   service.ProfileInput:
     properties:
@@ -406,6 +540,11 @@ definitions:
         type: string
       timezone:
         type: string
+    required:
+    - currency
+    - locale
+    - name
+    - timezone
     type: object
   service.RegisterInput:
     properties:
@@ -421,6 +560,13 @@ definitions:
         type: string
       timezone:
         type: string
+    required:
+    - currency
+    - email
+    - locale
+    - name
+    - password
+    - timezone
     type: object
   service.SeriesPoint:
     properties:
@@ -430,6 +576,10 @@ definitions:
         type: integer
       start:
         type: string
+    required:
+    - committed
+    - expenses
+    - start
     type: object
   service.Session:
     properties:
@@ -437,6 +587,9 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/service.User'
+    required:
+    - access_token
+    - user
     type: object
   service.Statement:
     properties:
@@ -481,6 +634,19 @@ definitions:
         type: array
       utilization:
         type: number
+    required:
+    - amount_due
+    - billed_balance
+    - charges
+    - closes_on
+    - current_balance
+    - cycle
+    - due_on
+    - installments
+    - opens_on
+    - payment_method_id
+    - payments
+    - payments_after_close
     type: object
   service.StatementCharge:
     properties:
@@ -492,6 +658,11 @@ definitions:
         type: string
       source:
         type: string
+    required:
+    - amount
+    - date
+    - description
+    - source
     type: object
   service.StatementInstallment:
     properties:
@@ -505,6 +676,12 @@ definitions:
         type: integer
       plan_id:
         type: integer
+    required:
+    - amount
+    - description
+    - "no"
+    - of
+    - plan_id
     type: object
   service.Summary:
     properties:
@@ -532,6 +709,16 @@ definitions:
         type: integer
       spent:
         type: integer
+    required:
+    - available
+    - budgets
+    - currency
+    - fixed_committed
+    - fixed_paid
+    - income
+    - installments
+    - month
+    - spent
     type: object
   service.UpcomingItem:
     properties:
@@ -549,6 +736,12 @@ definitions:
         type: integer
       type:
         type: string
+    required:
+    - amount
+    - date
+    - name
+    - overdue
+    - type
     type: object
   service.User:
     properties:
@@ -566,6 +759,14 @@ definitions:
         type: string
       timezone:
         type: string
+    required:
+    - created_at
+    - currency
+    - email
+    - id
+    - locale
+    - name
+    - timezone
     type: object
 info:
   contact: {}

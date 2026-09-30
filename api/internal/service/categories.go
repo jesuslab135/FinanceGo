@@ -11,18 +11,18 @@ import (
 )
 
 type Category struct {
-	ID    int64  `json:"id"`
-	Name  string `json:"name"`
-	Kind  string `json:"kind"`
-	Color string `json:"color"`
-	Icon  string `json:"icon"`
+	ID    int64  `json:"id" validate:"required"`
+	Name  string `json:"name" validate:"required"`
+	Kind  string `json:"kind" validate:"required"`
+	Color string `json:"color" validate:"required"`
+	Icon  string `json:"icon" validate:"required"`
 }
 
 type CategoryInput struct {
-	Name  string `json:"name"`
-	Kind  string `json:"kind"`
-	Color string `json:"color"`
-	Icon  string `json:"icon"`
+	Name  string `json:"name" validate:"required"`
+	Kind  string `json:"kind" validate:"required"`
+	Color string `json:"color" validate:"required"`
+	Icon  string `json:"icon" validate:"required"`
 }
 
 func toCategory(c store.Category) Category {

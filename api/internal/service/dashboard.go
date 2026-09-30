@@ -13,26 +13,26 @@ import (
 )
 
 type BudgetStatus struct {
-	CategoryID int64  `json:"category_id"`
-	Name       string `json:"name"`
-	Color      string `json:"color"`
-	Limit      int64  `json:"limit"`
-	Spent      int64  `json:"spent"`
-	Pct        int32  `json:"pct"`
+	CategoryID int64  `json:"category_id" validate:"required"`
+	Name       string `json:"name" validate:"required"`
+	Color      string `json:"color" validate:"required"`
+	Limit      int64  `json:"limit" validate:"required"`
+	Spent      int64  `json:"spent" validate:"required"`
+	Pct        int32  `json:"pct" validate:"required"`
 }
 
 type Summary struct {
-	Month             datex.Month    `json:"month"`
-	Currency          string         `json:"currency"`
-	Income            int64          `json:"income"`
-	FixedCommitted    int64          `json:"fixed_committed"`
-	FixedPaid         int64          `json:"fixed_paid"`
-	Installments      int64          `json:"installments"`
-	Spent             int64          `json:"spent"`
-	Available         int64          `json:"available"`
+	Month             datex.Month    `json:"month" validate:"required"`
+	Currency          string         `json:"currency" validate:"required"`
+	Income            int64          `json:"income" validate:"required"`
+	FixedCommitted    int64          `json:"fixed_committed" validate:"required"`
+	FixedPaid         int64          `json:"fixed_paid" validate:"required"`
+	Installments      int64          `json:"installments" validate:"required"`
+	Spent             int64          `json:"spent" validate:"required"`
+	Available         int64          `json:"available" validate:"required"`
 	SafeToSpendPerDay *int64         `json:"safe_to_spend_per_day"`
 	DaysRemaining     *int32         `json:"days_remaining"`
-	Budgets           []BudgetStatus `json:"budgets"`
+	Budgets           []BudgetStatus `json:"budgets" validate:"required"`
 }
 
 // SafeToSpend spreads what is left of the month over the remaining days
@@ -94,8 +94,8 @@ func budgetPct(spent, limit int64) int32 {
 }
 
 type CategoryBudget struct {
-	CategoryID   int64 `json:"category_id"`
-	MonthlyLimit int64 `json:"monthly_limit"`
+	CategoryID   int64 `json:"category_id" validate:"required"`
+	MonthlyLimit int64 `json:"monthly_limit" validate:"required"`
 }
 
 func (s *Service) ListCategoryBudgets(ctx context.Context, a Actor) ([]CategoryBudget, error) {
@@ -138,40 +138,40 @@ func (s *Service) DeleteCategoryBudget(ctx context.Context, a Actor, categoryID 
 }
 
 type SeriesPoint struct {
-	Start     datex.Date `json:"start"`
-	Expenses  int64      `json:"expenses"`
-	Committed int64      `json:"committed"`
+	Start     datex.Date `json:"start" validate:"required"`
+	Expenses  int64      `json:"expenses" validate:"required"`
+	Committed int64      `json:"committed" validate:"required"`
 }
 
 type BreakdownItem struct {
 	ID     *int64 `json:"id"`
-	Name   string `json:"name"`
-	Color  string `json:"color"`
-	Amount int64  `json:"amount"`
+	Name   string `json:"name" validate:"required"`
+	Color  string `json:"color" validate:"required"`
+	Amount int64  `json:"amount" validate:"required"`
 }
 
 type CardSummary struct {
-	PaymentMethodID int64       `json:"payment_method_id"`
-	Nickname        string      `json:"nickname"`
-	Color           string      `json:"color"`
+	PaymentMethodID int64       `json:"payment_method_id" validate:"required"`
+	Nickname        string      `json:"nickname" validate:"required"`
+	Color           string      `json:"color" validate:"required"`
 	Last4           *string     `json:"last4"`
-	CurrentBalance  int64       `json:"current_balance"`
+	CurrentBalance  int64       `json:"current_balance" validate:"required"`
 	CreditLimit     *int64      `json:"credit_limit"`
 	AvailableCredit *int64      `json:"available_credit"`
 	Utilization     *float64    `json:"utilization"`
-	Cycle           datex.Month `json:"cycle"`
-	AmountDue       int64       `json:"amount_due"`
-	DueOn           datex.Date  `json:"due_on"`
+	Cycle           datex.Month `json:"cycle" validate:"required"`
+	AmountDue       int64       `json:"amount_due" validate:"required"`
+	DueOn           datex.Date  `json:"due_on" validate:"required"`
 }
 
 type UpcomingItem struct {
-	Type            string     `json:"type"`
-	Date            datex.Date `json:"date"`
-	Name            string     `json:"name"`
-	Amount          int64      `json:"amount"`
+	Type            string     `json:"type" validate:"required"`
+	Date            datex.Date `json:"date" validate:"required"`
+	Name            string     `json:"name" validate:"required"`
+	Amount          int64      `json:"amount" validate:"required"`
 	EntryID         *int64     `json:"entry_id"`
 	PaymentMethodID *int64     `json:"payment_method_id"`
-	Overdue         bool       `json:"overdue"`
+	Overdue         bool       `json:"overdue" validate:"required"`
 }
 
 func checkRange(from, to time.Time, maxDays int) error {

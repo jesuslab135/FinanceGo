@@ -14,33 +14,33 @@ import (
 )
 
 type PaymentMethod struct {
-	ID                 int64       `json:"id"`
-	Nickname           string      `json:"nickname"`
-	Type               string      `json:"type"`
+	ID                 int64       `json:"id" validate:"required"`
+	Nickname           string      `json:"nickname" validate:"required"`
+	Type               string      `json:"type" validate:"required"`
 	Bank               *string     `json:"bank"`
 	Network            *string     `json:"network"`
 	Last4              *string     `json:"last4"`
-	Color              string      `json:"color"`
-	Active             bool        `json:"active"`
+	Color              string      `json:"color" validate:"required"`
+	Active             bool        `json:"active" validate:"required"`
 	CreditLimit        *int64      `json:"credit_limit"`
 	StatementDay       *int32      `json:"statement_day"`
 	PaymentDueDay      *int32      `json:"payment_due_day"`
-	OpeningBalance     int64       `json:"opening_balance"`
+	OpeningBalance     int64       `json:"opening_balance" validate:"required"`
 	OpeningBalanceDate *datex.Date `json:"opening_balance_date"`
 }
 
 type PaymentMethodInput struct {
-	Nickname           string      `json:"nickname"`
-	Type               string      `json:"type"`
+	Nickname           string      `json:"nickname" validate:"required"`
+	Type               string      `json:"type" validate:"required"`
 	Bank               *string     `json:"bank"`
 	Network            *string     `json:"network"`
 	Last4              *string     `json:"last4"`
-	Color              string      `json:"color"`
+	Color              string      `json:"color" validate:"required"`
 	Active             *bool       `json:"active"`
 	CreditLimit        *int64      `json:"credit_limit"`
 	StatementDay       *int32      `json:"statement_day"`
 	PaymentDueDay      *int32      `json:"payment_due_day"`
-	OpeningBalance     int64       `json:"opening_balance"`
+	OpeningBalance     int64       `json:"opening_balance" validate:"required"`
 	OpeningBalanceDate *datex.Date `json:"opening_balance_date"`
 }
 

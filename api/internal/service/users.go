@@ -17,13 +17,13 @@ import (
 )
 
 type User struct {
-	ID        int64     `json:"id"`
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	Currency  string    `json:"currency"`
-	Locale    string    `json:"locale"`
-	Timezone  string    `json:"timezone"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64     `json:"id" validate:"required"`
+	Email     string    `json:"email" validate:"required"`
+	Name      string    `json:"name" validate:"required"`
+	Currency  string    `json:"currency" validate:"required"`
+	Locale    string    `json:"locale" validate:"required"`
+	Timezone  string    `json:"timezone" validate:"required"`
+	CreatedAt time.Time `json:"created_at" validate:"required"`
 }
 
 func toUser(u store.User) User {
@@ -31,24 +31,24 @@ func toUser(u store.User) User {
 }
 
 type RegisterInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-	Currency string `json:"currency"`
-	Locale   string `json:"locale"`
-	Timezone string `json:"timezone"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
+	Name     string `json:"name" validate:"required"`
+	Currency string `json:"currency" validate:"required"`
+	Locale   string `json:"locale" validate:"required"`
+	Timezone string `json:"timezone" validate:"required"`
 }
 
 type ProfileInput struct {
-	Name     string `json:"name"`
-	Currency string `json:"currency"`
-	Locale   string `json:"locale"`
-	Timezone string `json:"timezone"`
+	Name     string `json:"name" validate:"required"`
+	Currency string `json:"currency" validate:"required"`
+	Locale   string `json:"locale" validate:"required"`
+	Timezone string `json:"timezone" validate:"required"`
 }
 
 type Session struct {
-	AccessToken  string `json:"access_token"`
-	User         User   `json:"user"`
+	AccessToken  string `json:"access_token" validate:"required"`
+	User         User   `json:"user" validate:"required"`
 	RefreshToken string `json:"-"`
 }
 

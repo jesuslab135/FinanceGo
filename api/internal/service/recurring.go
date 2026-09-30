@@ -12,45 +12,45 @@ import (
 )
 
 type IncomeSource struct {
-	ID         int64        `json:"id"`
+	ID         int64        `json:"id" validate:"required"`
 	CategoryID *int64       `json:"category_id"`
-	Name       string       `json:"name"`
-	Amount     int64        `json:"amount"`
-	DayOfMonth int32        `json:"day_of_month"`
-	StartMonth datex.Month  `json:"start_month"`
+	Name       string       `json:"name" validate:"required"`
+	Amount     int64        `json:"amount" validate:"required"`
+	DayOfMonth int32        `json:"day_of_month" validate:"required"`
+	StartMonth datex.Month  `json:"start_month" validate:"required"`
 	EndMonth   *datex.Month `json:"end_month"`
-	Active     bool         `json:"active"`
+	Active     bool         `json:"active" validate:"required"`
 }
 
 type IncomeSourceInput struct {
 	CategoryID *int64       `json:"category_id"`
-	Name       string       `json:"name"`
-	Amount     int64        `json:"amount"`
-	DayOfMonth int32        `json:"day_of_month"`
-	StartMonth datex.Month  `json:"start_month"`
+	Name       string       `json:"name" validate:"required"`
+	Amount     int64        `json:"amount" validate:"required"`
+	DayOfMonth int32        `json:"day_of_month" validate:"required"`
+	StartMonth datex.Month  `json:"start_month" validate:"required"`
 	EndMonth   *datex.Month `json:"end_month"`
 	Active     *bool        `json:"active"`
 }
 
 type FixedPayment struct {
-	ID              int64        `json:"id"`
-	CategoryID      int64        `json:"category_id"`
+	ID              int64        `json:"id" validate:"required"`
+	CategoryID      int64        `json:"category_id" validate:"required"`
 	PaymentMethodID *int64       `json:"payment_method_id"`
-	Name            string       `json:"name"`
-	Amount          int64        `json:"amount"`
-	DayOfMonth      int32        `json:"day_of_month"`
-	StartMonth      datex.Month  `json:"start_month"`
+	Name            string       `json:"name" validate:"required"`
+	Amount          int64        `json:"amount" validate:"required"`
+	DayOfMonth      int32        `json:"day_of_month" validate:"required"`
+	StartMonth      datex.Month  `json:"start_month" validate:"required"`
 	EndMonth        *datex.Month `json:"end_month"`
-	Active          bool         `json:"active"`
+	Active          bool         `json:"active" validate:"required"`
 }
 
 type FixedPaymentInput struct {
-	CategoryID      int64        `json:"category_id"`
+	CategoryID      int64        `json:"category_id" validate:"required"`
 	PaymentMethodID *int64       `json:"payment_method_id"`
-	Name            string       `json:"name"`
-	Amount          int64        `json:"amount"`
-	DayOfMonth      int32        `json:"day_of_month"`
-	StartMonth      datex.Month  `json:"start_month"`
+	Name            string       `json:"name" validate:"required"`
+	Amount          int64        `json:"amount" validate:"required"`
+	DayOfMonth      int32        `json:"day_of_month" validate:"required"`
+	StartMonth      datex.Month  `json:"start_month" validate:"required"`
 	EndMonth        *datex.Month `json:"end_month"`
 	Active          *bool        `json:"active"`
 }

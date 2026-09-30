@@ -15,21 +15,21 @@ import (
 )
 
 type Expense struct {
-	ID              int64      `json:"id"`
-	CategoryID      int64      `json:"category_id"`
+	ID              int64      `json:"id" validate:"required"`
+	CategoryID      int64      `json:"category_id" validate:"required"`
 	PaymentMethodID *int64     `json:"payment_method_id"`
-	Amount          int64      `json:"amount"`
-	Description     string     `json:"description"`
-	SpentOn         datex.Date `json:"spent_on"`
-	CreatedAt       time.Time  `json:"created_at"`
+	Amount          int64      `json:"amount" validate:"required"`
+	Description     string     `json:"description" validate:"required"`
+	SpentOn         datex.Date `json:"spent_on" validate:"required"`
+	CreatedAt       time.Time  `json:"created_at" validate:"required"`
 }
 
 type ExpenseInput struct {
-	CategoryID      int64      `json:"category_id"`
+	CategoryID      int64      `json:"category_id" validate:"required"`
 	PaymentMethodID *int64     `json:"payment_method_id"`
-	Amount          int64      `json:"amount"`
-	Description     string     `json:"description"`
-	SpentOn         datex.Date `json:"spent_on"`
+	Amount          int64      `json:"amount" validate:"required"`
+	Description     string     `json:"description" validate:"required"`
+	SpentOn         datex.Date `json:"spent_on" validate:"required"`
 }
 
 type ExpenseFilter struct {
@@ -40,7 +40,7 @@ type ExpenseFilter struct {
 }
 
 type ExpensePage struct {
-	Items      []Expense `json:"items"`
+	Items      []Expense `json:"items" validate:"required"`
 	NextCursor *string   `json:"next_cursor"`
 }
 
