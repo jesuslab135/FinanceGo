@@ -1,0 +1,3108 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Finance API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Log in with email and password",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.loginInput"
+                            }
+                        }
+                    },
+                    "description": "credentials",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Session"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Revoke the refresh cookie",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Exchange the refresh cookie for a new access token (rotates the cookie)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Session"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Create an account and start a session",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/service.RegisterInput"
+                            }
+                        }
+                    },
+                    "description": "account",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Session"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/card-payments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "List payments made to credit cards",
+                "parameters": [
+                    {
+                        "description": "card",
+                        "name": "payment_method_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.CardPayment"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Record a payment to a credit card (a transfer, not spending)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/service.CardPaymentInput"
+                            }
+                        }
+                    },
+                    "description": "payment",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.CardPayment"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/card-payments/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Delete a card payment",
+                "parameters": [
+                    {
+                        "description": "card payment id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "List categories",
+                "parameters": [
+                    {
+                        "description": "expense or income",
+                        "name": "kind",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.Category"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Create a category",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.CategoryInput"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Category"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Update a category (kind cannot change)",
+                "parameters": [
+                    {
+                        "description": "category id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.CategoryInput"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Category"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Delete a category; if it is in use, pass reassign_to",
+                "parameters": [
+                    {
+                        "description": "category id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "category that inherits all references",
+                        "name": "reassign_to",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/category-budgets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "budgets"
+                ],
+                "summary": "List monthly category limits",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.CategoryBudget"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/category-budgets/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "budgets"
+                ],
+                "summary": "Set (create or replace) a category's monthly limit",
+                "parameters": [
+                    {
+                        "description": "expense category id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.budgetInput"
+                            }
+                        }
+                    },
+                    "description": "limit in cents",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.CategoryBudget"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "budgets"
+                ],
+                "summary": "Remove a category's monthly limit",
+                "parameters": [
+                    {
+                        "description": "category id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/dashboard/breakdown": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Spending grouped by category or payment method",
+                "parameters": [
+                    {
+                        "description": "category or payment_method",
+                        "name": "by",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.BreakdownItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/cards": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Debt summary per active credit card (inactive cards too while they carry a balance)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.CardSummary"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/series": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Spending per day, ISO week or month (empty buckets are 0)",
+                "parameters": [
+                    {
+                        "description": "day, week or month",
+                        "name": "period",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.SeriesPoint"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Month summary: income, fixed, installments, spent, available, safe-to-spend, budgets",
+                "parameters": [
+                    {
+                        "description": "YYYY-MM (default: current month in the user's timezone)",
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Summary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/upcoming": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "dashboard"
+                ],
+                "summary": "Upcoming fixed payments and card payment due dates",
+                "parameters": [
+                    {
+                        "description": "7-60, default 7",
+                        "name": "days",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.UpcomingItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/entries/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "settled_on defaults to today; when given it must be between the month's first day minus 31 days and today plus 1 day.",
+                "tags": [
+                    "months"
+                ],
+                "summary": "Update one month's row (amount, status, settled_on, payment method)",
+                "parameters": [
+                    {
+                        "description": "entry id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/service.EntryUpdate"
+                            }
+                        }
+                    },
+                    "description": "changes",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Entry"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/expenses": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "expenses"
+                ],
+                "summary": "List expenses, newest first, cursor-paginated",
+                "parameters": [
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "category",
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "payment method",
+                        "name": "payment_method_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "search in description",
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "next_cursor from the previous page",
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "1-200, default 50",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.ExpensePage"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "expenses"
+                ],
+                "summary": "Record an expense",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.ExpenseInput"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Expense"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/expenses/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "expenses"
+                ],
+                "summary": "Replace an expense",
+                "parameters": [
+                    {
+                        "description": "expense id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.ExpenseInput"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Expense"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "expenses"
+                ],
+                "summary": "Delete an expense",
+                "parameters": [
+                    {
+                        "description": "expense id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/export/entries.csv": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "export"
+                ],
+                "summary": "Download income, fixed and installment rows as CSV",
+                "parameters": [
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/export/expenses.csv": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "export"
+                ],
+                "summary": "Download expenses as CSV",
+                "parameters": [
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fixed-payments": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "List recurring fixed payments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.FixedPayment"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Create a recurring fixed payment",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.FixedPaymentInput"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.FixedPayment"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fixed-payments/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Replace a fixed payment; pending, unedited rows from the current month on follow the change",
+                "parameters": [
+                    {
+                        "description": "fixed payment id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.FixedPaymentInput"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.FixedPayment"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Deactivate a fixed payment; end_month becomes the current month (null if it has not started), so past months keep it",
+                "parameters": [
+                    {
+                        "description": "fixed payment id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.FixedPayment"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/income-sources": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "List recurring income sources",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.IncomeSource"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Create a recurring income source",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.IncomeSourceInput"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.IncomeSource"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/income-sources/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Replace an income source; pending, unedited rows from the current month on follow the change",
+                "parameters": [
+                    {
+                        "description": "income source id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.IncomeSourceInput"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.IncomeSource"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "recurring"
+                ],
+                "summary": "Deactivate an income source; end_month becomes the current month (null if it has not started), so past months keep it",
+                "parameters": [
+                    {
+                        "description": "income source id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.IncomeSource"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/installment-plans": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "List MSI (meses sin intereses) plans",
+                "parameters": [
+                    {
+                        "description": "card",
+                        "name": "payment_method_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "exclude cancelled plans",
+                        "name": "active_only",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.InstallmentPlan"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Create an MSI plan on a credit card",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.InstallmentPlanInput"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.InstallmentPlan"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/installment-plans/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Replace an MSI plan (only description/category once billing started)",
+                "parameters": [
+                    {
+                        "description": "plan id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.InstallmentPlanInput"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.InstallmentPlan"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Cancel an MSI plan (refund/cancellation); unbilled installments leave the debt",
+                "parameters": [
+                    {
+                        "description": "plan id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.InstallmentPlan"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "Current user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.User"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "Update profile (name, currency, locale, timezone)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/service.ProfileInput"
+                            }
+                        }
+                    },
+                    "description": "profile",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.User"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "Permanently delete the account and all its data",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/httpapi.deleteAccountInput"
+                            }
+                        }
+                    },
+                    "description": "current password",
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/months/{month}/entries": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "months"
+                ],
+                "summary": "Income, fixed and installment rows for a month (generated on first read)",
+                "parameters": [
+                    {
+                        "description": "YYYY-MM",
+                        "name": "month",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.Entry"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "List payment methods (cards are reference data: last 4 digits only)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/service.PaymentMethod"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Create a payment method",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.PaymentMethodInput"
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.PaymentMethod"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Get a payment method",
+                "parameters": [
+                    {
+                        "description": "payment method id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.PaymentMethod"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Replace a payment method's editable fields (type cannot change)",
+                "parameters": [
+                    {
+                        "description": "payment method id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/service.PaymentMethodInput"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.PaymentMethod"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Delete an unused payment method (deactivate used ones instead)",
+                "parameters": [
+                    {
+                        "description": "payment method id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/{id}/statement": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Credit-card statement for a cycle (default: the one currently due)",
+                "parameters": [
+                    {
+                        "description": "card id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "YYYY-MM",
+                        "name": "cycle",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/service.Statement"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/httpapi.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [
+        {
+            "url": "/api/v1"
+        }
+    ],
+    "components": {
+        "requestBodies": {
+            "service.CategoryInput": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/service.CategoryInput"
+                        }
+                    }
+                },
+                "description": "category",
+                "required": true
+            },
+            "service.InstallmentPlanInput": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/service.InstallmentPlanInput"
+                        }
+                    }
+                },
+                "description": "plan",
+                "required": true
+            },
+            "service.IncomeSourceInput": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/service.IncomeSourceInput"
+                        }
+                    }
+                },
+                "description": "income source",
+                "required": true
+            },
+            "service.PaymentMethodInput": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/service.PaymentMethodInput"
+                        }
+                    }
+                },
+                "description": "payment method",
+                "required": true
+            },
+            "service.ExpenseInput": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/service.ExpenseInput"
+                        }
+                    }
+                },
+                "description": "expense",
+                "required": true
+            },
+            "service.FixedPaymentInput": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/service.FixedPaymentInput"
+                        }
+                    }
+                },
+                "description": "fixed payment",
+                "required": true
+            }
+        },
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "apperr.Error": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "fields": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "$ref": "#/components/schemas/apperr.Error"
+                    }
+                }
+            },
+            "httpapi.budgetInput": {
+                "type": "object",
+                "required": [
+                    "monthly_limit"
+                ],
+                "properties": {
+                    "monthly_limit": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "httpapi.deleteAccountInput": {
+                "type": "object",
+                "required": [
+                    "password"
+                ],
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "httpapi.loginInput": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.BreakdownItem": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "color",
+                    "name"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.BudgetStatus": {
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "color",
+                    "limit",
+                    "name",
+                    "pct",
+                    "spent"
+                ],
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "pct": {
+                        "type": "integer"
+                    },
+                    "spent": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.CardPayment": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "id",
+                    "note",
+                    "paid_on",
+                    "payment_method_id"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "paid_on": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.CardPaymentInput": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "note",
+                    "paid_on",
+                    "payment_method_id"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "paid_on": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.CardSummary": {
+                "type": "object",
+                "required": [
+                    "amount_due",
+                    "color",
+                    "current_balance",
+                    "cycle",
+                    "due_on",
+                    "nickname",
+                    "payment_method_id"
+                ],
+                "properties": {
+                    "amount_due": {
+                        "type": "integer"
+                    },
+                    "available_credit": {
+                        "type": "integer"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "credit_limit": {
+                        "type": "integer"
+                    },
+                    "current_balance": {
+                        "type": "integer"
+                    },
+                    "cycle": {
+                        "type": "string"
+                    },
+                    "due_on": {
+                        "type": "string"
+                    },
+                    "last4": {
+                        "type": "string"
+                    },
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "utilization": {
+                        "type": "number"
+                    }
+                }
+            },
+            "service.Category": {
+                "type": "object",
+                "required": [
+                    "color",
+                    "icon",
+                    "id",
+                    "kind",
+                    "name"
+                ],
+                "properties": {
+                    "color": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.CategoryBudget": {
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "monthly_limit"
+                ],
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "monthly_limit": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.CategoryInput": {
+                "type": "object",
+                "required": [
+                    "color",
+                    "icon",
+                    "kind",
+                    "name"
+                ],
+                "properties": {
+                    "color": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.Entry": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "due_date",
+                    "edited",
+                    "id",
+                    "kind",
+                    "month",
+                    "name",
+                    "status"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "due_date": {
+                        "type": "string"
+                    },
+                    "edited": {
+                        "type": "boolean"
+                    },
+                    "fixed_payment_id": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "income_source_id": {
+                        "type": "integer"
+                    },
+                    "installment_no": {
+                        "type": "integer"
+                    },
+                    "installment_plan_id": {
+                        "type": "integer"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "month": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "settled_on": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.EntryUpdate": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "status"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "settled_on": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.Expense": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "category_id",
+                    "created_at",
+                    "description",
+                    "id",
+                    "spent_on"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "spent_on": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.ExpenseInput": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "category_id",
+                    "description",
+                    "spent_on"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "spent_on": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.ExpensePage": {
+                "type": "object",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.Expense"
+                        }
+                    },
+                    "next_cursor": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.FixedPayment": {
+                "type": "object",
+                "required": [
+                    "active",
+                    "amount",
+                    "category_id",
+                    "day_of_month",
+                    "id",
+                    "name",
+                    "start_month"
+                ],
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "day_of_month": {
+                        "type": "integer"
+                    },
+                    "end_month": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "start_month": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.FixedPaymentInput": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "category_id",
+                    "day_of_month",
+                    "name",
+                    "start_month"
+                ],
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "day_of_month": {
+                        "type": "integer"
+                    },
+                    "end_month": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "start_month": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.IncomeSource": {
+                "type": "object",
+                "required": [
+                    "active",
+                    "amount",
+                    "day_of_month",
+                    "id",
+                    "name",
+                    "start_month"
+                ],
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "day_of_month": {
+                        "type": "integer"
+                    },
+                    "end_month": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "start_month": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.IncomeSourceInput": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "day_of_month",
+                    "name",
+                    "start_month"
+                ],
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "day_of_month": {
+                        "type": "integer"
+                    },
+                    "end_month": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "start_month": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.InstallmentPlan": {
+                "type": "object",
+                "required": [
+                    "billed_count",
+                    "category_id",
+                    "description",
+                    "first_cycle",
+                    "id",
+                    "installment_amount",
+                    "installments",
+                    "payment_method_id",
+                    "purchased_on",
+                    "remaining_amount",
+                    "total_amount"
+                ],
+                "properties": {
+                    "billed_count": {
+                        "type": "integer"
+                    },
+                    "cancelled_on": {
+                        "type": "string"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "first_cycle": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "installment_amount": {
+                        "type": "integer"
+                    },
+                    "installments": {
+                        "type": "integer"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "purchased_on": {
+                        "type": "string"
+                    },
+                    "remaining_amount": {
+                        "type": "integer"
+                    },
+                    "total_amount": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.InstallmentPlanInput": {
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "description",
+                    "installments",
+                    "payment_method_id",
+                    "purchased_on",
+                    "total_amount"
+                ],
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "installments": {
+                        "type": "integer"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "purchased_on": {
+                        "type": "string"
+                    },
+                    "total_amount": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.PaymentMethod": {
+                "type": "object",
+                "required": [
+                    "active",
+                    "color",
+                    "id",
+                    "nickname",
+                    "opening_balance",
+                    "type"
+                ],
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "bank": {
+                        "type": "string"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "credit_limit": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "last4": {
+                        "type": "string"
+                    },
+                    "network": {
+                        "type": "string"
+                    },
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "opening_balance": {
+                        "type": "integer"
+                    },
+                    "opening_balance_date": {
+                        "type": "string"
+                    },
+                    "payment_due_day": {
+                        "type": "integer"
+                    },
+                    "statement_day": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.PaymentMethodInput": {
+                "type": "object",
+                "required": [
+                    "color",
+                    "nickname",
+                    "opening_balance",
+                    "type"
+                ],
+                "properties": {
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "bank": {
+                        "type": "string"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "credit_limit": {
+                        "type": "integer"
+                    },
+                    "last4": {
+                        "type": "string"
+                    },
+                    "network": {
+                        "type": "string"
+                    },
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "opening_balance": {
+                        "type": "integer"
+                    },
+                    "opening_balance_date": {
+                        "type": "string"
+                    },
+                    "payment_due_day": {
+                        "type": "integer"
+                    },
+                    "statement_day": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.ProfileInput": {
+                "type": "object",
+                "required": [
+                    "currency",
+                    "locale",
+                    "name",
+                    "timezone"
+                ],
+                "properties": {
+                    "currency": {
+                        "type": "string"
+                    },
+                    "locale": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.RegisterInput": {
+                "type": "object",
+                "required": [
+                    "currency",
+                    "email",
+                    "locale",
+                    "name",
+                    "password",
+                    "timezone"
+                ],
+                "properties": {
+                    "currency": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "locale": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.SeriesPoint": {
+                "type": "object",
+                "required": [
+                    "committed",
+                    "expenses",
+                    "start"
+                ],
+                "properties": {
+                    "committed": {
+                        "type": "integer"
+                    },
+                    "expenses": {
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.Session": {
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "user"
+                ],
+                "properties": {
+                    "access_token": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/service.User"
+                    }
+                }
+            },
+            "service.Statement": {
+                "type": "object",
+                "required": [
+                    "amount_due",
+                    "billed_balance",
+                    "charges",
+                    "closes_on",
+                    "current_balance",
+                    "cycle",
+                    "due_on",
+                    "installments",
+                    "opens_on",
+                    "payment_method_id",
+                    "payments",
+                    "payments_after_close"
+                ],
+                "properties": {
+                    "amount_due": {
+                        "type": "integer"
+                    },
+                    "available_credit": {
+                        "type": "integer"
+                    },
+                    "billed_balance": {
+                        "type": "integer"
+                    },
+                    "charges": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.StatementCharge"
+                        }
+                    },
+                    "closes_on": {
+                        "type": "string"
+                    },
+                    "credit_limit": {
+                        "type": "integer"
+                    },
+                    "current_balance": {
+                        "type": "integer"
+                    },
+                    "cycle": {
+                        "type": "string"
+                    },
+                    "due_on": {
+                        "type": "string"
+                    },
+                    "installments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.StatementInstallment"
+                        }
+                    },
+                    "opens_on": {
+                        "type": "string"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "payments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.CardPayment"
+                        }
+                    },
+                    "payments_after_close": {
+                        "description": "PaymentsAfterClose are payments in (closes_on, due_on]; they reduce\namount_due below billed_balance.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.CardPayment"
+                        }
+                    },
+                    "utilization": {
+                        "type": "number"
+                    }
+                }
+            },
+            "service.StatementCharge": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "date",
+                    "description",
+                    "source"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.StatementInstallment": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "description",
+                    "no",
+                    "of",
+                    "plan_id"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "no": {
+                        "type": "integer"
+                    },
+                    "of": {
+                        "type": "integer"
+                    },
+                    "plan_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.Summary": {
+                "type": "object",
+                "required": [
+                    "available",
+                    "budgets",
+                    "currency",
+                    "fixed_committed",
+                    "fixed_paid",
+                    "income",
+                    "installments",
+                    "month",
+                    "spent"
+                ],
+                "properties": {
+                    "available": {
+                        "type": "integer"
+                    },
+                    "budgets": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/service.BudgetStatus"
+                        }
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "days_remaining": {
+                        "type": "integer"
+                    },
+                    "fixed_committed": {
+                        "type": "integer"
+                    },
+                    "fixed_paid": {
+                        "type": "integer"
+                    },
+                    "income": {
+                        "type": "integer"
+                    },
+                    "installments": {
+                        "type": "integer"
+                    },
+                    "month": {
+                        "type": "string"
+                    },
+                    "safe_to_spend_per_day": {
+                        "type": "integer"
+                    },
+                    "spent": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "service.UpcomingItem": {
+                "type": "object",
+                "required": [
+                    "amount",
+                    "date",
+                    "name",
+                    "overdue",
+                    "type"
+                ],
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "date": {
+                        "type": "string"
+                    },
+                    "entry_id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "overdue": {
+                        "type": "boolean"
+                    },
+                    "payment_method_id": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "service.User": {
+                "type": "object",
+                "required": [
+                    "created_at",
+                    "currency",
+                    "email",
+                    "id",
+                    "locale",
+                    "name",
+                    "timezone"
+                ],
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "locale": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
