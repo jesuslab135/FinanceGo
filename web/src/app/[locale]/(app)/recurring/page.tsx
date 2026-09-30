@@ -1,19 +1,27 @@
 "use client";
 
-import { Pencil, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { format } from "date-fns";
+import { enUS, es } from "date-fns/locale";
+import { Pencil, Plus, Power, PowerOff } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CategoryTile } from "@/components/common/category-tile";
 import { EmptyState } from "@/components/common/empty-state";
+import { ListRow } from "@/components/common/list-row";
 import { Money } from "@/components/common/money";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
+import { RowMenu } from "@/components/common/row-menu";
+import { FadeInItem, FadeInList } from "@/components/motion/fade-in-list";
 import { TemplateForm } from "@/components/recurring/template-form";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FixedPayment, FixedPaymentInput, IncomeSource, IncomeSourceInput } from "@/lib/api/types";
+import { useToday } from "@/hooks/use-today";
+import { parseISODate } from "@/lib/dates";
+import { nextOccurrence } from "@/lib/recurring";
 import {
-  useCreateFixedPayment, useCreateIncomeSource, useDeactivateFixedPayment, useDeactivateIncomeSource,
+  useCategories, useCreateFixedPayment, useCreateIncomeSource, useDeactivateFixedPayment, useDeactivateIncomeSource,
   useFixedPayments, useIncomeSources, useUpdateFixedPayment, useUpdateIncomeSource,
 } from "@/lib/query/hooks";
 import { useErrorMessage } from "@/lib/api/error-messages";
@@ -24,26 +32,39 @@ function TemplateList({ rows, onEdit, onToggle, onAdd, addLabel }: {
   rows: Row[]; onEdit: (r: Row) => void; onToggle: (r: Row) => void; onAdd: () => void; addLabel: string;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
+  const today = useToday();
+  const { data: categories = [] } = useCategories();
   if (rows.length === 0) return <EmptyState illustration="recurring" action={<Button size="touch" onClick={onAdd}><Plus /> {addLabel}</Button>}>{t("common.empty")}</EmptyState>;
   return (
-    <ul className="space-y-2">
-      {rows.map((r) => (
-        <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{r.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {t("recurring.everyMonth", { day: r.day_of_month })} · {r.start_month}{r.end_month ? ` – ${r.end_month}` : ""}
-            </p>
-          </div>
-          {!r.active && <Badge variant="outline">{t("common.inactive")}</Badge>}
-          <Money cents={r.amount} className="font-medium" />
-          <Button size="icon" variant="ghost" aria-label={t("common.edit")} onClick={() => onEdit(r)}><Pencil /></Button>
-          <Button size="sm" variant="ghost" onClick={() => onToggle(r)}>
-            {r.active ? t("recurring.deactivate") : t("common.activate")}
-          </Button>
-        </li>
-      ))}
-    </ul>
+    <FadeInList className="space-y-2">
+      {rows.map((r) => {
+        const cat = categories.find((c) => c.id === r.category_id);
+        const next = nextOccurrence(r, today);
+        const meta = [
+          t("recurring.everyMonth", { day: r.day_of_month }),
+          next && t("recurring.next", { date: format(parseISODate(next), "d MMM", { locale: locale === "en" ? enUS : es }) }),
+          !r.active && t("common.inactive"),
+        ].filter(Boolean).join(" · ");
+        return (
+          <FadeInItem key={r.id}>
+            <ListRow
+              muted={!r.active}
+              leading={<CategoryTile icon={cat?.icon} color={cat?.color} />}
+              title={r.name}
+              meta={<span className="whitespace-normal">{meta}</span>}
+              amount={<Money cents={r.amount} />}
+              trailing={<RowMenu actions={[
+                { label: t("common.edit"), icon: Pencil, onSelect: () => onEdit(r) },
+                r.active
+                  ? { label: t("recurring.deactivate"), icon: PowerOff, onSelect: () => onToggle(r) }
+                  : { label: t("common.activate"), icon: Power, onSelect: () => onToggle(r) },
+              ]} />}
+            />
+          </FadeInItem>
+        );
+      })}
+    </FadeInList>
   );
 }
 
@@ -83,14 +104,14 @@ export default function RecurringPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{t("recurring.title")}</h1>
-        <Button onClick={() => setDialog({ kind: tab })}>
+        <Button size="touch" onClick={() => setDialog({ kind: tab })}>
           <Plus /> {t(tab === "income" ? "recurring.newIncome" : "recurring.newFixed")}
         </Button>
       </div>
       <Tabs value={tab} onValueChange={(v) => setTab(v as "income" | "fixed")}>
-        <TabsList>
+        <TabsList className="h-11 w-full [&>*]:h-full [&>*]:min-w-0 [&>*]:flex-1">
           <TabsTrigger value="income">{t("recurring.incomeSources")}</TabsTrigger>
           <TabsTrigger value="fixed">{t("recurring.fixedPayments")}</TabsTrigger>
         </TabsList>

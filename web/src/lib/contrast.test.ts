@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrastRatio } from "./contrast";
+import { cardPalette, contrastRatio } from "./contrast";
 
 // Spec §3.1 pairs; body text needs 4.5, large/bold 3.
 const pairs: Array<[string, string, string, number]> = [
@@ -39,5 +39,14 @@ describe("token contrast (WCAG AA)", () => {
   });
   it.each(pairs)("%s", (_n, a, b, min) => {
     expect(contrastRatio(a, b)).toBeGreaterThanOrEqual(min);
+  });
+  it("card text meets AA across the whole gradient for any card color", () => {
+    const h = (n: number) => n.toString(16).padStart(2, "0");
+    for (let r = 0; r < 256; r += 51) for (let g = 0; g < 256; g += 51) for (let b = 0; b < 256; b += 51) {
+      const { from, ink } = cardPalette(`#${h(r)}${h(g)}${h(b)}`);
+      const end = `#${[from.slice(1, 3), from.slice(3, 5), from.slice(5, 7)].map((x) => h(Math.round(parseInt(x, 16) * 0.55))).join("")}`;
+      expect(contrastRatio(ink, from), from).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(ink, end), from).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });

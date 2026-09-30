@@ -68,12 +68,14 @@
     "repeat": "Repeat"
   },
   "month": {
+    "collapse": "Show or hide {section}",
     "title": "Month", "income": "Income", "fixed": "Fixed payments", "installments": "Interest-free installments",
     "status": { "pending": "Pending", "paid": "Paid", "received": "Received", "skipped": "Skipped" },
     "markPaid": "Mark paid", "markReceived": "Mark received", "skip": "Skip", "undo": "Undo",
     "due": "Due {date}", "edited": "Edited", "editEntry": "Edit entry", "empty": "Nothing this month"
   },
   "recurring": {
+    "next": "Next: {date}",
     "title": "Recurring", "incomeSources": "Income", "fixedPayments": "Fixed payments",
     "newIncome": "New income source", "newFixed": "New fixed payment", "editIncome": "Edit income",
     "editFixed": "Edit fixed payment", "name": "Name", "amount": "Amount", "day": "Day of month",
@@ -82,6 +84,7 @@
     "endMonthHint": "Leave empty if it never ends"
   },
   "cards": {
+    "payShort": "Pay {amount} · {date}",
     "msiShort": "Installments", "networkOther": "Other",
     "paymentsAfterClose": "Paid after statement",
     "title": "Cards & accounts", "new": "New payment method", "edit": "Edit payment method",
@@ -101,7 +104,7 @@
     "cancelled": "Cancelled", "note": "Note", "noCharges": "No charges this cycle",
     "source": { "expense": "Expense", "fixed": "Fixed payment" }, "installmentOf": "{no}/{of}",
     "notCredit": "This payment method is not a credit card.", "otherMethods": "Other methods",
-    "creditCards": "Credit cards", "perMonth": "{amount} per month",
+    "creditCards": "Credit cards", "debitCards": "Debit cards", "perMonth": "{amount} per month",
     "keepPlan": "Keep plan",
     "planLockedHint": "Installments were already billed: only the description and category can change.",
     "cancelPlanConfirm": "Pending installments will stop being billed; installments already billed stay on your statements."
@@ -113,6 +116,7 @@
     "budget": "Monthly limit", "budgetFor": "Monthly limit for {name}", "noBudget": "No limit", "removeBudget": "Remove limit"
   },
   "settings": {
+    "theme": "Appearance", "themeLight": "Light", "themeDark": "Dark", "themeSystem": "System",
     "title": "Settings", "profile": "Profile", "export": "Export data", "exportExpenses": "Expenses (CSV)",
     "exportEntries": "Income & fixed payments (CSV)", "danger": "Danger zone", "deleteAccount": "Delete account",
     "deleteWarning": "Your account and all your data will be deleted. This cannot be undone.",

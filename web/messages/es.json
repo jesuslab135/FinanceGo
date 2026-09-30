@@ -68,12 +68,14 @@
     "repeat": "Repetir"
   },
   "month": {
+    "collapse": "Mostrar u ocultar {section}",
     "title": "Mes", "income": "Ingresos", "fixed": "Pagos fijos", "installments": "Meses sin intereses",
     "status": { "pending": "Pendiente", "paid": "Pagado", "received": "Recibido", "skipped": "Omitido" },
     "markPaid": "Marcar pagado", "markReceived": "Marcar recibido", "skip": "Omitir", "undo": "Deshacer",
     "due": "Vence {date}", "edited": "Editado", "editEntry": "Editar movimiento", "empty": "Sin movimientos este mes"
   },
   "recurring": {
+    "next": "Próximo: {date}",
     "title": "Recurrentes", "incomeSources": "Ingresos", "fixedPayments": "Pagos fijos",
     "newIncome": "Nueva fuente de ingreso", "newFixed": "Nuevo pago fijo", "editIncome": "Editar ingreso",
     "editFixed": "Editar pago fijo", "name": "Nombre", "amount": "Monto", "day": "Día del mes",
@@ -82,6 +84,7 @@
     "endMonthHint": "Déjalo vacío si no termina"
   },
   "cards": {
+    "payShort": "Pago {amount} · {date}",
     "msiShort": "MSI", "networkOther": "Otra",
     "paymentsAfterClose": "Pagados después del corte",
     "title": "Tarjetas y cuentas", "new": "Nuevo método de pago", "edit": "Editar método de pago",
@@ -101,7 +104,7 @@
     "cancelled": "Cancelado", "note": "Nota", "noCharges": "Sin cargos en este periodo",
     "source": { "expense": "Gasto", "fixed": "Pago fijo" }, "installmentOf": "{no}/{of}",
     "notCredit": "Este método no es tarjeta de crédito.", "otherMethods": "Otros métodos",
-    "creditCards": "Tarjetas de crédito", "perMonth": "{amount} al mes",
+    "creditCards": "Tarjetas de crédito", "debitCards": "Tarjetas de débito", "perMonth": "{amount} al mes",
     "keepPlan": "Conservar plan",
     "planLockedHint": "Ya se cobraron mensualidades: solo puedes cambiar la descripción y la categoría.",
     "cancelPlanConfirm": "Las mensualidades pendientes dejarán de cobrarse; las ya cobradas se conservan en tus estados de cuenta."
@@ -113,6 +116,7 @@
     "budget": "Límite mensual", "budgetFor": "Límite mensual de {name}", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
   },
   "settings": {
+    "theme": "Apariencia", "themeLight": "Claro", "themeDark": "Oscuro", "themeSystem": "Sistema",
     "title": "Ajustes", "profile": "Perfil", "export": "Exportar datos", "exportExpenses": "Gastos (CSV)",
     "exportEntries": "Ingresos y pagos fijos (CSV)", "danger": "Zona de peligro", "deleteAccount": "Eliminar cuenta",
     "deleteWarning": "Se borrarán tu cuenta y todos tus datos. No se puede deshacer.",

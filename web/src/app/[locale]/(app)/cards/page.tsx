@@ -1,22 +1,17 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { enUS, es } from "date-fns/locale";
-import { useLocale, useTranslations } from "next-intl";
+import { ArrowLeftRight, Pencil, Plus, Trash2, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CardTile } from "@/components/cards/card-tile";
 import { PaymentMethodForm } from "@/components/cards/payment-method-form";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { EmptyState } from "@/components/common/empty-state";
-import { Meter } from "@/components/common/meter";
-import { Money } from "@/components/common/money";
+import { ListRow } from "@/components/common/list-row";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
 import type { PaymentMethod } from "@/lib/api/types";
-import { parseISODate } from "@/lib/dates";
 import {
   useCardsOverview, useCreatePaymentMethod, useDeletePaymentMethod, usePaymentMethods, useUpdatePaymentMethod,
 } from "@/lib/query/hooks";
@@ -25,7 +20,6 @@ import { useErrorMessage } from "@/lib/api/error-messages";
 export default function CardsPage() {
   const t = useTranslations();
   const errMsg = useErrorMessage();
-  const locale = useLocale();
   const { data: methods = [], isPending } = usePaymentMethods();
   const { data: overview = [] } = useCardsOverview();
   const create = useCreatePaymentMethod();
@@ -33,61 +27,50 @@ export default function CardsPage() {
   const remove = useDeletePaymentMethod();
   const [dialog, setDialog] = useState<{ pm?: PaymentMethod } | null>(null);
   const summaryOf = (id: number) => overview.find((c) => c.payment_method_id === id);
-  const credit = methods.filter((m) => m.type === "credit");
-  const others = methods.filter((m) => m.type !== "credit");
+  const others = methods.filter((m) => m.type !== "credit" && m.type !== "debit");
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{t("cards.title")}</h1>
-        <Button onClick={() => setDialog({})}><Plus /> {t("cards.new")}</Button>
+        <Button size="touch" onClick={() => setDialog({})}><Plus /> {t("cards.new")}</Button>
       </div>
       {!isPending && methods.length === 0 && <EmptyState illustration="cards" action={<Button size="touch" onClick={() => setDialog({})}><Plus /> {t("cards.new")}</Button>}>{t("common.empty")}</EmptyState>}
-      {credit.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">{t("cards.creditCards")}</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
-            {credit.map((c) => {
-              const s = summaryOf(c.id);
-              return (
-                <Link key={c.id} href={`/cards/${c.id}`} className="block space-y-3 rounded-xl border p-4 hover:bg-accent/50" style={{ borderTopColor: c.color, borderTopWidth: 4 }}>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate font-medium">{c.nickname}</span>
-                    {c.last4 && <span className="text-xs tabular-nums text-muted-foreground">···· {c.last4}</span>}
-                  </div>
-                  {!c.active && <Badge variant="outline">{t("common.inactive")}</Badge>}
-                  {s && (
-                    <>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t("cards.currentBalance")}</p>
-                        <p className="text-xl font-semibold"><Money cents={s.current_balance} /></p>
-                      </div>
-                      <p className="break-words text-xs text-muted-foreground">
-                        {t("cards.amountDue")}: <Money cents={s.amount_due} className="text-foreground" /> · {format(parseISODate(s.due_on), "d MMM", { locale: locale === "en" ? enUS : es })}
-                      </p>
-                      {s.credit_limit != null && <Meter value={s.current_balance} max={s.credit_limit} label={t("cards.utilization")} />}
-                    </>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {(["credit", "debit"] as const).map((type) => {
+        const list = methods.filter((m) => m.type === type);
+        return list.length === 0 ? null : (
+          <section key={type} className="space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground">{t(type === "credit" ? "cards.creditCards" : "cards.debitCards")}</h2>
+            <div className="grid justify-items-center gap-4 sm:grid-cols-2 sm:justify-items-start lg:grid-cols-3 [&>*]:w-full [&>*]:min-w-0">
+              {list.map((c) => <CardTile key={c.id} pm={c} summary={summaryOf(c.id)} href={`/cards/${c.id}`} />)}
+            </div>
+          </section>
+        );
+      })}
       {others.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground">{t("cards.otherMethods")}</h2>
           <ul className="space-y-2">
             {others.map((m) => (
-              <li key={m.id} className="flex items-center gap-3 rounded-lg border p-3">
-                <span className="size-3 rounded-full" style={{ background: m.color }} aria-hidden />
-                <span className="min-w-0 flex-1 truncate">{m.nickname}{m.last4 ? ` ···· ${m.last4}` : ""}</span>
-                <Badge variant="outline">{t(`cards.types.${m.type}`)}</Badge>
-                {!m.active && <Badge variant="outline">{t("common.inactive")}</Badge>}
-                <Button size="icon" variant="ghost" aria-label={t("common.edit")} onClick={() => setDialog({ pm: m })}><Pencil /></Button>
-                <ConfirmButton onConfirm={() => remove.mutate(m.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(errMsg(e)) })}>
-                  <Button size="icon" variant="ghost" aria-label={t("common.delete")}><Trash2 /></Button>
-                </ConfirmButton>
+              <li key={m.id}>
+                <ListRow
+                  muted={!m.active}
+                  leading={
+                    <span aria-hidden className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--tile)_15%,transparent)] dark:bg-[color-mix(in_srgb,var(--tile)_22%,transparent)]" style={{ ["--tile" as string]: m.color, color: m.color }}>
+                      {m.type === "cash" ? <Wallet className="size-5" /> : <ArrowLeftRight className="size-5" />}
+                    </span>
+                  }
+                  title={`${m.nickname}${m.last4 ? ` ···· ${m.last4}` : ""}`}
+                  meta={`${t(`cards.types.${m.type}`)}${m.active ? "" : ` · ${t("common.inactive")}`}`}
+                  trailing={
+                    <div className="flex shrink-0 items-center">
+                      <Button size="icon" variant="ghost" className="size-11" aria-label={t("common.edit")} onClick={() => setDialog({ pm: m })}><Pencil /></Button>
+                      <ConfirmButton onConfirm={() => remove.mutate(m.id, { onSuccess: () => toast.success(t("common.deleted")), onError: (e) => toast.error(errMsg(e)) })}>
+                        <Button size="icon" variant="ghost" className="size-11" aria-label={t("common.delete")}><Trash2 /></Button>
+                      </ConfirmButton>
+                    </div>
+                  }
+                />
               </li>
             ))}
           </ul>

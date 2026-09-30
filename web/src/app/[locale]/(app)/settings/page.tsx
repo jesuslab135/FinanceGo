@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useTheme } from "next-themes";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { FieldError } from "@/components/common/field-error";
@@ -18,6 +19,51 @@ import { saveBlob } from "@/lib/download";
 import { CURRENCIES, timezones } from "@/lib/locale-options";
 import { useMe, useUpdateMe } from "@/lib/query/hooks";
 import { fieldMessageKey, localizeFields, useErrorMessage } from "@/lib/api/error-messages";
+
+const cardCls = "rounded-2xl shadow-card ring-0";
+
+const THEMES = [
+  { value: "light", key: "settings.themeLight", preview: "#f6efe7" },
+  { value: "dark", key: "settings.themeDark", preview: "#1c1714" },
+  { value: "system", key: "settings.themeSystem", preview: "linear-gradient(90deg, #f6efe7 50%, #1c1714 50%)" },
+] as const;
+
+/** Persisted by next-themes (localStorage + class on <html>, applied before paint); "system" is the default. */
+function ThemeChooser() {
+  const t = useTranslations();
+  const { theme, setTheme } = useTheme();
+  // next-themes only knows the stored choice on the client; render the default until then to match the server HTML.
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const current = mounted && theme ? theme : "system";
+  const move = (e: React.KeyboardEvent, i: number) => {
+    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = THEMES[(i + step + THEMES.length) % THEMES.length];
+    setTheme(next.value);
+    document.getElementById(`theme-${next.value}`)?.focus();
+  };
+  return (
+    <div role="radiogroup" aria-label={t("settings.theme")} className="grid grid-cols-3 gap-3">
+      {THEMES.map((o, i) => (
+        <button
+          key={o.value}
+          id={`theme-${o.value}`}
+          type="button"
+          role="radio"
+          aria-checked={current === o.value}
+          tabIndex={current === o.value ? 0 : -1}
+          onClick={() => setTheme(o.value)}
+          onKeyDown={(e) => move(e, i)}
+          className={`flex min-h-11 flex-col items-center gap-2 rounded-2xl border-2 p-3 text-sm font-medium transition-colors ${current === o.value ? "border-primary bg-primary/5" : "border-border hover:bg-accent/50"}`}
+        >
+          <span aria-hidden className="block h-12 w-full max-w-20 rounded-xl border border-foreground/15" style={{ background: o.preview }} />
+          {t(o.key)}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const selectCls = "h-9 w-full rounded-md border bg-transparent px-2 text-sm";
 
@@ -87,7 +133,11 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{t("settings.title")}</h1>
-      <Card>
+      <Card className={cardCls}>
+        <CardHeader><CardTitle>{t("settings.theme")}</CardTitle></CardHeader>
+        <CardContent><ThemeChooser /></CardContent>
+      </Card>
+      <Card className={cardCls}>
         <CardHeader><CardTitle>{t("settings.profile")}</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={saveProfile} className="grid gap-4 sm:grid-cols-2" noValidate>
@@ -121,7 +171,7 @@ export default function SettingsPage() {
           </form>
         </CardContent>
       </Card>
-      <Card>
+      <Card className={cardCls}>
         <CardHeader><CardTitle>{t("settings.export")}</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-4 sm:items-end">
           <div className="space-y-2">
@@ -136,7 +186,7 @@ export default function SettingsPage() {
           <Button variant="outline" disabled={exporting} onClick={() => download("entries")}>{t("settings.exportEntries")}</Button>
         </CardContent>
       </Card>
-      <Card className="border-destructive/50">
+      <Card className="rounded-2xl shadow-card ring-1 ring-destructive/40">
         <CardHeader><CardTitle className="text-destructive">{t("settings.danger")}</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={(e) => e.preventDefault()} className="space-y-3" noValidate>

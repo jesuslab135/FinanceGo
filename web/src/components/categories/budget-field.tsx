@@ -30,7 +30,7 @@ export function BudgetField({ category, limit }: { category: Category; limit?: n
     if (cents !== limit) put.mutate({ categoryId: category.id, limit: cents }, opts);
   };
   return (
-    <div className="w-40">
+    <div className="w-full">
       <Label htmlFor={`budget-${category.id}`} className="sr-only">{t("categories.budgetFor", { name: category.name })}</Label>
       <MoneyInput id={`budget-${category.id}`} placeholder={t("categories.noBudget")} value={value} onChange={(e) => setValue(e.target.value)} onBlur={save} />
     </div>

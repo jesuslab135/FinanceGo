@@ -19,16 +19,18 @@ export function MeterFill({ pct, index = 0, className }: { pct: number; index?: 
   );
 }
 
-export function Meter({ value, max, label }: { value: number; max: number; label: string }) {
+/** tone="onDark" draws the bar in `ink` over a translucent track, for use on a colored card. */
+export function Meter({ value, max, label, tone = "default", ink }: { value: number; max: number; label: string; tone?: "default" | "onDark"; ink?: string }) {
   const pct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+  const onDark = tone === "onDark";
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs text-muted-foreground">
+    <div className="space-y-1" style={onDark && ink ? { color: ink } : undefined}>
+      <div className={`flex justify-between text-xs ${onDark ? "" : "text-muted-foreground"}`}>
         <span>{label}</span>
         <span className="tabular-nums">{(max > 0 ? (value / max) * 100 : 0).toFixed(1)}%</span>
       </div>
-      <div className="h-2 rounded-full bg-muted" role="meter" aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.min(Math.max(value, 0), max)} aria-valuetext={`${pct.toFixed(1)}%`} aria-label={label}>
-        <MeterFill pct={pct} className="bg-chart-1" />
+      <div className={`h-2 rounded-full ${onDark ? "bg-current/25" : "bg-muted"}`} role="meter" aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.min(Math.max(value, 0), max)} aria-valuetext={`${pct.toFixed(1)}%`} aria-label={label}>
+        <MeterFill pct={pct} className={onDark ? "bg-current" : "bg-chart-1"} />
       </div>
     </div>
   );
