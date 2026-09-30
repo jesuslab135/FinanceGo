@@ -10,18 +10,19 @@ import (
 	"time"
 )
 
-const deletePendingInstallmentEntries = `-- name: DeletePendingInstallmentEntries :exec
+const deleteInstallmentEntries = `-- name: DeleteInstallmentEntries :exec
 DELETE FROM monthly_entries
-WHERE installment_plan_id = $1::bigint AND status = 'pending' AND installment_no >= $2::int
+WHERE user_id = $1 AND installment_plan_id = $2::bigint AND installment_no >= $3::int
 `
 
-type DeletePendingInstallmentEntriesParams struct {
+type DeleteInstallmentEntriesParams struct {
+	UserID int64
 	PlanID int64
 	FromNo int32
 }
 
-func (q *Queries) DeletePendingInstallmentEntries(ctx context.Context, arg DeletePendingInstallmentEntriesParams) error {
-	_, err := q.db.Exec(ctx, deletePendingInstallmentEntries, arg.PlanID, arg.FromNo)
+func (q *Queries) DeleteInstallmentEntries(ctx context.Context, arg DeleteInstallmentEntriesParams) error {
+	_, err := q.db.Exec(ctx, deleteInstallmentEntries, arg.UserID, arg.PlanID, arg.FromNo)
 	return err
 }
 
@@ -320,13 +321,14 @@ const relabelInstallmentEntries = `-- name: RelabelInstallmentEntries :exec
 UPDATE monthly_entries
 SET name = $1::text || ' ' || installment_no::text || '/' || $2::int::text,
     category_id = $3::bigint, updated_at = now()
-WHERE installment_plan_id = $4::bigint
+WHERE user_id = $4 AND installment_plan_id = $5::bigint
 `
 
 type RelabelInstallmentEntriesParams struct {
 	Description  string
 	Installments int32
 	CategoryID   int64
+	UserID       int64
 	PlanID       int64
 }
 
@@ -335,6 +337,7 @@ func (q *Queries) RelabelInstallmentEntries(ctx context.Context, arg RelabelInst
 		arg.Description,
 		arg.Installments,
 		arg.CategoryID,
+		arg.UserID,
 		arg.PlanID,
 	)
 	return err

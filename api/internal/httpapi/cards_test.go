@@ -1,6 +1,7 @@
 package httpapi_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -93,8 +94,7 @@ func TestInstallmentPlanEntriesAndStatement(t *testing.T) {
 
 	h.expense(tok, "Comida", 20000, "2026-03-01", "súper", &cc)
 	h.expense(tok, "Comida", 5000, "2026-03-16", "café", &cc) // next cycle
-	rent := h.fixed(tok, "Netflix", 30000, 10, "2026-03", &cc)
-	_ = rent
+	h.fixed(tok, "Netflix", 30000, 10, "2026-03", &cc)
 	nf := byKind(h.entries(tok, "2026-03"), "fixed")[0]
 	expect[entry](t, h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", nf.ID), tok, M{"amount": 30000, "status": "paid", "settled_on": "2026-03-10", "payment_method_id": cc}), 200)
 	expect[M](t, h.do("POST", "/api/v1/card-payments", tok, M{"payment_method_id": cc, "amount": 10000, "paid_on": "2026-03-05"}), 201)
@@ -169,5 +169,28 @@ func TestInstallmentPlanLockAndCancel(t *testing.T) {
 	active := expect[list[plan]](t, h.do("GET", "/api/v1/installment-plans?active_only=true", tok, nil), 200)
 	if len(active.Items) != 0 {
 		t.Fatalf("active plans %+v", active.Items)
+	}
+}
+
+func TestInstallmentPlanStructuralEditDropsPaidRows(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("drop@example.com")
+	cc := h.creditCard(tok)
+	pl := h.msi(tok, cc, 120000, 4, "2026-03-16") // first cycle April: May is 2/4
+	may := byKind(h.entries(tok, "2026-05"), "installment")
+	if len(may) != 1 {
+		t.Fatalf("may %+v", may)
+	}
+	expect[entry](t, h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", may[0].ID), tok, M{"amount": may[0].Amount, "status": "paid", "settled_on": "2026-03-16", "payment_method_id": cc}), 200)
+	body := M{"payment_method_id": cc, "category_id": h.catID(tok, "Entretenimiento"), "description": "TV",
+		"total_amount": 90000, "installments": 3, "purchased_on": "2026-03-16"}
+	expect[plan](t, h.do("PUT", fmt.Sprintf("/api/v1/installment-plans/%d", pl.ID), tok, body), 200)
+	may = byKind(h.entries(tok, "2026-05"), "installment")
+	if len(may) != 1 || may[0].Name != "TV 2/3" || may[0].Amount != 30000 || may[0].Status != "pending" {
+		t.Fatalf("regenerated may %+v", may)
+	}
+	var n int
+	if err := h.pool.QueryRow(context.Background(), `SELECT count(*) FROM monthly_entries WHERE installment_plan_id = $1 AND installment_no > 3`, pl.ID).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("orphans %d %v", n, err)
 	}
 }

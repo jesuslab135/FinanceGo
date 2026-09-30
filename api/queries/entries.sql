@@ -79,12 +79,12 @@ VALUES (@user_id, sqlc.arg(month)::date, 'installment', sqlc.arg(installment_pla
     sqlc.arg(category_id)::bigint, sqlc.arg(payment_method_id)::bigint, @amount, sqlc.arg(due_date)::date)
 ON CONFLICT DO NOTHING;
 
--- name: DeletePendingInstallmentEntries :exec
+-- name: DeleteInstallmentEntries :exec
 DELETE FROM monthly_entries
-WHERE installment_plan_id = sqlc.arg(plan_id)::bigint AND status = 'pending' AND installment_no >= sqlc.arg(from_no)::int;
+WHERE user_id = @user_id AND installment_plan_id = sqlc.arg(plan_id)::bigint AND installment_no >= sqlc.arg(from_no)::int;
 
 -- name: RelabelInstallmentEntries :exec
 UPDATE monthly_entries
 SET name = sqlc.arg(description)::text || ' ' || installment_no::text || '/' || sqlc.arg(installments)::int::text,
     category_id = sqlc.arg(category_id)::bigint, updated_at = now()
-WHERE installment_plan_id = sqlc.arg(plan_id)::bigint;
+WHERE user_id = @user_id AND installment_plan_id = sqlc.arg(plan_id)::bigint;

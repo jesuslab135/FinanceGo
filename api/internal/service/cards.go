@@ -241,7 +241,7 @@ func (s *Service) UpdateInstallmentPlan(ctx context.Context, a Actor, id int64, 
 		billed, _ := cards.Billed(planOf(cur), curSD, today)
 		structural := in.PaymentMethodID != cur.PaymentMethodID || in.TotalAmount != cur.TotalAmount ||
 			in.Installments != cur.Installments || !in.PurchasedOn.Equal(cur.PurchasedOn)
-		if cur.CancelledOn != nil || (billed > 0 && structural) {
+		if structural && (cur.CancelledOn != nil || billed > 0) {
 			return apperr.Conflict("plan_locked", "installments already billed; only description and category can change")
 		}
 		p, err := q.UpdateInstallmentPlan(ctx, store.UpdateInstallmentPlanParams{ID: id, UserID: a.UserID,
@@ -250,12 +250,12 @@ func (s *Service) UpdateInstallmentPlan(ctx context.Context, a Actor, id int64, 
 		if err != nil {
 			return err
 		}
-		if structural { // nothing billed yet: drop rows, they regenerate lazily
-			if err := q.DeletePendingInstallmentEntries(ctx, store.DeletePendingInstallmentEntriesParams{PlanID: id, FromNo: 1}); err != nil {
+		if structural { // nothing billed yet: drop all rows (any status), they regenerate lazily
+			if err := q.DeleteInstallmentEntries(ctx, store.DeleteInstallmentEntriesParams{UserID: a.UserID, PlanID: id, FromNo: 1}); err != nil {
 				return err
 			}
 		}
-		if err := q.RelabelInstallmentEntries(ctx, store.RelabelInstallmentEntriesParams{PlanID: id, Description: p.Description,
+		if err := q.RelabelInstallmentEntries(ctx, store.RelabelInstallmentEntriesParams{UserID: a.UserID, PlanID: id, Description: p.Description,
 			Installments: p.Installments, CategoryID: p.CategoryID}); err != nil {
 			return err
 		}
@@ -284,7 +284,7 @@ func (s *Service) CancelInstallmentPlan(ctx context.Context, a Actor, id int64) 
 				return err
 			}
 			billed, _ := cards.Billed(planOf(cur), sd, today)
-			if err := q.DeletePendingInstallmentEntries(ctx, store.DeletePendingInstallmentEntriesParams{PlanID: id, FromNo: int32(billed + 1)}); err != nil {
+			if err := q.DeleteInstallmentEntries(ctx, store.DeleteInstallmentEntriesParams{UserID: a.UserID, PlanID: id, FromNo: int32(billed + 1)}); err != nil {
 				return err
 			}
 		}
@@ -375,7 +375,7 @@ func utilization(current int64, limit *int64) (*float64, *int64) {
 	if limit == nil || *limit <= 0 {
 		return nil, nil
 	}
-	u := math.Round(float64(current)*1000/float64(*limit)) / 10
+	u := math.Max(0, math.Round(float64(current)*1000/float64(*limit))/10)
 	avail := *limit - current
 	return &u, &avail
 }
