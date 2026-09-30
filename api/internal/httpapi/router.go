@@ -93,4 +93,9 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.POST("/installment-plans", h.createInstallmentPlan)
 	p.PUT("/installment-plans/:id", h.updateInstallmentPlan)
 	p.DELETE("/installment-plans/:id", h.cancelInstallmentPlan)
+
+	p.GET("/dashboard/summary", h.dashboardSummary)
+	p.GET("/category-budgets", h.listCategoryBudgets)
+	p.PUT("/category-budgets/:id", h.putCategoryBudget)
+	p.DELETE("/category-budgets/:id", h.deleteCategoryBudget)
 }

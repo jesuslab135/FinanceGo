@@ -95,3 +95,16 @@ func items[T any](list []T) gin.H {
 	}
 	return gin.H{"items": list}
 }
+
+func queryMonth(c *gin.Context, key string) (*time.Time, bool) {
+	v := c.Query(key)
+	if v == "" {
+		return nil, true
+	}
+	t, err := datex.ParseMonth(v)
+	if err != nil {
+		fail(c, apperr.BadRequest(key+": "+err.Error()))
+		return nil, false
+	}
+	return &t, true
+}
