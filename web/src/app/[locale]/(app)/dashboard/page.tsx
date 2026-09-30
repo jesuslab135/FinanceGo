@@ -24,7 +24,7 @@ import { useToday } from "@/hooks/use-today";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeInsights } from "@/lib/insights";
 import { useBreakdown, useCardsOverview, useCategories, useIncomeSources, useSeries, useSummary, useUpcoming } from "@/lib/query/hooks";
-import { readJSON, userKey } from "@/lib/storage";
+import { isOnboardingSkipped } from "@/lib/onboarding";
 import { useErrorMessage } from "@/lib/api/error-messages";
 import { riseIn } from "@/lib/motion";
 
@@ -76,13 +76,14 @@ function Dashboard() {
   const incomeSources = useIncomeSources();
   const upcoming = useUpcoming(7);
   const cards = useCardsOverview();
-  const onboardingSkipped = useMemo(() => user != null && readJSON(userKey(user.id, "onboarding-skipped"), false), [user]);
+  // Same rule as the layout's onboarding gate, so "Finish setup" never points at a /welcome that bounces back.
+  const onboardingSkipped = useMemo(() => user != null && isOnboardingSkipped(user.id), [user]);
   // Each insight uses only the inputs it needs: a loading, failed or placeholder query leaves its input
   // undefined and hides only the insights that depend on it.
   const insights = useMemo(
     () => computeInsights({
       today, summary: summaryNow.data, upcoming: upcoming.data, cards: cards.data, catNow: catNow.data, catPrev: catPrev.data,
-      daily: daily.isPlaceholderData ? undefined : daily.data, hasIncome: incomeSources.data?.some((s) => s.active), onboardingSkipped,
+      daily: daily.isPlaceholderData ? undefined : daily.data, hasIncome: incomeSources.data ? incomeSources.data.length > 0 : undefined, onboardingSkipped,
     }, fmt),
     [today, summaryNow.data, upcoming.data, cards.data, catNow.data, catPrev.data, daily.data, daily.isPlaceholderData, incomeSources.data, onboardingSkipped, fmt],
   );

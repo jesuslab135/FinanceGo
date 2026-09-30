@@ -17,7 +17,8 @@ const h = vi.hoisted(() => ({
   del: vi.fn(),
   get: vi.fn(),
 }));
-vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }) }));
+const toastMock = vi.hoisted(() => Object.assign(vi.fn<(label: string, opts?: { action: { onClick: () => void } }) => void>(), { error: vi.fn() }));
+vi.mock("sonner", () => ({ toast: toastMock }));
 vi.mock("@/lib/api/client", () => ({ api: { GET: h.get } }));
 vi.mock("@/lib/auth/auth-provider", () => ({ useAuth: () => ({ user: { id: 1 } }) }));
 vi.mock("@/lib/query/hooks", () => ({
@@ -39,6 +40,21 @@ describe("QuickAddFlow", () => {
     celebrateMock.mockReset();
     h.mutateAsync.mockReset().mockResolvedValue({ id: 50 });
     h.get.mockReset().mockResolvedValue({ data: { items: [] } });
+  });
+
+  it("reports a failed undo instead of failing silently", async () => {
+    toastMock.mockClear(); toastMock.error.mockClear(); h.del.mockReset();
+    renderWithProviders(<QuickAddFlow onDone={vi.fn()} />);
+    await userEvent.keyboard("500");
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Comida" }));
+    await userEvent.click(await screen.findByRole("radio", { name: /BBVA/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(toastMock).toHaveBeenCalledWith("Guardado", expect.anything()));
+    toastMock.mock.calls[0][1]!.action.onClick();
+    expect(h.del).toHaveBeenCalledWith(50, expect.objectContaining({ onError: expect.any(Function) }));
+    h.del.mock.calls[0][1].onError(new TypeError("Failed to fetch"));
+    expect(toastMock.error).toHaveBeenCalledWith(expect.stringContaining("No hay conexión con el servidor"));
   });
 
   it("types an amount, picks category and card, and saves integer cents", async () => {

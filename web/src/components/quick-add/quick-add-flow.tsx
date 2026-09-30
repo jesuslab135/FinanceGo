@@ -106,7 +106,7 @@ export function QuickAddFlow({ prefill, onDone }: { prefill?: Partial<ExpenseInp
       });
       record(categoryId, cardId);
       navigator.vibrate?.(10);
-      toast(t("common.saved"), { action: { label: t("common.undo"), onClick: () => remove.mutate(created.id) } });
+      toast(t("common.saved"), { action: { label: t("common.undo"), onClick: () => remove.mutate(created.id, { onError: (err) => toast.error(errMsg(err)) }) } });
       onDone();
       if (first && user) {
         writeJSON(userKey(user.id, "celebrated-first"), true);

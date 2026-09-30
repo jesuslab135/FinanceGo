@@ -1,5 +1,20 @@
-import { describe, expect, it } from "vitest";
-import { categoryForIcon, FIXED_SUGGESTIONS, needsOnboarding } from "./onboarding";
+import { afterEach, describe, expect, it } from "vitest";
+import { categoryForIcon, FIXED_SUGGESTIONS, isOnboardingSkipped, markOnboardingSettled, needsOnboarding, ONBOARDING_SKIPPED, resetOnboardingSession } from "./onboarding";
+import { userKey, writeJSON } from "./storage";
+
+describe("isOnboardingSkipped", () => {
+  afterEach(() => { localStorage.clear(); resetOnboardingSession(); });
+  it("is false by default", () => expect(isOnboardingSkipped(9)).toBe(false));
+  it("reads the stored per-user flag", () => {
+    writeJSON(userKey(9, ONBOARDING_SKIPPED), true);
+    expect(isOnboardingSkipped(9)).toBe(true);
+    expect(isOnboardingSkipped(10)).toBe(false);
+  });
+  it("honours this session's memory when storage is unavailable", () => {
+    markOnboardingSettled(9);
+    expect(isOnboardingSkipped(9)).toBe(true);
+  });
+});
 
 describe("needsOnboarding", () => {
   const base = { status: "authenticated" as const, incomeCount: 0, skipped: false, pathname: "/dashboard" };

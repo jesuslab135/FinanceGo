@@ -1,4 +1,5 @@
 import type { Category } from "@/lib/api/types";
+import { readJSON, userKey } from "@/lib/storage";
 
 /** Routes that never bounce to /welcome (pathname is locale-free, from next-intl's usePathname). */
 const EXEMPT_PREFIXES = ["/welcome", "/settings"];
@@ -45,6 +46,11 @@ const settledThisSession = new Set<number>();
 /** Records, for this page session, that the user skipped or already saved an income: never redirect them to /welcome. */
 export function markOnboardingSettled(userId: number): void { settledThisSession.add(userId); }
 export function isOnboardingSettled(userId: number): boolean { return settledThisSession.has(userId); }
+
+/** True when the user skipped (or otherwise settled) onboarding: this session's memory, then the stored flag. */
+export function isOnboardingSkipped(userId: number): boolean {
+  return isOnboardingSettled(userId) || readJSON(userKey(userId, ONBOARDING_SKIPPED), false);
+}
 
 /** Test-only: clears the session memory. */
 export function resetOnboardingSession(): void { settledThisSession.clear(); }
