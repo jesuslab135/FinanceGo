@@ -173,8 +173,10 @@ func (s *Service) Login(ctx context.Context, email, password string) (Session, e
 	return s.newSession(ctx, s.q, u, "")
 }
 
-// Refresh rotates a refresh token. Presenting an already-revoked token is
-// treated as theft: the whole family is revoked (outside any rollback).
+// Refresh rotates a refresh token. Presenting a token revoked less than
+// refreshGrace ago is a slow second tab racing the rotation: refresh_race,
+// family untouched. An older revoked token is treated as theft: the whole
+// family is revoked (outside any rollback).
 func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	if raw == "" {
 		return Session{}, apperr.Unauthorized()
@@ -187,7 +189,10 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 		return Session{}, err
 	}
 	if rt.RevokedAt != nil {
-		if err := s.q.RevokeRefreshFamily(ctx, rt.FamilyID); err != nil {
+		if s.now().Before(rt.RevokedAt.Add(refreshGrace)) {
+			return Session{}, refreshRace()
+		}
+		if err := s.q.RevokeRefreshFamily(ctx, store.RevokeRefreshFamilyParams{Now: s.now(), FamilyID: rt.FamilyID}); err != nil {
 			return Session{}, err
 		}
 		return Session{}, apperr.Unauthorized()
@@ -197,12 +202,12 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	}
 	var sess Session
 	err = s.inTx(ctx, func(q *store.Queries) error {
-		n, err := q.RevokeRefreshToken(ctx, rt.ID)
+		n, err := q.RevokeRefreshToken(ctx, store.RevokeRefreshTokenParams{Now: s.now(), ID: rt.ID})
 		if err != nil {
 			return err
 		}
 		if n == 0 { // a concurrent refresh won the race
-			return &apperr.Error{Status: http.StatusUnauthorized, Code: "refresh_race", Message: "refresh already in progress"}
+			return refreshRace()
 		}
 		u, err := q.GetUser(ctx, rt.UserID)
 		if err != nil {
@@ -214,11 +219,19 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	return sess, err
 }
 
+// refreshGrace is how long a just-rotated refresh token is answered with
+// refresh_race instead of being treated as stolen.
+const refreshGrace = 30 * time.Second
+
+func refreshRace() error {
+	return &apperr.Error{Status: http.StatusUnauthorized, Code: "refresh_race", Message: "refresh already in progress"}
+}
+
 func (s *Service) Logout(ctx context.Context, raw string) error {
 	if raw == "" {
 		return nil
 	}
-	return s.q.RevokeRefreshByHash(ctx, auth.HashRefresh(raw))
+	return s.q.RevokeRefreshByHash(ctx, store.RevokeRefreshByHashParams{Now: s.now(), TokenHash: auth.HashRefresh(raw)})
 }
 
 func (s *Service) Me(ctx context.Context, a Actor) (User, error) {

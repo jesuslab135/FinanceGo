@@ -25,10 +25,10 @@ VALUES (@user_id, @family_id, @token_hash, @expires_at);
 SELECT * FROM refresh_tokens WHERE token_hash = @token_hash;
 
 -- name: RevokeRefreshToken :execrows
-UPDATE refresh_tokens SET revoked_at = now() WHERE id = @id AND revoked_at IS NULL;
+UPDATE refresh_tokens SET revoked_at = sqlc.arg(now)::timestamptz WHERE id = @id AND revoked_at IS NULL;
 
 -- name: RevokeRefreshByHash :exec
-UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = @token_hash AND revoked_at IS NULL;
+UPDATE refresh_tokens SET revoked_at = sqlc.arg(now)::timestamptz WHERE token_hash = @token_hash AND revoked_at IS NULL;
 
 -- name: RevokeRefreshFamily :exec
-UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = @family_id AND revoked_at IS NULL;
+UPDATE refresh_tokens SET revoked_at = sqlc.arg(now)::timestamptz WHERE family_id = @family_id AND revoked_at IS NULL;
