@@ -42,6 +42,9 @@ export function PlansList({ cardId }: { cardId: number }) {
                 <>
                   <Button size="icon" variant="ghost" aria-label={t("common.edit")} onClick={() => setDialog({ plan: p })}><Pencil /></Button>
                   <ConfirmButton
+                    actionLabel={t("cards.cancelPlan")}
+                    cancelLabel={t("cards.keepPlan")}
+                    description={t("cards.cancelPlanConfirm")}
                     onConfirm={() =>
                       cancel.mutate(p.id, {
                         onSuccess: () => toast.success(t("common.saved")),

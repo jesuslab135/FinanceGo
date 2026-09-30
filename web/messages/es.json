@@ -90,7 +90,9 @@
     "cancelled": "Cancelado", "note": "Nota", "noCharges": "Sin cargos en este periodo",
     "source": { "expense": "Gasto", "fixed": "Pago fijo" }, "installmentOf": "{no}/{of}",
     "notCredit": "Este método no es tarjeta de crédito.", "otherMethods": "Otros métodos",
-    "creditCards": "Tarjetas de crédito", "perMonth": "{amount} al mes"
+    "creditCards": "Tarjetas de crédito", "perMonth": "{amount} al mes",
+    "keepPlan": "Conservar plan",
+    "cancelPlanConfirm": "Las mensualidades pendientes dejarán de cobrarse; las ya cobradas se conservan en tus estados de cuenta."
   },
   "categories": {
     "title": "Categorías", "new": "Nueva categoría", "edit": "Editar categoría", "kind": "Tipo",

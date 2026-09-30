@@ -6,7 +6,14 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export function ConfirmButton({ onConfirm, children, description }: { onConfirm: () => void; children: ReactNode; description?: string }) {
+/** Asks for confirmation before `onConfirm`. Defaults describe a delete; pass labels for other actions. */
+export function ConfirmButton({ onConfirm, children, description, actionLabel, cancelLabel }: {
+  onConfirm: () => void;
+  children: ReactNode;
+  description?: string;
+  actionLabel?: string;
+  cancelLabel?: string;
+}) {
   const t = useTranslations("common");
   return (
     <AlertDialog>
@@ -17,8 +24,8 @@ export function ConfirmButton({ onConfirm, children, description }: { onConfirm:
           <AlertDialogDescription>{description ?? t("confirmDelete")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{t("delete")}</AlertDialogAction>
+          <AlertDialogCancel>{cancelLabel ?? t("cancel")}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{actionLabel ?? t("delete")}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -90,7 +90,9 @@
     "cancelled": "Cancelled", "note": "Note", "noCharges": "No charges this cycle",
     "source": { "expense": "Expense", "fixed": "Fixed payment" }, "installmentOf": "{no}/{of}",
     "notCredit": "This payment method is not a credit card.", "otherMethods": "Other methods",
-    "creditCards": "Credit cards", "perMonth": "{amount} per month"
+    "creditCards": "Credit cards", "perMonth": "{amount} per month",
+    "keepPlan": "Keep plan",
+    "cancelPlanConfirm": "Pending installments will stop being billed; installments already billed stay on your statements."
   },
   "categories": {
     "title": "Categories", "new": "New category", "edit": "Edit category", "kind": "Type",
