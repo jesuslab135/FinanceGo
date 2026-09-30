@@ -1,7 +1,6 @@
 "use client";
 import { useLocale } from "next-intl";
 import { useEffect, type ReactNode } from "react";
-import { PageTransition } from "@/components/motion/page-transition";
 import { AppShell } from "@/components/shell/app-shell";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/auth-provider";
@@ -38,5 +37,5 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   if (status !== "authenticated" || checking || decision === "redirect") {
     return <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground" aria-busy>…</div>;
   }
-  return <AppShell><PageTransition>{children}</PageTransition></AppShell>;
+  return <AppShell>{children}</AppShell>;
 }

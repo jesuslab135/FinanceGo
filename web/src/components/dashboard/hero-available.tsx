@@ -16,32 +16,34 @@ export function HeroAvailable({ summary: s, className }: { summary: Summary; cla
   const fmt = useFormatMoney();
   const negative = s.available < 0;
   return (
-    <SharedElement name="hero-amount"><section
-      data-tone={negative ? "critical" : "brand"}
-      className={cn(
-        "relative space-y-2 overflow-hidden rounded-[20px] p-5 text-white shadow-card md:p-7",
-        negative
-          ? "bg-[linear-gradient(135deg,var(--critical-hero-from)_0%,var(--critical-hero-from)_70%,var(--critical-hero-to)_100%)]"
-          : "bg-[linear-gradient(135deg,var(--hero-from)_0%,var(--hero-from)_70%,var(--hero-to)_100%)]",
-        className,
-      )}
-    >
-      <p className={pill}>{t("heroLabel")}</p>
-      <div>
-        {negative ? (
-          <p className="num font-display text-4xl font-extrabold tracking-tight md:text-5xl">{fmt(s.available)}</p>
-        ) : (
-          <AnimatedAmount cents={s.available} splitCents className="font-display text-4xl font-extrabold tracking-tight md:text-5xl" />
+    <SharedElement name="hero-amount">
+      <section
+        data-tone={negative ? "critical" : "brand"}
+        className={cn(
+          "relative space-y-2 overflow-hidden rounded-[20px] p-5 text-white shadow-card md:p-7",
+          negative
+            ? "bg-[linear-gradient(135deg,var(--critical-hero-from)_0%,var(--critical-hero-from)_70%,var(--critical-hero-to)_100%)]"
+            : "bg-[linear-gradient(135deg,var(--hero-from)_0%,var(--hero-from)_70%,var(--hero-to)_100%)]",
+          className,
         )}
-      </div>
-      {negative ? (
-        <p className={cn(pill, "font-semibold")}><AlertTriangle className="size-4" aria-hidden /> {t("overspent")}</p>
-      ) : (
-        s.safe_to_spend_per_day != null && (
-          <p className={pill}>{t("heroHint", { amount: fmt(s.safe_to_spend_per_day), days: s.days_remaining ?? 0 })}</p>
-        )
-      )}
-      <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
-    </section></SharedElement>
+      >
+        <p className={pill}>{t("heroLabel")}</p>
+        <div>
+          {negative ? (
+            <p className="num font-display text-4xl font-extrabold tracking-tight md:text-5xl">{fmt(s.available)}</p>
+          ) : (
+            <AnimatedAmount cents={s.available} splitCents className="font-display text-4xl font-extrabold tracking-tight md:text-5xl" />
+          )}
+        </div>
+        {negative ? (
+          <p className={cn(pill, "font-semibold")}><AlertTriangle className="size-4" aria-hidden /> {t("overspent")}</p>
+        ) : (
+          s.safe_to_spend_per_day != null && (
+            <p className={pill}>{t("heroHint", { amount: fmt(s.safe_to_spend_per_day), days: s.days_remaining ?? 0 })}</p>
+          )
+        )}
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
+      </section>
+    </SharedElement>
   );
 }
