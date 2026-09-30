@@ -1,0 +1,95 @@
+{
+  "common": {
+    "appName": "FinanceGo", "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",
+    "add": "Add", "close": "Close", "loading": "Loading…", "retry": "Retry",
+    "confirmTitle": "Are you sure?", "confirmDelete": "This cannot be undone.", "none": "None",
+    "optional": "optional", "active": "Active", "inactive": "Inactive", "activate": "Activate",
+    "error": "Something went wrong", "saved": "Saved", "deleted": "Deleted", "empty": "Nothing here yet",
+    "actions": "Actions", "search": "Search", "from": "From", "to": "To", "all": "All",
+    "previous": "Previous", "next": "Next", "today": "Today", "total": "Total"
+  },
+  "nav": {
+    "dashboard": "Home", "expenses": "Expenses", "month": "Month", "recurring": "Recurring", "cards": "Cards",
+    "categories": "Categories", "settings": "Settings", "more": "More", "quickAdd": "Add expense",
+    "logout": "Log out", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "themeSystem": "System",
+    "language": "Language", "mainNav": "Main navigation"
+  },
+  "auth": {
+    "loginTitle": "Log in", "registerTitle": "Create your account", "email": "Email", "password": "Password",
+    "name": "Name", "currency": "Currency", "timezone": "Time zone", "login": "Log in", "register": "Create account",
+    "noAccount": "No account yet?", "haveAccount": "Already have an account?",
+    "invalidCredentials": "Wrong email or password", "passwordHint": "At least 8 characters",
+    "tagline": "Your income, fixed payments and expenses in one place."
+  },
+  "validation": {
+    "required": "Required", "amount": "Enter a valid amount, e.g. 1,234.50", "email": "Invalid email",
+    "min8": "At least 8 characters", "last4": "Exactly 4 digits", "day": "Day between 1 and 31",
+    "installments": "Between 2 and 48 installments", "max200": "At most 200 characters"
+  },
+  "expenses": {
+    "title": "Expenses", "new": "New expense", "edit": "Edit expense", "amount": "Amount", "category": "Category",
+    "paymentMethod": "Payment method", "description": "Description", "date": "Date", "noMethod": "No method",
+    "loadMore": "Load more", "empty": "No expenses in this range", "searchPlaceholder": "Search description"
+  },
+  "month": {
+    "title": "Month", "income": "Income", "fixed": "Fixed payments", "installments": "Interest-free installments",
+    "status": { "pending": "Pending", "paid": "Paid", "received": "Received", "skipped": "Skipped" },
+    "markPaid": "Mark paid", "markReceived": "Mark received", "skip": "Skip", "undo": "Undo",
+    "due": "Due {date}", "edited": "Edited", "editEntry": "Edit entry", "empty": "Nothing this month"
+  },
+  "recurring": {
+    "title": "Recurring", "incomeSources": "Income", "fixedPayments": "Fixed payments",
+    "newIncome": "New income source", "newFixed": "New fixed payment", "editIncome": "Edit income",
+    "editFixed": "Edit fixed payment", "name": "Name", "amount": "Amount", "day": "Day of month",
+    "startMonth": "Start month", "endMonth": "End month", "deactivate": "Deactivate",
+    "dayHint": "Shorter months use their last day", "everyMonth": "Every month on day {day}",
+    "endMonthHint": "Leave empty if it never ends"
+  },
+  "cards": {
+    "title": "Cards & accounts", "new": "New payment method", "edit": "Edit payment method",
+    "nickname": "Nickname", "type": "Type",
+    "types": { "credit": "Credit", "debit": "Debit", "cash": "Cash", "transfer": "Transfer" },
+    "bank": "Bank", "network": "Network", "last4": "Last 4 digits",
+    "last4Hint": "Reference only. Never store the full number, CVV or expiry.",
+    "creditLimit": "Credit limit", "statementDay": "Statement day", "paymentDueDay": "Payment due day",
+    "openingBalance": "Opening balance", "openingBalanceDate": "Opening balance date",
+    "openingHint": "Existing debt, excluding interest-free purchases you add separately.",
+    "currentBalance": "Current balance", "amountDue": "Pay to avoid interest", "dueOn": "Due date",
+    "billed": "Statement balance", "utilization": "Credit used", "available": "Available credit",
+    "cycle": "Cycle {from} – {to}", "charges": "Charges", "payments": "Payments",
+    "recordPayment": "Record payment", "msi": "Interest-free installments", "newMsi": "New installment purchase",
+    "editMsi": "Edit installment purchase", "totalAmount": "Total", "installments": "Installments",
+    "purchasedOn": "Purchase date", "remaining": "Remaining", "cancelPlan": "Cancel plan",
+    "cancelled": "Cancelled", "note": "Note", "noCharges": "No charges this cycle",
+    "source": { "expense": "Expense", "fixed": "Fixed payment" }, "installmentOf": "{no}/{of}",
+    "notCredit": "This payment method is not a credit card.", "otherMethods": "Other methods",
+    "creditCards": "Credit cards", "perMonth": "{amount} per month"
+  },
+  "categories": {
+    "title": "Categories", "new": "New category", "edit": "Edit category", "kind": "Type",
+    "kinds": { "expense": "Expense", "income": "Income" }, "color": "Color", "name": "Name",
+    "inUse": "This category is in use. Choose where to move its records:", "reassignTo": "Move to",
+    "budget": "Monthly limit", "noBudget": "No limit", "removeBudget": "Remove limit"
+  },
+  "settings": {
+    "title": "Settings", "profile": "Profile", "export": "Export data", "exportExpenses": "Expenses (CSV)",
+    "exportEntries": "Income & fixed payments (CSV)", "danger": "Danger zone", "deleteAccount": "Delete account",
+    "deleteWarning": "Your account and all your data will be deleted. This cannot be undone.",
+    "confirmPassword": "Type your password to confirm", "language": "Language"
+  },
+  "dashboard": {
+    "title": "Overview", "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date",
+    "income": "Income this month", "fixed": "Fixed this month", "fixedDetail": "{paid} paid · {pending} pending",
+    "installments": "Installments this month",
+    "spent": { "day": "Spent this day", "week": "Spent this week", "month": "Spent this month" },
+    "available": "Available this month", "overspent": "Overspent",
+    "safeToSpend": "You can spend {amount} per day ({days} days left)",
+    "spending": "Spending over time", "expensesSeries": "Expenses", "committedSeries": "Fixed & installments",
+    "byCategory": "By category", "byMethod": "By payment method", "noMethod": "No method",
+    "other": "Other", "budgets": "Category limits", "upcoming": "Upcoming payments", "overdue": "Overdue",
+    "cardsDebt": "Card debt", "showTable": "Show table", "showChart": "Show chart",
+    "noData": "No activity in this period",
+    "budgetStatus": { "ok": "On track", "warn": "Near the limit", "over": "Over the limit" },
+    "periodColumn": "Period", "cardDue": "Card payment"
+  }
+}

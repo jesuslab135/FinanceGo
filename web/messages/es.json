@@ -1,0 +1,95 @@
+{
+  "common": {
+    "appName": "FinanceGo", "save": "Guardar", "cancel": "Cancelar", "delete": "Eliminar", "edit": "Editar",
+    "add": "Agregar", "close": "Cerrar", "loading": "Cargando…", "retry": "Reintentar",
+    "confirmTitle": "¿Estás seguro?", "confirmDelete": "Esta acción no se puede deshacer.", "none": "Ninguno",
+    "optional": "opcional", "active": "Activo", "inactive": "Inactivo", "activate": "Activar",
+    "error": "Algo salió mal", "saved": "Guardado", "deleted": "Eliminado", "empty": "Aún no hay nada aquí",
+    "actions": "Acciones", "search": "Buscar", "from": "Desde", "to": "Hasta", "all": "Todos",
+    "previous": "Anterior", "next": "Siguiente", "today": "Hoy", "total": "Total"
+  },
+  "nav": {
+    "dashboard": "Inicio", "expenses": "Gastos", "month": "Mes", "recurring": "Recurrentes", "cards": "Tarjetas",
+    "categories": "Categorías", "settings": "Ajustes", "more": "Más", "quickAdd": "Agregar gasto",
+    "logout": "Cerrar sesión", "theme": "Tema", "themeLight": "Claro", "themeDark": "Oscuro", "themeSystem": "Sistema",
+    "language": "Idioma", "mainNav": "Navegación principal"
+  },
+  "auth": {
+    "loginTitle": "Inicia sesión", "registerTitle": "Crea tu cuenta", "email": "Correo", "password": "Contraseña",
+    "name": "Nombre", "currency": "Moneda", "timezone": "Zona horaria", "login": "Entrar", "register": "Crear cuenta",
+    "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
+    "invalidCredentials": "Correo o contraseña incorrectos", "passwordHint": "Mínimo 8 caracteres",
+    "tagline": "Tus ingresos, pagos fijos y gastos en un solo lugar."
+  },
+  "validation": {
+    "required": "Requerido", "amount": "Escribe un monto válido, p. ej. 1,234.50", "email": "Correo inválido",
+    "min8": "Mínimo 8 caracteres", "last4": "Exactamente 4 dígitos", "day": "Día entre 1 y 31",
+    "installments": "Entre 2 y 48 mensualidades", "max200": "Máximo 200 caracteres"
+  },
+  "expenses": {
+    "title": "Gastos", "new": "Nuevo gasto", "edit": "Editar gasto", "amount": "Monto", "category": "Categoría",
+    "paymentMethod": "Método de pago", "description": "Descripción", "date": "Fecha", "noMethod": "Sin método",
+    "loadMore": "Cargar más", "empty": "No hay gastos en este rango", "searchPlaceholder": "Buscar descripción"
+  },
+  "month": {
+    "title": "Mes", "income": "Ingresos", "fixed": "Pagos fijos", "installments": "Meses sin intereses",
+    "status": { "pending": "Pendiente", "paid": "Pagado", "received": "Recibido", "skipped": "Omitido" },
+    "markPaid": "Marcar pagado", "markReceived": "Marcar recibido", "skip": "Omitir", "undo": "Deshacer",
+    "due": "Vence {date}", "edited": "Editado", "editEntry": "Editar movimiento", "empty": "Sin movimientos este mes"
+  },
+  "recurring": {
+    "title": "Recurrentes", "incomeSources": "Ingresos", "fixedPayments": "Pagos fijos",
+    "newIncome": "Nueva fuente de ingreso", "newFixed": "Nuevo pago fijo", "editIncome": "Editar ingreso",
+    "editFixed": "Editar pago fijo", "name": "Nombre", "amount": "Monto", "day": "Día del mes",
+    "startMonth": "Mes de inicio", "endMonth": "Mes final", "deactivate": "Desactivar",
+    "dayHint": "Si el mes es más corto se usa el último día", "everyMonth": "Cada mes el día {day}",
+    "endMonthHint": "Déjalo vacío si no termina"
+  },
+  "cards": {
+    "title": "Tarjetas y cuentas", "new": "Nuevo método de pago", "edit": "Editar método de pago",
+    "nickname": "Alias", "type": "Tipo",
+    "types": { "credit": "Crédito", "debit": "Débito", "cash": "Efectivo", "transfer": "Transferencia" },
+    "bank": "Banco", "network": "Red", "last4": "Últimos 4 dígitos",
+    "last4Hint": "Solo como referencia. Nunca guardes el número completo, CVV ni vencimiento.",
+    "creditLimit": "Límite de crédito", "statementDay": "Día de corte", "paymentDueDay": "Día límite de pago",
+    "openingBalance": "Saldo inicial", "openingBalanceDate": "Fecha del saldo inicial",
+    "openingHint": "Deuda previa, sin incluir compras a MSI que registres aparte.",
+    "currentBalance": "Saldo actual", "amountDue": "Pago para no generar intereses", "dueOn": "Fecha límite",
+    "billed": "Saldo al corte", "utilization": "Uso del límite", "available": "Crédito disponible",
+    "cycle": "Periodo {from} – {to}", "charges": "Cargos", "payments": "Pagos",
+    "recordPayment": "Registrar pago", "msi": "Meses sin intereses", "newMsi": "Nueva compra a MSI",
+    "editMsi": "Editar compra a MSI", "totalAmount": "Total", "installments": "Mensualidades",
+    "purchasedOn": "Fecha de compra", "remaining": "Restante", "cancelPlan": "Cancelar plan",
+    "cancelled": "Cancelado", "note": "Nota", "noCharges": "Sin cargos en este periodo",
+    "source": { "expense": "Gasto", "fixed": "Pago fijo" }, "installmentOf": "{no}/{of}",
+    "notCredit": "Este método no es tarjeta de crédito.", "otherMethods": "Otros métodos",
+    "creditCards": "Tarjetas de crédito", "perMonth": "{amount} al mes"
+  },
+  "categories": {
+    "title": "Categorías", "new": "Nueva categoría", "edit": "Editar categoría", "kind": "Tipo",
+    "kinds": { "expense": "Gasto", "income": "Ingreso" }, "color": "Color", "name": "Nombre",
+    "inUse": "Esta categoría está en uso. Elige a cuál mover sus movimientos:", "reassignTo": "Mover a",
+    "budget": "Límite mensual", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
+  },
+  "settings": {
+    "title": "Ajustes", "profile": "Perfil", "export": "Exportar datos", "exportExpenses": "Gastos (CSV)",
+    "exportEntries": "Ingresos y pagos fijos (CSV)", "danger": "Zona de peligro", "deleteAccount": "Eliminar cuenta",
+    "deleteWarning": "Se borrarán tu cuenta y todos tus datos. No se puede deshacer.",
+    "confirmPassword": "Escribe tu contraseña para confirmar", "language": "Idioma"
+  },
+  "dashboard": {
+    "title": "Resumen", "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha",
+    "income": "Ingresos del mes", "fixed": "Fijos del mes", "fixedDetail": "{paid} pagado · {pending} pendiente",
+    "installments": "MSI del mes",
+    "spent": { "day": "Gastado este día", "week": "Gastado esta semana", "month": "Gastado este mes" },
+    "available": "Disponible del mes", "overspent": "Sobregirado",
+    "safeToSpend": "Puedes gastar {amount} por día ({days} días restantes)",
+    "spending": "Gasto en el tiempo", "expensesSeries": "Gastos", "committedSeries": "Fijos y MSI",
+    "byCategory": "Por categoría", "byMethod": "Por método de pago", "noMethod": "Sin método",
+    "other": "Otros", "budgets": "Límites por categoría", "upcoming": "Próximos pagos", "overdue": "Vencido",
+    "cardsDebt": "Deuda de tarjetas", "showTable": "Ver tabla", "showChart": "Ver gráfica",
+    "noData": "Sin movimientos en este periodo",
+    "budgetStatus": { "ok": "En orden", "warn": "Cerca del límite", "over": "Excedido" },
+    "periodColumn": "Periodo", "cardDue": "Pago de tarjeta"
+  }
+}
