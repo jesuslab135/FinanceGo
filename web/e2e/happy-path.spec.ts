@@ -65,3 +65,34 @@ test("register → income + card fixed payment → card expense → Available �
   await expect(page).toHaveURL(/\/en\/dashboard/);
   await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 });
+
+test("cards: a card with records can't be deleted, an unused one can", async ({ page }) => {
+  await register(page, uniqueEmail("delete"));
+  const today = new Date().toLocaleDateString("sv", { timeZone: "America/Tijuana" });
+  const refreshed = await page.request.post("/api/v1/auth/refresh");
+  const headers = { Authorization: `Bearer ${(await refreshed.json()).access_token}` };
+  const post = async (path: string, data: object) => {
+    const res = await page.request.post(`/api/v1${path}`, { headers, data });
+    expect(res.ok(), `${path}: ${await res.text()}`).toBeTruthy();
+    const body = await res.json();
+    return (body.data ?? body) as { id: number };
+  };
+  const card = { type: "credit", color: "#2a78d6", opening_balance: 0, statement_day: 15, payment_due_day: 5 };
+  const used = await post("/payment-methods", { ...card, nickname: "Usada" });
+  const unused = await post("/payment-methods", { ...card, nickname: "Sin uso" });
+  const cats: { id: number; kind: string }[] = await (await page.request.get("/api/v1/categories", { headers })).json().then((b) => b.data ?? b);
+  await post("/expenses", { amount: 1000, category_id: cats.find((c) => c.kind === "expense")!.id, payment_method_id: used.id, spent_on: today });
+
+  await page.goto(`/es/cards/${used.id}`);
+  await page.getByRole("button", { name: "Eliminar" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Eliminar" }).click();
+  await expect(page.getByText("Desactívalo en su lugar")).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/es/cards/${used.id}$`));
+
+  await page.goto(`/es/cards/${unused.id}`);
+  await page.getByRole("button", { name: "Eliminar" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Eliminar" }).click();
+  await expect(page).toHaveURL(/\/es\/cards$/);
+  await expect(page.getByText("Usada")).toBeVisible();
+  await expect(page.getByText("Sin uso")).toHaveCount(0);
+});

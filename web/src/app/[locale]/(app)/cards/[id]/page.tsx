@@ -5,12 +5,13 @@ import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { DeleteCardButton } from "@/components/cards/delete-card-button";
 import { PaymentMethodForm } from "@/components/cards/payment-method-form";
 import { PlansList } from "@/components/cards/plans-list";
 import { StatementView } from "@/components/cards/statement-view";
 import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { usePaymentMethods, useUpdatePaymentMethod } from "@/lib/query/hooks";
 
 export default function CardPage() {
@@ -18,6 +19,7 @@ export default function CardPage() {
   const id = Number(useParams<{ id: string }>().id);
   const { data: methods, isPending } = usePaymentMethods();
   const update = useUpdatePaymentMethod();
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const pm = methods?.find((m) => m.id === id);
 
@@ -30,6 +32,7 @@ export default function CardPage() {
         <Button asChild variant="ghost" size="icon" aria-label={t("nav.cards")}><Link href="/cards"><ArrowLeft /></Link></Button>
         <h1 className="min-w-0 flex-1 truncate text-2xl font-semibold">{pm.nickname}{pm.last4 ? ` ···· ${pm.last4}` : ""}</h1>
         <Button variant="outline" onClick={() => setEditing(true)}><Pencil /> {t("common.edit")}</Button>
+        <DeleteCardButton id={id} onDeleted={() => router.replace("/cards")} />
       </div>
       {pm.type === "credit" ? (
         <>
