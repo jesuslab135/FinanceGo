@@ -34,7 +34,8 @@ func (h *handlers) monthEntries(c *gin.Context) {
 }
 
 // updateEntry godoc
-// @Summary  Update one month's row (amount, status, settled_on, payment method)
+// @Summary      Update one month's row (amount, status, settled_on, payment method)
+// @Description  settled_on defaults to today; when given it must be between the month's first day minus 31 days and today plus 1 day.
 // @Tags     months
 // @Accept   json
 // @Produce  json

@@ -12,45 +12,45 @@ import (
 )
 
 type IncomeSource struct {
-	ID         int64        `json:"id"`
+	ID         int64        `json:"id" validate:"required"`
 	CategoryID *int64       `json:"category_id"`
-	Name       string       `json:"name"`
-	Amount     int64        `json:"amount"`
-	DayOfMonth int32        `json:"day_of_month"`
-	StartMonth datex.Month  `json:"start_month"`
+	Name       string       `json:"name" validate:"required"`
+	Amount     int64        `json:"amount" validate:"required"`
+	DayOfMonth int32        `json:"day_of_month" validate:"required"`
+	StartMonth datex.Month  `json:"start_month" validate:"required"`
 	EndMonth   *datex.Month `json:"end_month"`
-	Active     bool         `json:"active"`
+	Active     bool         `json:"active" validate:"required"`
 }
 
 type IncomeSourceInput struct {
 	CategoryID *int64       `json:"category_id"`
-	Name       string       `json:"name"`
-	Amount     int64        `json:"amount"`
-	DayOfMonth int32        `json:"day_of_month"`
-	StartMonth datex.Month  `json:"start_month"`
+	Name       string       `json:"name" validate:"required"`
+	Amount     int64        `json:"amount" validate:"required"`
+	DayOfMonth int32        `json:"day_of_month" validate:"required"`
+	StartMonth datex.Month  `json:"start_month" validate:"required"`
 	EndMonth   *datex.Month `json:"end_month"`
 	Active     *bool        `json:"active"`
 }
 
 type FixedPayment struct {
-	ID              int64        `json:"id"`
-	CategoryID      int64        `json:"category_id"`
+	ID              int64        `json:"id" validate:"required"`
+	CategoryID      int64        `json:"category_id" validate:"required"`
 	PaymentMethodID *int64       `json:"payment_method_id"`
-	Name            string       `json:"name"`
-	Amount          int64        `json:"amount"`
-	DayOfMonth      int32        `json:"day_of_month"`
-	StartMonth      datex.Month  `json:"start_month"`
+	Name            string       `json:"name" validate:"required"`
+	Amount          int64        `json:"amount" validate:"required"`
+	DayOfMonth      int32        `json:"day_of_month" validate:"required"`
+	StartMonth      datex.Month  `json:"start_month" validate:"required"`
 	EndMonth        *datex.Month `json:"end_month"`
-	Active          bool         `json:"active"`
+	Active          bool         `json:"active" validate:"required"`
 }
 
 type FixedPaymentInput struct {
-	CategoryID      int64        `json:"category_id"`
+	CategoryID      int64        `json:"category_id" validate:"required"`
 	PaymentMethodID *int64       `json:"payment_method_id"`
-	Name            string       `json:"name"`
-	Amount          int64        `json:"amount"`
-	DayOfMonth      int32        `json:"day_of_month"`
-	StartMonth      datex.Month  `json:"start_month"`
+	Name            string       `json:"name" validate:"required"`
+	Amount          int64        `json:"amount" validate:"required"`
+	DayOfMonth      int32        `json:"day_of_month" validate:"required"`
+	StartMonth      datex.Month  `json:"start_month" validate:"required"`
 	EndMonth        *datex.Month `json:"end_month"`
 	Active          *bool        `json:"active"`
 }
@@ -77,6 +77,26 @@ func checkTemplate(v *apperr.V, name *string, amount int64, day int32, start dat
 		t := true
 		*active = &t
 	}
+}
+
+// inactiveEnd is the end_month stored for a template saved with the given
+// active flag. Deactivating ends it at the current month (user tz) so months up
+// to then keep generating its rows; a template that has not started yet gets
+// no end_month and, being inactive, generates nothing (the DB requires
+// end_month >= start_month). Active templates keep the client value.
+func (s *Service) inactiveEnd(a Actor, active bool, start datex.Month, end *datex.Month) *datex.Month {
+	if active {
+		return end
+	}
+	cur := datex.MonthStart(s.today(a))
+	if cur.Before(start.Time) {
+		return nil
+	}
+	if end != nil && end.Before(cur) {
+		return end
+	}
+	m := datex.NewMonth(cur)
+	return &m
 }
 
 func monthOrNil(m *datex.Month) *time.Time {
@@ -145,6 +165,7 @@ func (s *Service) UpdateIncomeSource(ctx context.Context, a Actor, id int64, in 
 		if err := s.validateIncome(ctx, q, a, &in); err != nil {
 			return err
 		}
+		in.EndMonth = s.inactiveEnd(a, *in.Active, in.StartMonth, in.EndMonth)
 		r, err := q.UpdateIncomeSource(ctx, store.UpdateIncomeSourceParams{
 			ID: id, UserID: a.UserID, CategoryID: in.CategoryID, Name: in.Name, Amount: in.Amount, DayOfMonth: in.DayOfMonth,
 			StartMonth: in.StartMonth.Time, EndMonth: monthOrNil(in.EndMonth), Active: *in.Active,
@@ -161,7 +182,7 @@ func (s *Service) UpdateIncomeSource(ctx context.Context, a Actor, id int64, in 
 func (s *Service) DeactivateIncomeSource(ctx context.Context, a Actor, id int64) (IncomeSource, error) {
 	var out IncomeSource
 	err := s.inTx(ctx, func(q *store.Queries) error {
-		r, err := q.DeactivateIncomeSource(ctx, store.DeactivateIncomeSourceParams{ID: id, UserID: a.UserID})
+		r, err := q.DeactivateIncomeSource(ctx, store.DeactivateIncomeSourceParams{ID: id, UserID: a.UserID, CurrentMonth: datex.MonthStart(s.today(a))})
 		if err != nil {
 			return notFound(err)
 		}
@@ -203,6 +224,7 @@ func (s *Service) UpdateFixedPayment(ctx context.Context, a Actor, id int64, in 
 		if err := s.validateFixed(ctx, q, a, &in); err != nil {
 			return err
 		}
+		in.EndMonth = s.inactiveEnd(a, *in.Active, in.StartMonth, in.EndMonth)
 		r, err := q.UpdateFixedPayment(ctx, store.UpdateFixedPaymentParams{
 			ID: id, UserID: a.UserID, CategoryID: in.CategoryID, PaymentMethodID: in.PaymentMethodID, Name: in.Name, Amount: in.Amount,
 			DayOfMonth: in.DayOfMonth, StartMonth: in.StartMonth.Time, EndMonth: monthOrNil(in.EndMonth), Active: *in.Active,
@@ -219,7 +241,7 @@ func (s *Service) UpdateFixedPayment(ctx context.Context, a Actor, id int64, in 
 func (s *Service) DeactivateFixedPayment(ctx context.Context, a Actor, id int64) (FixedPayment, error) {
 	var out FixedPayment
 	err := s.inTx(ctx, func(q *store.Queries) error {
-		r, err := q.DeactivateFixedPayment(ctx, store.DeactivateFixedPaymentParams{ID: id, UserID: a.UserID})
+		r, err := q.DeactivateFixedPayment(ctx, store.DeactivateFixedPaymentParams{ID: id, UserID: a.UserID, CurrentMonth: datex.MonthStart(s.today(a))})
 		if err != nil {
 			return notFound(err)
 		}
@@ -233,16 +255,16 @@ func (s *Service) DeactivateFixedPayment(ctx context.Context, a Actor, id int64)
 // unedited rows and drops rows that fall outside the template's range.
 func (s *Service) afterIncomeChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
 	from := datex.MonthStart(s.today(a))
-	if err := q.PropagateIncomeSource(ctx, store.PropagateIncomeSourceParams{SourceID: id, FromMonth: from}); err != nil {
+	if err := q.PropagateIncomeSource(ctx, store.PropagateIncomeSourceParams{SourceID: id, FromMonth: from, UserID: a.UserID}); err != nil {
 		return err
 	}
-	return q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: id, FromMonth: from})
+	return q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: id, FromMonth: from, UserID: a.UserID})
 }
 
 func (s *Service) afterFixedChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
 	from := datex.MonthStart(s.today(a))
-	if err := q.PropagateFixedPayment(ctx, store.PropagateFixedPaymentParams{SourceID: id, FromMonth: from}); err != nil {
+	if err := q.PropagateFixedPayment(ctx, store.PropagateFixedPaymentParams{SourceID: id, FromMonth: from, UserID: a.UserID}); err != nil {
 		return err
 	}
-	return q.PruneFixedEntries(ctx, store.PruneFixedEntriesParams{SourceID: id, FromMonth: from})
+	return q.PruneFixedEntries(ctx, store.PruneFixedEntriesParams{SourceID: id, FromMonth: from, UserID: a.UserID})
 }

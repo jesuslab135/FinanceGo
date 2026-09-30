@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -46,6 +47,11 @@ func fail(c *gin.Context, err error) {
 
 func bind(c *gin.Context, dst any) bool {
 	if err := c.ShouldBindJSON(dst); err != nil {
+		if mbe := (*http.MaxBytesError)(nil); errors.As(err, &mbe) {
+			fail(c, &apperr.Error{Status: http.StatusRequestEntityTooLarge, Code: "payload_too_large",
+				Message: fmt.Sprintf("request body exceeds %d bytes", mbe.Limit)})
+			return false
+		}
 		fail(c, apperr.BadRequest("invalid JSON body: "+err.Error()))
 		return false
 	}

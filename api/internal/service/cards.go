@@ -52,18 +52,18 @@ func (s *Service) ensureInstallments(ctx context.Context, q *store.Queries, user
 // ---- card payments ----------------------------------------------------------
 
 type CardPayment struct {
-	ID              int64      `json:"id"`
-	PaymentMethodID int64      `json:"payment_method_id"`
-	Amount          int64      `json:"amount"`
-	PaidOn          datex.Date `json:"paid_on"`
-	Note            string     `json:"note"`
+	ID              int64      `json:"id" validate:"required"`
+	PaymentMethodID int64      `json:"payment_method_id" validate:"required"`
+	Amount          int64      `json:"amount" validate:"required"`
+	PaidOn          datex.Date `json:"paid_on" validate:"required"`
+	Note            string     `json:"note" validate:"required"`
 }
 
 type CardPaymentInput struct {
-	PaymentMethodID int64      `json:"payment_method_id"`
-	Amount          int64      `json:"amount"`
-	PaidOn          datex.Date `json:"paid_on"`
-	Note            string     `json:"note"`
+	PaymentMethodID int64      `json:"payment_method_id" validate:"required"`
+	Amount          int64      `json:"amount" validate:"required"`
+	PaidOn          datex.Date `json:"paid_on" validate:"required"`
+	Note            string     `json:"note" validate:"required"`
 }
 
 func toCardPayment(c store.CardPayment) CardPayment {
@@ -116,27 +116,27 @@ func (s *Service) DeleteCardPayment(ctx context.Context, a Actor, id int64) erro
 // ---- installment plans ------------------------------------------------------
 
 type InstallmentPlan struct {
-	ID                int64       `json:"id"`
-	PaymentMethodID   int64       `json:"payment_method_id"`
-	CategoryID        int64       `json:"category_id"`
-	Description       string      `json:"description"`
-	TotalAmount       int64       `json:"total_amount"`
-	Installments      int32       `json:"installments"`
-	PurchasedOn       datex.Date  `json:"purchased_on"`
+	ID                int64       `json:"id" validate:"required"`
+	PaymentMethodID   int64       `json:"payment_method_id" validate:"required"`
+	CategoryID        int64       `json:"category_id" validate:"required"`
+	Description       string      `json:"description" validate:"required"`
+	TotalAmount       int64       `json:"total_amount" validate:"required"`
+	Installments      int32       `json:"installments" validate:"required"`
+	PurchasedOn       datex.Date  `json:"purchased_on" validate:"required"`
 	CancelledOn       *datex.Date `json:"cancelled_on"`
-	InstallmentAmount int64       `json:"installment_amount"`
-	BilledCount       int32       `json:"billed_count"`
-	RemainingAmount   int64       `json:"remaining_amount"`
-	FirstCycle        datex.Month `json:"first_cycle"`
+	InstallmentAmount int64       `json:"installment_amount" validate:"required"`
+	BilledCount       int32       `json:"billed_count" validate:"required"`
+	RemainingAmount   int64       `json:"remaining_amount" validate:"required"`
+	FirstCycle        datex.Month `json:"first_cycle" validate:"required"`
 }
 
 type InstallmentPlanInput struct {
-	PaymentMethodID int64      `json:"payment_method_id"`
-	CategoryID      int64      `json:"category_id"`
-	Description     string     `json:"description"`
-	TotalAmount     int64      `json:"total_amount"`
-	Installments    int32      `json:"installments"`
-	PurchasedOn     datex.Date `json:"purchased_on"`
+	PaymentMethodID int64      `json:"payment_method_id" validate:"required"`
+	CategoryID      int64      `json:"category_id" validate:"required"`
+	Description     string     `json:"description" validate:"required"`
+	TotalAmount     int64      `json:"total_amount" validate:"required"`
+	Installments    int32      `json:"installments" validate:"required"`
+	PurchasedOn     datex.Date `json:"purchased_on" validate:"required"`
 }
 
 func planOf(p store.InstallmentPlan) cards.Plan {
@@ -297,35 +297,38 @@ func (s *Service) CancelInstallmentPlan(ctx context.Context, a Actor, id int64) 
 // ---- statements -------------------------------------------------------------
 
 type StatementCharge struct {
-	Date        datex.Date `json:"date"`
-	Description string     `json:"description"`
-	Amount      int64      `json:"amount"`
-	Source      string     `json:"source"`
+	Date        datex.Date `json:"date" validate:"required"`
+	Description string     `json:"description" validate:"required"`
+	Amount      int64      `json:"amount" validate:"required"`
+	Source      string     `json:"source" validate:"required"`
 }
 
 type StatementInstallment struct {
-	PlanID      int64  `json:"plan_id"`
-	Description string `json:"description"`
-	No          int32  `json:"no"`
-	Of          int32  `json:"of"`
-	Amount      int64  `json:"amount"`
+	PlanID      int64  `json:"plan_id" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	No          int32  `json:"no" validate:"required"`
+	Of          int32  `json:"of" validate:"required"`
+	Amount      int64  `json:"amount" validate:"required"`
 }
 
 type Statement struct {
-	PaymentMethodID int64                  `json:"payment_method_id"`
-	Cycle           datex.Month            `json:"cycle"`
-	OpensOn         datex.Date             `json:"opens_on"`
-	ClosesOn        datex.Date             `json:"closes_on"`
-	DueOn           datex.Date             `json:"due_on"`
-	BilledBalance   int64                  `json:"billed_balance"`
-	AmountDue       int64                  `json:"amount_due"`
-	CurrentBalance  int64                  `json:"current_balance"`
+	PaymentMethodID int64                  `json:"payment_method_id" validate:"required"`
+	Cycle           datex.Month            `json:"cycle" validate:"required"`
+	OpensOn         datex.Date             `json:"opens_on" validate:"required"`
+	ClosesOn        datex.Date             `json:"closes_on" validate:"required"`
+	DueOn           datex.Date             `json:"due_on" validate:"required"`
+	BilledBalance   int64                  `json:"billed_balance" validate:"required"`
+	AmountDue       int64                  `json:"amount_due" validate:"required"`
+	CurrentBalance  int64                  `json:"current_balance" validate:"required"`
 	CreditLimit     *int64                 `json:"credit_limit"`
 	AvailableCredit *int64                 `json:"available_credit"`
 	Utilization     *float64               `json:"utilization"`
-	Charges         []StatementCharge      `json:"charges"`
-	Installments    []StatementInstallment `json:"installments"`
-	Payments        []CardPayment          `json:"payments"`
+	Charges         []StatementCharge      `json:"charges" validate:"required"`
+	Installments    []StatementInstallment `json:"installments" validate:"required"`
+	Payments        []CardPayment          `json:"payments" validate:"required"`
+	// PaymentsAfterClose are payments in (closes_on, due_on]; they reduce
+	// amount_due below billed_balance.
+	PaymentsAfterClose []CardPayment `json:"payments_after_close" validate:"required"`
 }
 
 type cardState struct {
@@ -399,7 +402,7 @@ func (s *Service) CardStatement(ctx context.Context, a Actor, pmID int64, cycle 
 		PaymentMethodID: pmID, Cycle: datex.NewMonth(r.Cycle), OpensOn: datex.NewDate(r.Opens), ClosesOn: datex.NewDate(r.Closes),
 		DueOn: datex.NewDate(r.Due), BilledBalance: r.BilledBalance, AmountDue: r.AmountDue, CurrentBalance: r.CurrentBalance,
 		CreditLimit: pm.CreditLimit, AvailableCredit: avail, Utilization: util,
-		Charges: []StatementCharge{}, Installments: []StatementInstallment{}, Payments: []CardPayment{},
+		Charges: []StatementCharge{}, Installments: []StatementInstallment{}, Payments: []CardPayment{}, PaymentsAfterClose: []CardPayment{},
 	}
 	inCycle := func(d time.Time) bool { return !d.Before(r.Opens) && !d.After(r.Closes) }
 	for _, ch := range st.charges {
@@ -417,6 +420,8 @@ func (s *Service) CardStatement(ctx context.Context, a Actor, pmID int64, cycle 
 	for _, p := range st.payments {
 		if inCycle(p.PaidOn) {
 			out.Payments = append(out.Payments, toCardPayment(p))
+		} else if p.PaidOn.After(r.Closes) && !p.PaidOn.After(r.Due) && !p.PaidOn.Before(st.card.OpeningDate) {
+			out.PaymentsAfterClose = append(out.PaymentsAfterClose, toCardPayment(p))
 		}
 	}
 	return out, nil

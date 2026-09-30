@@ -109,3 +109,50 @@ func TestFixedPayments(t *testing.T) {
 
 // newHarnessUserOn signs up a second user on the same harness and returns its token.
 func newHarnessUserOn(h *harness, email string) string { return h.signup(email) }
+
+// Deactivating a template ends it at the current month: months up to then
+// (even never-loaded, backdated ones) still show it, later months don't.
+func TestDeactivateKeepsPastMonths(t *testing.T) {
+	h := newHarness(t) // today 2026-03-15
+	tok := h.signup("deact@example.com")
+	id := h.income(tok, 2500000, 15, "2026-01")
+	off := expect[incomeSource](t, h.do("DELETE", fmt.Sprintf("/api/v1/income-sources/%d", id), tok, nil), 200)
+	if off.Active || off.EndMonth == nil || *off.EndMonth != "2026-03" {
+		t.Fatalf("deactivated %+v", off)
+	}
+	for _, m := range []string{"2026-02", "2026-03"} {
+		if got := byKind(h.entries(tok, m), "income"); len(got) != 1 {
+			t.Fatalf("%s: income rows %+v", m, got)
+		}
+	}
+	if got := byKind(h.entries(tok, "2026-04"), "income"); len(got) != 0 {
+		t.Fatalf("2026-04 after deactivation: %+v", got)
+	}
+
+	// PUT active=false clamps an explicit later end_month the same way.
+	fid := h.fixed(tok, "Renta", 1000000, 1, "2026-01", nil)
+	h.entries(tok, "2026-05") // materialize a future month first; it gets pruned
+	put := expect[fixedPayment](t, h.do("PUT", fmt.Sprintf("/api/v1/fixed-payments/%d", fid), tok, M{
+		"name": "Renta", "amount": 1000000, "day_of_month": 1, "start_month": "2026-01", "end_month": "2026-12",
+		"category_id": h.catID(tok, "Vivienda"), "active": false,
+	}), 200)
+	if put.Active || put.EndMonth == nil || *put.EndMonth != "2026-03" {
+		t.Fatalf("PUT active=false %+v", put)
+	}
+	if len(byKind(h.entries(tok, "2026-01"), "fixed")) != 1 || len(byKind(h.entries(tok, "2026-05"), "fixed")) != 0 {
+		t.Fatal("fixed deactivation range wrong")
+	}
+
+	// A template that has not started yet generates nothing once deactivated.
+	future := expect[incomeSource](t, h.do("POST", "/api/v1/income-sources", tok, M{
+		"name": "Bono", "amount": 100, "day_of_month": 1, "start_month": "2026-06", "end_month": "2026-08",
+	}), 201).ID
+	if r := h.do("DELETE", fmt.Sprintf("/api/v1/income-sources/%d", future), tok, nil); r.Code != 200 {
+		t.Fatalf("deactivate future: %d %s", r.Code, r.Body)
+	}
+	for _, e := range byKind(h.entries(tok, "2026-06"), "income") {
+		if e.Name == "Bono" {
+			t.Fatalf("deactivated future template generated %+v", e)
+		}
+	}
+}

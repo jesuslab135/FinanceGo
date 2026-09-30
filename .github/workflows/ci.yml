@@ -22,7 +22,7 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
         with:
           working-directory: api
-          version: latest
+          version: v2.14.0 # pinned: v2.5.0 predates Go 1.26 (go.mod)
       - name: tests (integration via testcontainers)
         run: go test ./...
       - name: generated code is current
@@ -31,7 +31,8 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag@v1.16.4
           sqlc generate
           swag init -g cmd/api/main.go -o docs --parseInternal
-          git diff --exit-code -- internal/store docs
+          git status --porcelain -- internal/store docs
+          test -z "$(git status --porcelain -- internal/store docs)"
 
   docker:
     runs-on: ubuntu-latest

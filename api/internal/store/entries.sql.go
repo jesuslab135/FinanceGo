@@ -10,6 +10,26 @@ import (
 	"time"
 )
 
+const deleteCardPendingInstallments = `-- name: DeleteCardPendingInstallments :exec
+DELETE FROM monthly_entries m
+USING installment_plans p
+WHERE m.user_id = $1 AND m.kind = 'installment' AND m.status = 'pending'
+  AND m.installment_plan_id = p.id AND p.user_id = $1
+  AND p.payment_method_id = $2::bigint
+`
+
+type DeleteCardPendingInstallmentsParams struct {
+	UserID          int64
+	PaymentMethodID int64
+}
+
+// After a card's cut-off/due day changes, pending installment rows may sit in the
+// wrong month; drop them so ensureInstallments regenerates them with the new mapping.
+func (q *Queries) DeleteCardPendingInstallments(ctx context.Context, arg DeleteCardPendingInstallmentsParams) error {
+	_, err := q.db.Exec(ctx, deleteCardPendingInstallments, arg.UserID, arg.PaymentMethodID)
+	return err
+}
+
 const deleteInstallmentEntries = `-- name: DeleteInstallmentEntries :exec
 DELETE FROM monthly_entries
 WHERE user_id = $1 AND installment_plan_id = $2::bigint AND installment_no >= $3::int
@@ -31,7 +51,7 @@ INSERT INTO monthly_entries (user_id, month, kind, fixed_payment_id, name, categ
 SELECT f.user_id, $1::date, 'fixed', f.id, f.name, f.category_id, f.payment_method_id, f.amount,
        $1::date + (LEAST(f.day_of_month, EXTRACT(DAY FROM ($1::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
 FROM fixed_payments f
-WHERE f.user_id = $2 AND f.active
+WHERE f.user_id = $2 AND (f.active OR f.end_month IS NOT NULL)
   AND f.start_month <= $1::date AND (f.end_month IS NULL OR f.end_month >= $1::date)
 ON CONFLICT DO NOTHING
 `
@@ -51,7 +71,7 @@ INSERT INTO monthly_entries (user_id, month, kind, income_source_id, name, categ
 SELECT s.user_id, $1::date, 'income', s.id, s.name, s.category_id, s.amount,
        $1::date + (LEAST(s.day_of_month, EXTRACT(DAY FROM ($1::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
 FROM income_sources s
-WHERE s.user_id = $2 AND s.active
+WHERE s.user_id = $2 AND (s.active OR s.end_month IS NOT NULL)
   AND s.start_month <= $1::date AND (s.end_month IS NULL OR s.end_month >= $1::date)
 ON CONFLICT DO NOTHING
 `
@@ -61,6 +81,8 @@ type EnsureIncomeEntriesParams struct {
 	UserID int64
 }
 
+// Inactive templates keep generating up to their (clamped) end_month; an inactive
+// template without one never started (see DeactivateIncomeSource).
 func (q *Queries) EnsureIncomeEntries(ctx context.Context, arg EnsureIncomeEntriesParams) error {
 	_, err := q.db.Exec(ctx, ensureIncomeEntries, arg.Month, arg.UserID)
 	return err
@@ -244,17 +266,18 @@ UPDATE monthly_entries m SET name = f.name, amount = f.amount, category_id = f.c
     due_date = m.month + (LEAST(f.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM fixed_payments f
-WHERE f.id = $1 AND m.fixed_payment_id = f.id
-  AND m.month >= $2::date AND m.status = 'pending' AND NOT m.edited
+WHERE f.id = $1 AND f.user_id = $2 AND m.user_id = $2 AND m.fixed_payment_id = f.id
+  AND m.month >= $3::date AND m.status = 'pending' AND NOT m.edited
 `
 
 type PropagateFixedPaymentParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PropagateFixedPayment(ctx context.Context, arg PropagateFixedPaymentParams) error {
-	_, err := q.db.Exec(ctx, propagateFixedPayment, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, propagateFixedPayment, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 
@@ -263,57 +286,60 @@ UPDATE monthly_entries m SET name = s.name, amount = s.amount, category_id = s.c
     due_date = m.month + (LEAST(s.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM income_sources s
-WHERE s.id = $1 AND m.income_source_id = s.id
-  AND m.month >= $2::date AND m.status = 'pending' AND NOT m.edited
+WHERE s.id = $1 AND s.user_id = $2 AND m.user_id = $2 AND m.income_source_id = s.id
+  AND m.month >= $3::date AND m.status = 'pending' AND NOT m.edited
 `
 
 type PropagateIncomeSourceParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PropagateIncomeSource(ctx context.Context, arg PropagateIncomeSourceParams) error {
-	_, err := q.db.Exec(ctx, propagateIncomeSource, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, propagateIncomeSource, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 
 const pruneFixedEntries = `-- name: PruneFixedEntries :exec
 DELETE FROM monthly_entries m
 USING fixed_payments f
-WHERE f.id = $1 AND m.fixed_payment_id = f.id
-  AND m.status = 'pending' AND NOT m.edited AND m.month >= $2::date
-  AND ((NOT f.active AND m.month > $2::date)
+WHERE f.id = $1 AND f.user_id = $2 AND m.user_id = $2 AND m.fixed_payment_id = f.id
+  AND m.status = 'pending' AND NOT m.edited AND m.month >= $3::date
+  AND ((NOT f.active AND m.month > $3::date)
        OR (f.end_month IS NOT NULL AND m.month > f.end_month)
        OR m.month < f.start_month)
 `
 
 type PruneFixedEntriesParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PruneFixedEntries(ctx context.Context, arg PruneFixedEntriesParams) error {
-	_, err := q.db.Exec(ctx, pruneFixedEntries, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, pruneFixedEntries, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 
 const pruneIncomeEntries = `-- name: PruneIncomeEntries :exec
 DELETE FROM monthly_entries m
 USING income_sources s
-WHERE s.id = $1 AND m.income_source_id = s.id
-  AND m.status = 'pending' AND NOT m.edited AND m.month >= $2::date
-  AND ((NOT s.active AND m.month > $2::date)
+WHERE s.id = $1 AND s.user_id = $2 AND m.user_id = $2 AND m.income_source_id = s.id
+  AND m.status = 'pending' AND NOT m.edited AND m.month >= $3::date
+  AND ((NOT s.active AND m.month > $3::date)
        OR (s.end_month IS NOT NULL AND m.month > s.end_month)
        OR m.month < s.start_month)
 `
 
 type PruneIncomeEntriesParams struct {
 	SourceID  int64
+	UserID    int64
 	FromMonth time.Time
 }
 
 func (q *Queries) PruneIncomeEntries(ctx context.Context, arg PruneIncomeEntriesParams) error {
-	_, err := q.db.Exec(ctx, pruneIncomeEntries, arg.SourceID, arg.FromMonth)
+	_, err := q.db.Exec(ctx, pruneIncomeEntries, arg.SourceID, arg.UserID, arg.FromMonth)
 	return err
 }
 

@@ -136,7 +136,8 @@ func TestRefreshRotationAndReuse(t *testing.T) {
 		t.Fatal("refresh did not rotate")
 	}
 
-	// Reusing the rotated token revokes the whole family, including c2.
+	// Reusing the rotated token after the 30s grace window revokes the whole family, including c2.
+	h.setNow(h.now.Add(31 * time.Second))
 	if r := h.do("POST", "/api/v1/auth/refresh", "", nil, c1); r.Code != 401 {
 		t.Fatalf("reuse: %d", r.Code)
 	}
@@ -183,5 +184,26 @@ func TestRefreshExpiredClearsCookie(t *testing.T) {
 	r := h.do("POST", "/api/v1/auth/refresh", "", nil, c)
 	if r.Code != 401 || refreshCookieOf(t, r).MaxAge >= 0 {
 		t.Fatalf("expired refresh: %d cookies=%v", r.Code, r.Cookies)
+	}
+}
+
+// A second tab presenting the just-rotated token within 30s gets refresh_race
+// without killing the session the first tab now holds.
+func TestRefreshRaceGraceWindow(t *testing.T) {
+	h := newHarness(t)
+	reg := h.do("POST", "/api/v1/auth/register", "", M{
+		"email": "gi@example.com", "password": "password123", "name": "Gi", "currency": "MXN", "locale": "es", "timezone": "UTC",
+	})
+	c1 := refreshCookieOf(t, reg)
+	r := h.do("POST", "/api/v1/auth/refresh", "", nil, c1)
+	expect[M](t, r, 200)
+	c2 := refreshCookieOf(t, r)
+
+	h.setNow(h.now.Add(10 * time.Second))
+	if r := h.do("POST", "/api/v1/auth/refresh", "", nil, c1); r.Code != 401 || errCode(r) != "refresh_race" {
+		t.Fatalf("late second tab: %d %s", r.Code, r.Body)
+	}
+	if r := h.do("POST", "/api/v1/auth/refresh", "", nil, c2); r.Code != 200 {
+		t.Fatalf("rotated cookie no longer refreshes: %d %s", r.Code, r.Body)
 	}
 }

@@ -3,7 +3,9 @@ INSERT INTO monthly_entries (user_id, month, kind, income_source_id, name, categ
 SELECT s.user_id, sqlc.arg(month)::date, 'income', s.id, s.name, s.category_id, s.amount,
        sqlc.arg(month)::date + (LEAST(s.day_of_month, EXTRACT(DAY FROM (sqlc.arg(month)::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
 FROM income_sources s
-WHERE s.user_id = @user_id AND s.active
+-- Inactive templates keep generating up to their (clamped) end_month; an inactive
+-- template without one never started (see DeactivateIncomeSource).
+WHERE s.user_id = @user_id AND (s.active OR s.end_month IS NOT NULL)
   AND s.start_month <= sqlc.arg(month)::date AND (s.end_month IS NULL OR s.end_month >= sqlc.arg(month)::date)
 ON CONFLICT DO NOTHING;
 
@@ -12,7 +14,7 @@ INSERT INTO monthly_entries (user_id, month, kind, fixed_payment_id, name, categ
 SELECT f.user_id, sqlc.arg(month)::date, 'fixed', f.id, f.name, f.category_id, f.payment_method_id, f.amount,
        sqlc.arg(month)::date + (LEAST(f.day_of_month, EXTRACT(DAY FROM (sqlc.arg(month)::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
 FROM fixed_payments f
-WHERE f.user_id = @user_id AND f.active
+WHERE f.user_id = @user_id AND (f.active OR f.end_month IS NOT NULL)
   AND f.start_month <= sqlc.arg(month)::date AND (f.end_month IS NULL OR f.end_month >= sqlc.arg(month)::date)
 ON CONFLICT DO NOTHING;
 
@@ -35,13 +37,13 @@ UPDATE monthly_entries m SET name = s.name, amount = s.amount, category_id = s.c
     due_date = m.month + (LEAST(s.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM income_sources s
-WHERE s.id = @source_id AND m.income_source_id = s.id
+WHERE s.id = @source_id AND s.user_id = @user_id AND m.user_id = @user_id AND m.income_source_id = s.id
   AND m.month >= sqlc.arg(from_month)::date AND m.status = 'pending' AND NOT m.edited;
 
 -- name: PruneIncomeEntries :exec
 DELETE FROM monthly_entries m
 USING income_sources s
-WHERE s.id = @source_id AND m.income_source_id = s.id
+WHERE s.id = @source_id AND s.user_id = @user_id AND m.user_id = @user_id AND m.income_source_id = s.id
   AND m.status = 'pending' AND NOT m.edited AND m.month >= sqlc.arg(from_month)::date
   AND ((NOT s.active AND m.month > sqlc.arg(from_month)::date)
        OR (s.end_month IS NOT NULL AND m.month > s.end_month)
@@ -53,13 +55,13 @@ UPDATE monthly_entries m SET name = f.name, amount = f.amount, category_id = f.c
     due_date = m.month + (LEAST(f.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
     updated_at = now()
 FROM fixed_payments f
-WHERE f.id = @source_id AND m.fixed_payment_id = f.id
+WHERE f.id = @source_id AND f.user_id = @user_id AND m.user_id = @user_id AND m.fixed_payment_id = f.id
   AND m.month >= sqlc.arg(from_month)::date AND m.status = 'pending' AND NOT m.edited;
 
 -- name: PruneFixedEntries :exec
 DELETE FROM monthly_entries m
 USING fixed_payments f
-WHERE f.id = @source_id AND m.fixed_payment_id = f.id
+WHERE f.id = @source_id AND f.user_id = @user_id AND m.user_id = @user_id AND m.fixed_payment_id = f.id
   AND m.status = 'pending' AND NOT m.edited AND m.month >= sqlc.arg(from_month)::date
   AND ((NOT f.active AND m.month > sqlc.arg(from_month)::date)
        OR (f.end_month IS NOT NULL AND m.month > f.end_month)
@@ -88,3 +90,12 @@ UPDATE monthly_entries
 SET name = sqlc.arg(description)::text || ' ' || installment_no::text || '/' || sqlc.arg(installments)::int::text,
     category_id = sqlc.arg(category_id)::bigint, updated_at = now()
 WHERE user_id = @user_id AND installment_plan_id = sqlc.arg(plan_id)::bigint;
+
+-- name: DeleteCardPendingInstallments :exec
+-- After a card's cut-off/due day changes, pending installment rows may sit in the
+-- wrong month; drop them so ensureInstallments regenerates them with the new mapping.
+DELETE FROM monthly_entries m
+USING installment_plans p
+WHERE m.user_id = @user_id AND m.kind = 'installment' AND m.status = 'pending'
+  AND m.installment_plan_id = p.id AND p.user_id = @user_id
+  AND p.payment_method_id = sqlc.arg(payment_method_id)::bigint;

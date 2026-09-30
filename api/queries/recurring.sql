@@ -14,7 +14,10 @@ WHERE id = @id AND user_id = @user_id
 RETURNING *;
 
 -- name: DeactivateIncomeSource :one
-UPDATE income_sources SET active = false, updated_at = now()
+-- Ends the template at the current month (NULL when it has not started yet: nothing to keep).
+UPDATE income_sources SET active = false,
+    end_month = CASE WHEN start_month <= sqlc.arg(current_month)::date THEN LEAST(end_month, sqlc.arg(current_month)::date) END,
+    updated_at = now()
 WHERE id = @id AND user_id = @user_id
 RETURNING *;
 
@@ -34,6 +37,9 @@ WHERE id = @id AND user_id = @user_id
 RETURNING *;
 
 -- name: DeactivateFixedPayment :one
-UPDATE fixed_payments SET active = false, updated_at = now()
+-- Ends the template at the current month (NULL when it has not started yet: nothing to keep).
+UPDATE fixed_payments SET active = false,
+    end_month = CASE WHEN start_month <= sqlc.arg(current_month)::date THEN LEAST(end_month, sqlc.arg(current_month)::date) END,
+    updated_at = now()
 WHERE id = @id AND user_id = @user_id
 RETURNING *;

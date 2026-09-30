@@ -23,8 +23,8 @@ func (h *handlers) startSession(c *gin.Context, code int, sess service.Session) 
 }
 
 type loginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 // register godoc
@@ -149,7 +149,7 @@ func (h *handlers) putMe(c *gin.Context) {
 }
 
 type deleteAccountInput struct {
-	Password string `json:"password"`
+	Password string `json:"password" validate:"required"`
 }
 
 // deleteMe godoc

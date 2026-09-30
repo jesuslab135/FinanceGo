@@ -592,7 +592,7 @@ const docTemplate = `{
                 "tags": [
                     "dashboard"
                 ],
-                "summary": "Debt summary per active credit card",
+                "summary": "Debt summary per active credit card (inactive cards too while they carry a balance)",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -745,6 +745,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "settled_on defaults to today; when given it must be between the month's first day minus 31 days and today plus 1 day.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1167,7 +1168,7 @@ const docTemplate = `{
                 "tags": [
                     "recurring"
                 ],
-                "summary": "Deactivate a fixed payment",
+                "summary": "Deactivate a fixed payment; end_month becomes the current month (null if it has not started), so past months keep it",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1311,7 +1312,7 @@ const docTemplate = `{
                 "tags": [
                     "recurring"
                 ],
-                "summary": "Deactivate an income source",
+                "summary": "Deactivate an income source; end_month becomes the current month (null if it has not started), so past months keep it",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1899,6 +1900,9 @@ const docTemplate = `{
         },
         "httpapi.budgetInput": {
             "type": "object",
+            "required": [
+                "monthly_limit"
+            ],
             "properties": {
                 "monthly_limit": {
                     "type": "integer"
@@ -1907,6 +1911,9 @@ const docTemplate = `{
         },
         "httpapi.deleteAccountInput": {
             "type": "object",
+            "required": [
+                "password"
+            ],
             "properties": {
                 "password": {
                     "type": "string"
@@ -1915,6 +1922,10 @@ const docTemplate = `{
         },
         "httpapi.loginInput": {
             "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -1926,6 +1937,11 @@ const docTemplate = `{
         },
         "service.BreakdownItem": {
             "type": "object",
+            "required": [
+                "amount",
+                "color",
+                "name"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -1943,6 +1959,14 @@ const docTemplate = `{
         },
         "service.BudgetStatus": {
             "type": "object",
+            "required": [
+                "category_id",
+                "color",
+                "limit",
+                "name",
+                "pct",
+                "spent"
+            ],
             "properties": {
                 "category_id": {
                     "type": "integer"
@@ -1966,6 +1990,13 @@ const docTemplate = `{
         },
         "service.CardPayment": {
             "type": "object",
+            "required": [
+                "amount",
+                "id",
+                "note",
+                "paid_on",
+                "payment_method_id"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -1986,6 +2017,12 @@ const docTemplate = `{
         },
         "service.CardPaymentInput": {
             "type": "object",
+            "required": [
+                "amount",
+                "note",
+                "paid_on",
+                "payment_method_id"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2003,6 +2040,15 @@ const docTemplate = `{
         },
         "service.CardSummary": {
             "type": "object",
+            "required": [
+                "amount_due",
+                "color",
+                "current_balance",
+                "cycle",
+                "due_on",
+                "nickname",
+                "payment_method_id"
+            ],
             "properties": {
                 "amount_due": {
                     "type": "integer"
@@ -2041,6 +2087,13 @@ const docTemplate = `{
         },
         "service.Category": {
             "type": "object",
+            "required": [
+                "color",
+                "icon",
+                "id",
+                "kind",
+                "name"
+            ],
             "properties": {
                 "color": {
                     "type": "string"
@@ -2061,6 +2114,10 @@ const docTemplate = `{
         },
         "service.CategoryBudget": {
             "type": "object",
+            "required": [
+                "category_id",
+                "monthly_limit"
+            ],
             "properties": {
                 "category_id": {
                     "type": "integer"
@@ -2072,6 +2129,12 @@ const docTemplate = `{
         },
         "service.CategoryInput": {
             "type": "object",
+            "required": [
+                "color",
+                "icon",
+                "kind",
+                "name"
+            ],
             "properties": {
                 "color": {
                     "type": "string"
@@ -2089,6 +2152,16 @@ const docTemplate = `{
         },
         "service.Entry": {
             "type": "object",
+            "required": [
+                "amount",
+                "due_date",
+                "edited",
+                "id",
+                "kind",
+                "month",
+                "name",
+                "status"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2139,6 +2212,10 @@ const docTemplate = `{
         },
         "service.EntryUpdate": {
             "type": "object",
+            "required": [
+                "amount",
+                "status"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2156,6 +2233,14 @@ const docTemplate = `{
         },
         "service.Expense": {
             "type": "object",
+            "required": [
+                "amount",
+                "category_id",
+                "created_at",
+                "description",
+                "id",
+                "spent_on"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2182,6 +2267,12 @@ const docTemplate = `{
         },
         "service.ExpenseInput": {
             "type": "object",
+            "required": [
+                "amount",
+                "category_id",
+                "description",
+                "spent_on"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2202,6 +2293,9 @@ const docTemplate = `{
         },
         "service.ExpensePage": {
             "type": "object",
+            "required": [
+                "items"
+            ],
             "properties": {
                 "items": {
                     "type": "array",
@@ -2216,6 +2310,15 @@ const docTemplate = `{
         },
         "service.FixedPayment": {
             "type": "object",
+            "required": [
+                "active",
+                "amount",
+                "category_id",
+                "day_of_month",
+                "id",
+                "name",
+                "start_month"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -2248,6 +2351,13 @@ const docTemplate = `{
         },
         "service.FixedPaymentInput": {
             "type": "object",
+            "required": [
+                "amount",
+                "category_id",
+                "day_of_month",
+                "name",
+                "start_month"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -2277,6 +2387,14 @@ const docTemplate = `{
         },
         "service.IncomeSource": {
             "type": "object",
+            "required": [
+                "active",
+                "amount",
+                "day_of_month",
+                "id",
+                "name",
+                "start_month"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -2306,6 +2424,12 @@ const docTemplate = `{
         },
         "service.IncomeSourceInput": {
             "type": "object",
+            "required": [
+                "amount",
+                "day_of_month",
+                "name",
+                "start_month"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -2332,6 +2456,19 @@ const docTemplate = `{
         },
         "service.InstallmentPlan": {
             "type": "object",
+            "required": [
+                "billed_count",
+                "category_id",
+                "description",
+                "first_cycle",
+                "id",
+                "installment_amount",
+                "installments",
+                "payment_method_id",
+                "purchased_on",
+                "remaining_amount",
+                "total_amount"
+            ],
             "properties": {
                 "billed_count": {
                     "type": "integer"
@@ -2373,6 +2510,14 @@ const docTemplate = `{
         },
         "service.InstallmentPlanInput": {
             "type": "object",
+            "required": [
+                "category_id",
+                "description",
+                "installments",
+                "payment_method_id",
+                "purchased_on",
+                "total_amount"
+            ],
             "properties": {
                 "category_id": {
                     "type": "integer"
@@ -2396,6 +2541,14 @@ const docTemplate = `{
         },
         "service.PaymentMethod": {
             "type": "object",
+            "required": [
+                "active",
+                "color",
+                "id",
+                "nickname",
+                "opening_balance",
+                "type"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -2440,6 +2593,12 @@ const docTemplate = `{
         },
         "service.PaymentMethodInput": {
             "type": "object",
+            "required": [
+                "color",
+                "nickname",
+                "opening_balance",
+                "type"
+            ],
             "properties": {
                 "active": {
                     "type": "boolean"
@@ -2481,6 +2640,12 @@ const docTemplate = `{
         },
         "service.ProfileInput": {
             "type": "object",
+            "required": [
+                "currency",
+                "locale",
+                "name",
+                "timezone"
+            ],
             "properties": {
                 "currency": {
                     "type": "string"
@@ -2498,6 +2663,14 @@ const docTemplate = `{
         },
         "service.RegisterInput": {
             "type": "object",
+            "required": [
+                "currency",
+                "email",
+                "locale",
+                "name",
+                "password",
+                "timezone"
+            ],
             "properties": {
                 "currency": {
                     "type": "string"
@@ -2521,6 +2694,11 @@ const docTemplate = `{
         },
         "service.SeriesPoint": {
             "type": "object",
+            "required": [
+                "committed",
+                "expenses",
+                "start"
+            ],
             "properties": {
                 "committed": {
                     "type": "integer"
@@ -2535,6 +2713,10 @@ const docTemplate = `{
         },
         "service.Session": {
             "type": "object",
+            "required": [
+                "access_token",
+                "user"
+            ],
             "properties": {
                 "access_token": {
                     "type": "string"
@@ -2546,6 +2728,20 @@ const docTemplate = `{
         },
         "service.Statement": {
             "type": "object",
+            "required": [
+                "amount_due",
+                "billed_balance",
+                "charges",
+                "closes_on",
+                "current_balance",
+                "cycle",
+                "due_on",
+                "installments",
+                "opens_on",
+                "payment_method_id",
+                "payments",
+                "payments_after_close"
+            ],
             "properties": {
                 "amount_due": {
                     "type": "integer"
@@ -2595,6 +2791,13 @@ const docTemplate = `{
                         "$ref": "#/definitions/service.CardPayment"
                     }
                 },
+                "payments_after_close": {
+                    "description": "PaymentsAfterClose are payments in (closes_on, due_on]; they reduce\namount_due below billed_balance.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.CardPayment"
+                    }
+                },
                 "utilization": {
                     "type": "number"
                 }
@@ -2602,6 +2805,12 @@ const docTemplate = `{
         },
         "service.StatementCharge": {
             "type": "object",
+            "required": [
+                "amount",
+                "date",
+                "description",
+                "source"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2619,6 +2828,13 @@ const docTemplate = `{
         },
         "service.StatementInstallment": {
             "type": "object",
+            "required": [
+                "amount",
+                "description",
+                "no",
+                "of",
+                "plan_id"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2639,6 +2855,17 @@ const docTemplate = `{
         },
         "service.Summary": {
             "type": "object",
+            "required": [
+                "available",
+                "budgets",
+                "currency",
+                "fixed_committed",
+                "fixed_paid",
+                "income",
+                "installments",
+                "month",
+                "spent"
+            ],
             "properties": {
                 "available": {
                     "type": "integer"
@@ -2680,6 +2907,13 @@ const docTemplate = `{
         },
         "service.UpcomingItem": {
             "type": "object",
+            "required": [
+                "amount",
+                "date",
+                "name",
+                "overdue",
+                "type"
+            ],
             "properties": {
                 "amount": {
                     "type": "integer"
@@ -2706,6 +2940,15 @@ const docTemplate = `{
         },
         "service.User": {
             "type": "object",
+            "required": [
+                "created_at",
+                "currency",
+                "email",
+                "id",
+                "locale",
+                "name",
+                "timezone"
+            ],
             "properties": {
                 "created_at": {
                     "type": "string"

@@ -12,26 +12,26 @@ import (
 const maxMonthsAhead = 12
 
 type Entry struct {
-	ID                int64       `json:"id"`
-	Month             datex.Month `json:"month"`
-	Kind              string      `json:"kind"`
+	ID                int64       `json:"id" validate:"required"`
+	Month             datex.Month `json:"month" validate:"required"`
+	Kind              string      `json:"kind" validate:"required"`
 	IncomeSourceID    *int64      `json:"income_source_id"`
 	FixedPaymentID    *int64      `json:"fixed_payment_id"`
 	InstallmentPlanID *int64      `json:"installment_plan_id"`
 	InstallmentNo     *int32      `json:"installment_no"`
-	Name              string      `json:"name"`
+	Name              string      `json:"name" validate:"required"`
 	CategoryID        *int64      `json:"category_id"`
 	PaymentMethodID   *int64      `json:"payment_method_id"`
-	Amount            int64       `json:"amount"`
-	DueDate           datex.Date  `json:"due_date"`
-	Status            string      `json:"status"`
+	Amount            int64       `json:"amount" validate:"required"`
+	DueDate           datex.Date  `json:"due_date" validate:"required"`
+	Status            string      `json:"status" validate:"required"`
 	SettledOn         *datex.Date `json:"settled_on"`
-	Edited            bool        `json:"edited"`
+	Edited            bool        `json:"edited" validate:"required"`
 }
 
 type EntryUpdate struct {
-	Amount          int64       `json:"amount"`
-	Status          string      `json:"status"`
+	Amount          int64       `json:"amount" validate:"required"`
+	Status          string      `json:"status" validate:"required"`
 	SettledOn       *datex.Date `json:"settled_on"`
 	PaymentMethodID *int64      `json:"payment_method_id"`
 }
@@ -91,6 +91,11 @@ func (s *Service) UpdateEntry(ctx context.Context, a Actor, id int64, in EntryUp
 			v.Check(in.PaymentMethodID == nil, "payment_method_id", "is not allowed on income")
 		} else {
 			v.Check(in.Status == "pending" || in.Status == "paid" || in.Status == "skipped", "status", "must be pending, paid or skipped")
+		}
+		if in.SettledOn != nil {
+			earliest, latest := e.Month.AddDate(0, 0, -31), s.today(a).AddDate(0, 0, 1)
+			v.Check(!in.SettledOn.Before(earliest) && !in.SettledOn.After(latest), "settled_on",
+				"must be between "+earliest.Format(time.DateOnly)+" and "+latest.Format(time.DateOnly))
 		}
 		if e.Kind == "installment" {
 			v.Check(in.Amount == e.Amount, "amount", "installment amounts are set by the plan")

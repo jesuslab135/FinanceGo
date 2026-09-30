@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -98,6 +99,19 @@ func rateLimit(perMin int) gin.HandlerFunc {
 		if !l.get(c.ClientIP()).Allow() {
 			fail(c, apperr.RateLimited())
 			return
+		}
+		c.Next()
+	}
+}
+
+// maxBodyBytes caps request bodies; the largest legitimate JSON body is a few KiB.
+const maxBodyBytes = 1 << 20
+
+// bodyLimit makes reads past n bytes fail with *http.MaxBytesError (mapped to 413 by bind).
+func bodyLimit(n int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Body != nil {
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, n)
 		}
 		c.Next()
 	}

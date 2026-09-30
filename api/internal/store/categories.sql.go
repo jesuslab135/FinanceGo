@@ -10,15 +10,20 @@ import (
 )
 
 const categoryUsage = `-- name: CategoryUsage :one
-SELECT ((SELECT count(*) FROM expenses e WHERE e.category_id = $1)
-      + (SELECT count(*) FROM fixed_payments f WHERE f.category_id = $1)
-      + (SELECT count(*) FROM income_sources i WHERE i.category_id = $1)
-      + (SELECT count(*) FROM monthly_entries m WHERE m.category_id = $1)
-      + (SELECT count(*) FROM installment_plans p WHERE p.category_id = $1))::bigint AS uses
+SELECT ((SELECT count(*) FROM expenses e WHERE e.category_id = $1 AND e.user_id = $2)
+      + (SELECT count(*) FROM fixed_payments f WHERE f.category_id = $1 AND f.user_id = $2)
+      + (SELECT count(*) FROM income_sources i WHERE i.category_id = $1 AND i.user_id = $2)
+      + (SELECT count(*) FROM monthly_entries m WHERE m.category_id = $1 AND m.user_id = $2)
+      + (SELECT count(*) FROM installment_plans p WHERE p.category_id = $1 AND p.user_id = $2))::bigint AS uses
 `
 
-func (q *Queries) CategoryUsage(ctx context.Context, id int64) (int64, error) {
-	row := q.db.QueryRow(ctx, categoryUsage, id)
+type CategoryUsageParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) CategoryUsage(ctx context.Context, arg CategoryUsageParams) (int64, error) {
+	row := q.db.QueryRow(ctx, categoryUsage, arg.ID, arg.UserID)
 	var uses int64
 	err := row.Scan(&uses)
 	return uses, err
@@ -143,72 +148,77 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 }
 
 const reassignEntriesCategory = `-- name: ReassignEntriesCategory :exec
-UPDATE monthly_entries SET category_id = $1, updated_at = now() WHERE category_id = $2
+UPDATE monthly_entries SET category_id = $1, updated_at = now() WHERE category_id = $2 AND user_id = $3
 `
 
 type ReassignEntriesCategoryParams struct {
 	ToID   *int64
 	FromID *int64
+	UserID int64
 }
 
 func (q *Queries) ReassignEntriesCategory(ctx context.Context, arg ReassignEntriesCategoryParams) error {
-	_, err := q.db.Exec(ctx, reassignEntriesCategory, arg.ToID, arg.FromID)
+	_, err := q.db.Exec(ctx, reassignEntriesCategory, arg.ToID, arg.FromID, arg.UserID)
 	return err
 }
 
 const reassignExpensesCategory = `-- name: ReassignExpensesCategory :exec
-UPDATE expenses SET category_id = $1, updated_at = now() WHERE category_id = $2
+UPDATE expenses SET category_id = $1, updated_at = now() WHERE category_id = $2 AND user_id = $3
 `
 
 type ReassignExpensesCategoryParams struct {
 	ToID   int64
 	FromID int64
+	UserID int64
 }
 
 func (q *Queries) ReassignExpensesCategory(ctx context.Context, arg ReassignExpensesCategoryParams) error {
-	_, err := q.db.Exec(ctx, reassignExpensesCategory, arg.ToID, arg.FromID)
+	_, err := q.db.Exec(ctx, reassignExpensesCategory, arg.ToID, arg.FromID, arg.UserID)
 	return err
 }
 
 const reassignFixedCategory = `-- name: ReassignFixedCategory :exec
-UPDATE fixed_payments SET category_id = $1, updated_at = now() WHERE category_id = $2
+UPDATE fixed_payments SET category_id = $1, updated_at = now() WHERE category_id = $2 AND user_id = $3
 `
 
 type ReassignFixedCategoryParams struct {
 	ToID   int64
 	FromID int64
+	UserID int64
 }
 
 func (q *Queries) ReassignFixedCategory(ctx context.Context, arg ReassignFixedCategoryParams) error {
-	_, err := q.db.Exec(ctx, reassignFixedCategory, arg.ToID, arg.FromID)
+	_, err := q.db.Exec(ctx, reassignFixedCategory, arg.ToID, arg.FromID, arg.UserID)
 	return err
 }
 
 const reassignIncomeCategory = `-- name: ReassignIncomeCategory :exec
-UPDATE income_sources SET category_id = $1, updated_at = now() WHERE category_id = $2
+UPDATE income_sources SET category_id = $1, updated_at = now() WHERE category_id = $2 AND user_id = $3
 `
 
 type ReassignIncomeCategoryParams struct {
 	ToID   *int64
 	FromID *int64
+	UserID int64
 }
 
 func (q *Queries) ReassignIncomeCategory(ctx context.Context, arg ReassignIncomeCategoryParams) error {
-	_, err := q.db.Exec(ctx, reassignIncomeCategory, arg.ToID, arg.FromID)
+	_, err := q.db.Exec(ctx, reassignIncomeCategory, arg.ToID, arg.FromID, arg.UserID)
 	return err
 }
 
 const reassignPlansCategory = `-- name: ReassignPlansCategory :exec
-UPDATE installment_plans SET category_id = $1, updated_at = now() WHERE category_id = $2
+UPDATE installment_plans SET category_id = $1, updated_at = now() WHERE category_id = $2 AND user_id = $3
 `
 
 type ReassignPlansCategoryParams struct {
 	ToID   int64
 	FromID int64
+	UserID int64
 }
 
 func (q *Queries) ReassignPlansCategory(ctx context.Context, arg ReassignPlansCategoryParams) error {
-	_, err := q.db.Exec(ctx, reassignPlansCategory, arg.ToID, arg.FromID)
+	_, err := q.db.Exec(ctx, reassignPlansCategory, arg.ToID, arg.FromID, arg.UserID)
 	return err
 }
 

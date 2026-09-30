@@ -9,7 +9,8 @@ RETURNING *;
 SELECT * FROM payment_methods WHERE user_id = @user_id ORDER BY active DESC, nickname, id;
 
 -- name: ListCreditCards :many
-SELECT * FROM payment_methods WHERE user_id = @user_id AND type = 'credit' AND active ORDER BY nickname, id;
+-- Includes inactive cards: callers keep those that still carry a balance.
+SELECT * FROM payment_methods WHERE user_id = @user_id AND type = 'credit' ORDER BY nickname, id;
 
 -- name: GetPaymentMethod :one
 SELECT * FROM payment_methods WHERE id = @id AND user_id = @user_id;
@@ -23,11 +24,11 @@ WHERE id = @id AND user_id = @user_id
 RETURNING *;
 
 -- name: PaymentMethodUsage :one
-SELECT ((SELECT count(*) FROM expenses e WHERE e.payment_method_id = @id)
-      + (SELECT count(*) FROM fixed_payments f WHERE f.payment_method_id = @id)
-      + (SELECT count(*) FROM monthly_entries m WHERE m.payment_method_id = @id)
-      + (SELECT count(*) FROM installment_plans p WHERE p.payment_method_id = @id)
-      + (SELECT count(*) FROM card_payments c WHERE c.payment_method_id = @id))::bigint AS uses;
+SELECT ((SELECT count(*) FROM expenses e WHERE e.payment_method_id = @id AND e.user_id = @user_id)
+      + (SELECT count(*) FROM fixed_payments f WHERE f.payment_method_id = @id AND f.user_id = @user_id)
+      + (SELECT count(*) FROM monthly_entries m WHERE m.payment_method_id = @id AND m.user_id = @user_id)
+      + (SELECT count(*) FROM installment_plans p WHERE p.payment_method_id = @id AND p.user_id = @user_id)
+      + (SELECT count(*) FROM card_payments c WHERE c.payment_method_id = @id AND c.user_id = @user_id))::bigint AS uses;
 
 -- name: DeletePaymentMethod :execrows
 DELETE FROM payment_methods WHERE id = @id AND user_id = @user_id;

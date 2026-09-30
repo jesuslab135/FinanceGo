@@ -145,29 +145,44 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const revokeRefreshByHash = `-- name: RevokeRefreshByHash :exec
-UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1 AND revoked_at IS NULL
+UPDATE refresh_tokens SET revoked_at = $1::timestamptz WHERE token_hash = $2 AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeRefreshByHash(ctx context.Context, tokenHash string) error {
-	_, err := q.db.Exec(ctx, revokeRefreshByHash, tokenHash)
+type RevokeRefreshByHashParams struct {
+	Now       time.Time
+	TokenHash string
+}
+
+func (q *Queries) RevokeRefreshByHash(ctx context.Context, arg RevokeRefreshByHashParams) error {
+	_, err := q.db.Exec(ctx, revokeRefreshByHash, arg.Now, arg.TokenHash)
 	return err
 }
 
 const revokeRefreshFamily = `-- name: RevokeRefreshFamily :exec
-UPDATE refresh_tokens SET revoked_at = now() WHERE family_id = $1 AND revoked_at IS NULL
+UPDATE refresh_tokens SET revoked_at = $1::timestamptz WHERE family_id = $2 AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeRefreshFamily(ctx context.Context, familyID string) error {
-	_, err := q.db.Exec(ctx, revokeRefreshFamily, familyID)
+type RevokeRefreshFamilyParams struct {
+	Now      time.Time
+	FamilyID string
+}
+
+func (q *Queries) RevokeRefreshFamily(ctx context.Context, arg RevokeRefreshFamilyParams) error {
+	_, err := q.db.Exec(ctx, revokeRefreshFamily, arg.Now, arg.FamilyID)
 	return err
 }
 
 const revokeRefreshToken = `-- name: RevokeRefreshToken :execrows
-UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1 AND revoked_at IS NULL
+UPDATE refresh_tokens SET revoked_at = $1::timestamptz WHERE id = $2 AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeRefreshToken(ctx context.Context, id int64) (int64, error) {
-	result, err := q.db.Exec(ctx, revokeRefreshToken, id)
+type RevokeRefreshTokenParams struct {
+	Now time.Time
+	ID  int64
+}
+
+func (q *Queries) RevokeRefreshToken(ctx context.Context, arg RevokeRefreshTokenParams) (int64, error) {
+	result, err := q.db.Exec(ctx, revokeRefreshToken, arg.Now, arg.ID)
 	if err != nil {
 		return 0, err
 	}

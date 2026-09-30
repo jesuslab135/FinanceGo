@@ -14,33 +14,33 @@ import (
 )
 
 type PaymentMethod struct {
-	ID                 int64       `json:"id"`
-	Nickname           string      `json:"nickname"`
-	Type               string      `json:"type"`
+	ID                 int64       `json:"id" validate:"required"`
+	Nickname           string      `json:"nickname" validate:"required"`
+	Type               string      `json:"type" validate:"required"`
 	Bank               *string     `json:"bank"`
 	Network            *string     `json:"network"`
 	Last4              *string     `json:"last4"`
-	Color              string      `json:"color"`
-	Active             bool        `json:"active"`
+	Color              string      `json:"color" validate:"required"`
+	Active             bool        `json:"active" validate:"required"`
 	CreditLimit        *int64      `json:"credit_limit"`
 	StatementDay       *int32      `json:"statement_day"`
 	PaymentDueDay      *int32      `json:"payment_due_day"`
-	OpeningBalance     int64       `json:"opening_balance"`
+	OpeningBalance     int64       `json:"opening_balance" validate:"required"`
 	OpeningBalanceDate *datex.Date `json:"opening_balance_date"`
 }
 
 type PaymentMethodInput struct {
-	Nickname           string      `json:"nickname"`
-	Type               string      `json:"type"`
+	Nickname           string      `json:"nickname" validate:"required"`
+	Type               string      `json:"type" validate:"required"`
 	Bank               *string     `json:"bank"`
 	Network            *string     `json:"network"`
 	Last4              *string     `json:"last4"`
-	Color              string      `json:"color"`
+	Color              string      `json:"color" validate:"required"`
 	Active             *bool       `json:"active"`
 	CreditLimit        *int64      `json:"credit_limit"`
 	StatementDay       *int32      `json:"statement_day"`
 	PaymentDueDay      *int32      `json:"payment_due_day"`
-	OpeningBalance     int64       `json:"opening_balance"`
+	OpeningBalance     int64       `json:"opening_balance" validate:"required"`
 	OpeningBalanceDate *datex.Date `json:"opening_balance_date"`
 }
 
@@ -163,15 +163,25 @@ func (s *Service) UpdatePaymentMethod(ctx context.Context, a Actor, id int64, in
 	if err := normalizePaymentMethod(&in, s.today(a)); err != nil {
 		return PaymentMethod{}, err
 	}
-	p, err := s.q.UpdatePaymentMethod(ctx, store.UpdatePaymentMethodParams{
-		ID: id, UserID: a.UserID, Nickname: in.Nickname, Bank: in.Bank, Network: in.Network, Last4: in.Last4,
-		Color: in.Color, Active: *in.Active, CreditLimit: in.CreditLimit, StatementDay: in.StatementDay,
-		PaymentDueDay: in.PaymentDueDay, OpeningBalance: in.OpeningBalance, OpeningBalanceDate: dateOrNil(in.OpeningBalanceDate),
+	var out PaymentMethod
+	err = s.inTx(ctx, func(q *store.Queries) error {
+		p, err := q.UpdatePaymentMethod(ctx, store.UpdatePaymentMethodParams{
+			ID: id, UserID: a.UserID, Nickname: in.Nickname, Bank: in.Bank, Network: in.Network, Last4: in.Last4,
+			Color: in.Color, Active: *in.Active, CreditLimit: in.CreditLimit, StatementDay: in.StatementDay,
+			PaymentDueDay: in.PaymentDueDay, OpeningBalance: in.OpeningBalance, OpeningBalanceDate: dateOrNil(in.OpeningBalanceDate),
+		})
+		if err != nil {
+			return notFound(err)
+		}
+		out = toPaymentMethod(p)
+		// A new cut-off or due day remaps installments to other months: drop the
+		// pending rows so ensureInstallments regenerates them lazily.
+		if cur.Type == "credit" && (!eqPtr(cur.StatementDay, p.StatementDay) || !eqPtr(cur.PaymentDueDay, p.PaymentDueDay)) {
+			return q.DeleteCardPendingInstallments(ctx, store.DeleteCardPendingInstallmentsParams{UserID: a.UserID, PaymentMethodID: id})
+		}
+		return nil
 	})
-	if err != nil {
-		return PaymentMethod{}, notFound(err)
-	}
-	return toPaymentMethod(p), nil
+	return out, err
 }
 
 func (s *Service) DeletePaymentMethod(ctx context.Context, a Actor, id int64) error {
@@ -179,7 +189,7 @@ func (s *Service) DeletePaymentMethod(ctx context.Context, a Actor, id int64) er
 		if _, err := q.GetPaymentMethod(ctx, store.GetPaymentMethodParams{ID: id, UserID: a.UserID}); err != nil {
 			return notFound(err)
 		}
-		uses, err := q.PaymentMethodUsage(ctx, &id)
+		uses, err := q.PaymentMethodUsage(ctx, store.PaymentMethodUsageParams{ID: &id, UserID: a.UserID})
 		if err != nil {
 			return err
 		}

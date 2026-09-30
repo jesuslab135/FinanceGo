@@ -42,6 +42,10 @@ type statement struct {
 	Payments []struct {
 		Amount int64 `json:"amount"`
 	} `json:"payments"`
+	PaymentsAfterClose []struct {
+		Amount int64  `json:"amount"`
+		PaidOn string `json:"paid_on"`
+	} `json:"payments_after_close"`
 }
 
 func (h *harness) msi(tok string, card int64, total int64, n int, on string) plan {
@@ -111,6 +115,18 @@ func TestInstallmentPlanEntriesAndStatement(t *testing.T) {
 	if len(st.Charges) != 2 || len(st.Installments) != 1 || st.Installments[0].No != 1 || st.Installments[0].Of != 3 || len(st.Payments) != 1 {
 		t.Fatalf("lines %+v", st)
 	}
+	// A payment after the cut-off but before the due date lowers amount_due and is
+	// listed under payments_after_close, not payments.
+	expect[M](t, h.do("POST", "/api/v1/card-payments", tok, M{"payment_method_id": cc, "amount": 3333, "paid_on": "2026-03-15"}), 201)
+	h.setNow(time.Date(2026, 3, 20, 18, 0, 0, 0, time.UTC))
+	tok = h.login("msi@example.com")
+	expect[M](t, h.do("POST", "/api/v1/card-payments", tok, M{"payment_method_id": cc, "amount": 50000, "paid_on": "2026-03-20"}), 201)
+	st = expect[statement](t, h.do("GET", fmt.Sprintf("/api/v1/payment-methods/%d/statement?cycle=2026-03", cc), tok, nil), 200)
+	if len(st.Payments) != 2 || len(st.PaymentsAfterClose) != 1 || st.PaymentsAfterClose[0].PaidOn != "2026-03-20" || st.AmountDue != 20000 {
+		t.Fatalf("after close: payments=%+v after=%+v due=%d", st.Payments, st.PaymentsAfterClose, st.AmountDue)
+	}
+	h.setNow(time.Date(2026, 3, 15, 18, 0, 0, 0, time.UTC))
+	tok = h.login("msi@example.com")
 	def := expect[statement](t, h.do("GET", fmt.Sprintf("/api/v1/payment-methods/%d/statement", cc), tok, nil), 200)
 	if def.Cycle != "2026-03" {
 		t.Fatalf("default cycle %s", def.Cycle)
@@ -181,7 +197,7 @@ func TestInstallmentPlanStructuralEditDropsPaidRows(t *testing.T) {
 	if len(may) != 1 {
 		t.Fatalf("may %+v", may)
 	}
-	expect[entry](t, h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", may[0].ID), tok, M{"amount": may[0].Amount, "status": "paid", "settled_on": "2026-03-16", "payment_method_id": cc}), 200)
+	expect[entry](t, h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", may[0].ID), tok, M{"amount": may[0].Amount, "status": "paid", "payment_method_id": cc}), 200)
 	body := M{"payment_method_id": cc, "category_id": h.catID(tok, "Entretenimiento"), "description": "TV",
 		"total_amount": 90000, "installments": 3, "purchased_on": "2026-03-16"}
 	expect[plan](t, h.do("PUT", fmt.Sprintf("/api/v1/installment-plans/%d", pl.ID), tok, body), 200)
@@ -192,5 +208,30 @@ func TestInstallmentPlanStructuralEditDropsPaidRows(t *testing.T) {
 	var n int
 	if err := h.pool.QueryRow(context.Background(), `SELECT count(*) FROM monthly_entries WHERE installment_plan_id = $1 AND installment_no > 3`, pl.ID).Scan(&n); err != nil || n != 0 {
 		t.Fatalf("orphans %d %v", n, err)
+	}
+}
+
+// Changing a card's cut-off day remaps pending installment rows to their new months.
+func TestCardCycleChangeRemapsInstallments(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("cycle@example.com")
+	cc := h.creditCard(tok) // closes 15th, due 5th
+	h.msi(tok, cc, 90000, 3, "2026-03-20")
+	if apr := byKind(h.entries(tok, "2026-04"), "installment"); len(apr) != 1 || apr[0].Name != "TV 1/3" {
+		t.Fatalf("april before change %+v", apr)
+	}
+	expect[paymentMethod](t, h.do("PUT", fmt.Sprintf("/api/v1/payment-methods/%d", cc), tok, M{
+		"nickname": "BBVA Oro", "type": "credit", "bank": "BBVA", "network": "visa", "last4": "4242",
+		"credit_limit": 5000000, "statement_day": 25, "payment_due_day": 5,
+		"opening_balance": 0, "opening_balance_date": "2026-01-01",
+	}), 200)
+	if mar := byKind(h.entries(tok, "2026-03"), "installment"); len(mar) != 1 || mar[0].Name != "TV 1/3" {
+		t.Fatalf("march after change %+v", mar)
+	}
+	if apr := byKind(h.entries(tok, "2026-04"), "installment"); len(apr) != 1 || apr[0].Name != "TV 2/3" {
+		t.Fatalf("april after change %+v", apr)
+	}
+	if s := expect[summary](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-04", tok, nil), 200); s.Installments != 30000 {
+		t.Fatalf("april summary installments %d", s.Installments)
 	}
 }
