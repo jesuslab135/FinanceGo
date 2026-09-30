@@ -1,6 +1,7 @@
 "use client";
 import { m } from "motion/react";
-import { useId, type KeyboardEvent } from "react";
+import { useId } from "react";
+import { useRovingRadio } from "@/hooks/use-roving-radio";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -11,19 +12,10 @@ export function Segmented<V extends string>({ value, options, onChange, ariaLabe
   value: V; options: Option<V>[]; onChange: (v: V) => void; ariaLabel: string; className?: string;
 }) {
   const id = useId();
-  const idx = options.findIndex((o) => o.value === value);
-  const onKey = (e: KeyboardEvent) => {
-    const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-    const target = e.key === "Home" ? 0 : e.key === "End" ? options.length - 1 : null;
-    if (!d && target === null) return;
-    e.preventDefault();
-    const next = target !== null ? options[target] : options[(idx + d + options.length) % options.length];
-    onChange(next.value);
-    (e.currentTarget.parentElement?.querySelector(`[data-value="${next.value}"]`) as HTMLElement | null)?.focus();
-  };
+  const { groupRef, itemProps } = useRovingRadio({ values: options.map((o) => o.value), value, onChange });
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className={cn("inline-flex rounded-full bg-muted p-1", className)}>
-      {options.map((o) => {
+    <div ref={groupRef} role="radiogroup" aria-label={ariaLabel} className={cn("inline-flex rounded-full bg-muted p-1", className)}>
+      {options.map((o, i) => {
         const active = o.value === value;
         return (
           <button
@@ -31,10 +23,9 @@ export function Segmented<V extends string>({ value, options, onChange, ariaLabe
             type="button"
             role="radio"
             aria-checked={active}
-            tabIndex={active ? 0 : -1}
             data-value={o.value}
             onClick={() => onChange(o.value)}
-            onKeyDown={onKey}
+            {...itemProps(i)}
             className={cn("relative min-h-11 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
             {active && <m.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-full bg-card shadow-card" transition={spring} />}
