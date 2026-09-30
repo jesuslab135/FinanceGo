@@ -46,7 +46,7 @@ financeGo/
       auth/          argon2id hashing, JWT, refresh tokens
       http/          router, middleware, handlers, error mapping, DTOs
       service/       business rules (one file per domain)
-      recurrence/    month generation, day clamping (pure functions)
+      datex/         civil dates, months, day clamping, JSON date types (pure)
       cards/         statement cycle and balance math (pure functions)
       store/         sqlc-generated code
     migrations/      goose SQL migrations
@@ -66,7 +66,7 @@ financeGo/
   docs/superpowers/{specs,plans}/
 ```
 
-Layers in the API: handler (HTTP, binding, DTO) → service (rules, ownership checks) → store (sqlc). `recurrence` and `cards` are pure packages with no DB access, so they can be unit-tested exhaustively.
+Layers in the API: handler (HTTP, binding, DTO) → service (rules, ownership checks) → store (sqlc). `datex` and `cards` are pure packages with no DB access, so they can be unit-tested exhaustively.
 
 ## 4. Data model
 
@@ -92,7 +92,7 @@ Unique indexes: `(fixed_payment_id, month)` and `(income_source_id, month)`.
 
 **card_payments**: `user_id`, `payment_method_id` (must be `type = credit`), `amount`, `paid_on DATE`, `note`.
 
-**installment_plans** (meses sin intereses, MSI): `user_id`, `payment_method_id` (must be `type = credit`), `category_id`, `description`, `total_amount`, `installments SMALLINT` (2–48), `purchased_on DATE`, `active BOOL`. Installment `k` (1..N) = `total_amount / N`, rounded down to the cent; the last installment takes the remainder so the installments sum exactly to the total.
+**installment_plans** (meses sin intereses, MSI): `user_id`, `payment_method_id` (must be `type = credit`), `category_id`, `description`, `total_amount`, `installments SMALLINT` (2–48), `purchased_on DATE`, `cancelled_on DATE NULL` (set when the plan is cancelled or refunded). Installment `k` (1..N) = `total_amount / N`, rounded down to the cent; the last installment takes the remainder so the installments sum exactly to the total.
 
 **category_budgets**: `user_id`, `category_id` (an expense category), `monthly_limit`; unique `(user_id, category_id)`. Optional per-category spending limit.
 
@@ -107,7 +107,7 @@ Any read of month `M` (entries, dashboard summary, series covering `M`) first ca
 - **Day clamping:** `due_date = M + min(day_of_month, last day of M) - 1`. A payment set for the 31st falls on Feb 28/29, Apr 30, and so on.
 - **Future months** are generated only when requested, up to 12 months ahead. Requests further out are rejected with 422.
 - **Editing a template** (amount, name, category, card, day) updates the rows for the current and future months that are still `pending` and have `edited = false`. Past months and rows edited by hand are never changed.
-- **Deactivating a template** or setting `end_month` deletes its `pending`, unedited rows after the end month. All other rows are kept.
+- **Deactivating a template** deletes its `pending`, unedited rows for months after the current month; the current month's row stays and can be skipped. Setting `end_month` deletes pending, unedited rows after the end month. All other rows are kept.
 - **Editing a monthly entry** sets `edited = true`.
 
 ### 5.2 Month balance
@@ -151,7 +151,7 @@ The `day`, `week`, and `month` series cover the expenses plus the fixed entries 
   - **Billed balance at the close of cycle C** = `opening_balance + regular charges up to close + Σ installments billed in cycles ≤ C − payments up to close`.
   - **Amount due for C** = `max(0, billed balance − payments after close up to the due date)`, which is the amount to pay to avoid interest.
   - The statement endpoint lists the installments billed in C (`k/N`), and each plan shows its remaining installments and remaining amount.
-- **Editing a plan:** a plan can be edited only while none of its installments have been billed in a closed cycle. Otherwise, only `description`, `category_id`, and `active` can change. Setting a plan inactive (cancelled or refunded) deletes its future pending entries and removes the unbilled remainder from the debt.
+- **Editing a plan:** a plan can be edited only while none of its installments have been billed in a closed cycle. Otherwise, only `description`, `category_id`, and `active` can change. Cancelling a plan (`DELETE`) sets `cancelled_on = today`. It deletes the pending entries for installments whose cycle closes after that date and removes the unbilled remainder from the debt: installments count only when their cycle closes on or before `cancelled_on`.
 
 ### 5.6 Upcoming dues
 
@@ -164,7 +164,7 @@ These are in-app only. Email and push notifications are out of scope.
 
 ## 6. API
 
-The base path is `/api/v1`. JSON, `snake_case`, amounts as integer cents, dates as `YYYY-MM-DD`, months as `YYYY-MM`.
+The base path is `/api/v1`. Updates use `PUT` with the full set of editable fields, so optional fields can be cleared by sending `null`. JSON, `snake_case`, amounts as integer cents, dates as `YYYY-MM-DD`, months as `YYYY-MM`.
 
 Every error uses the same shape, `{ "error": { "code": "validation_failed", "message": "...", "fields": { "amount": "must be > 0" } } }`, with these statuses:
 
@@ -178,15 +178,15 @@ Every error uses the same shape, `{ "error": { "code": "validation_failed", "mes
 
 | Area | Endpoints |
 |---|---|
-| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /me`, `PATCH /me` |
-| Categories | `GET/POST /categories`, `PATCH/DELETE /categories/{id}?reassign_to=` |
-| Payment methods | `GET/POST /payment-methods`, `PATCH/DELETE /payment-methods/{id}`, `GET /payment-methods/{id}/statement?cycle=YYYY-MM` |
+| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /me`, `PUT /me` |
+| Categories | `GET/POST /categories`, `PUT/DELETE /categories/{id}?reassign_to=` |
+| Payment methods | `GET/POST /payment-methods`, `PUT/DELETE /payment-methods/{id}`, `GET /payment-methods/{id}/statement?cycle=YYYY-MM` |
 | Card payments | `GET /card-payments?payment_method_id&from&to`, `POST /card-payments`, `DELETE /card-payments/{id}` |
-| Income sources | `GET/POST /income-sources`, `PATCH/DELETE /income-sources/{id}` (DELETE deactivates) |
-| Fixed payments | `GET/POST /fixed-payments`, `PATCH/DELETE /fixed-payments/{id}` (DELETE deactivates) |
-| Monthly entries | `GET /months/{yyyy-mm}/entries`, `PATCH /entries/{id}` (amount, status, settled_on, payment_method_id) |
-| Expenses | `GET /expenses?from&to&category_id&payment_method_id&q&cursor&limit`, `POST /expenses`, `PATCH/DELETE /expenses/{id}` |
-| Installment plans (MSI) | `GET /installment-plans?payment_method_id&active`, `POST /installment-plans`, `PATCH/DELETE /installment-plans/{id}` (DELETE deactivates) |
+| Income sources | `GET/POST /income-sources`, `PUT/DELETE /income-sources/{id}` (DELETE deactivates) |
+| Fixed payments | `GET/POST /fixed-payments`, `PUT/DELETE /fixed-payments/{id}` (DELETE deactivates) |
+| Monthly entries | `GET /months/{yyyy-mm}/entries`, `PUT /entries/{id}` (amount, status, settled_on, payment_method_id) |
+| Expenses | `GET /expenses?from&to&category_id&payment_method_id&q&cursor&limit`, `POST /expenses`, `PUT/DELETE /expenses/{id}` |
+| Installment plans (MSI) | `GET /installment-plans?payment_method_id&active_only`, `POST /installment-plans`, `PUT/DELETE /installment-plans/{id}` (DELETE cancels) |
 | Category budgets | `GET /category-budgets`, `PUT /category-budgets/{category_id}` (upsert), `DELETE /category-budgets/{category_id}` |
 | Dashboard | `GET /dashboard/summary?month=` (includes installments, safe-to-spend, and category budgets), `GET /dashboard/series?period=day\|week\|month&from&to`, `GET /dashboard/breakdown?by=category\|payment_method&from&to`, `GET /dashboard/cards`, `GET /dashboard/upcoming?days=` |
 | Export and account | `GET /export/expenses.csv?from&to`, `GET /export/entries.csv?from&to` (UTF-8 with BOM so Excel opens it cleanly, amounts as decimals), `DELETE /me` (requires `password` in the body; deletes the account and all its data) |
