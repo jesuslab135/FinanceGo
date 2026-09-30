@@ -92,6 +92,7 @@
     "notCredit": "Este método no es tarjeta de crédito.", "otherMethods": "Otros métodos",
     "creditCards": "Tarjetas de crédito", "perMonth": "{amount} al mes",
     "keepPlan": "Conservar plan",
+    "planLockedHint": "Ya se cobraron mensualidades: solo puedes cambiar la descripción y la categoría.",
     "cancelPlanConfirm": "Las mensualidades pendientes dejarán de cobrarse; las ya cobradas se conservan en tus estados de cuenta."
   },
   "categories": {

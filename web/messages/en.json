@@ -92,6 +92,7 @@
     "notCredit": "This payment method is not a credit card.", "otherMethods": "Other methods",
     "creditCards": "Credit cards", "perMonth": "{amount} per month",
     "keepPlan": "Keep plan",
+    "planLockedHint": "Installments were already billed: only the description and category can change.",
     "cancelPlanConfirm": "Pending installments will stop being billed; installments already billed stay on your statements."
   },
   "categories": {

@@ -46,6 +46,9 @@ export function PlanForm({ cardId, initial, onSubmit, onCancel }: {
     },
   });
   const { errors, isSubmitting } = form.formState;
+  // Once an installment is billed (or the plan is cancelled) only description and category may change;
+  // the locked fields stay read-only but are still submitted unchanged.
+  const locked = !!initial && (initial.billed_count > 0 || !!initial.cancelled_on);
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -65,15 +68,16 @@ export function PlanForm({ cardId, initial, onSubmit, onCancel }: {
         <Input id="plan-desc" aria-invalid={!!errors.description} {...form.register("description")} />
         <FieldError message={errors.description?.message} />
       </div>
+      {locked && <p className="text-sm text-muted-foreground">{t("cards.planLockedHint")}</p>}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="plan-total">{t("cards.totalAmount")}</Label>
-          <MoneyInput id="plan-total" aria-invalid={!!errors.total_amount} {...form.register("total_amount")} />
+          <MoneyInput id="plan-total" readOnly={locked} className={locked ? "bg-muted" : undefined} aria-invalid={!!errors.total_amount} {...form.register("total_amount")} />
           <FieldError message={errors.total_amount?.message} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="plan-n">{t("cards.installments")}</Label>
-          <Input id="plan-n" type="number" min={2} max={48} list="plan-n-common" aria-invalid={!!errors.installments} {...form.register("installments")} />
+          <Input id="plan-n" type="number" min={2} max={48} readOnly={locked} className={locked ? "bg-muted" : undefined} list="plan-n-common" aria-invalid={!!errors.installments} {...form.register("installments")} />
           <datalist id="plan-n-common">{[3, 6, 9, 12, 18, 24].map((n) => <option key={n} value={n} />)}</datalist>
           <FieldError message={errors.installments?.message} />
         </div>
@@ -81,7 +85,7 @@ export function PlanForm({ cardId, initial, onSubmit, onCancel }: {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="plan-date">{t("cards.purchasedOn")}</Label>
-          <Input id="plan-date" type="date" {...form.register("purchased_on")} />
+          <Input id="plan-date" type="date" readOnly={locked} className={locked ? "bg-muted" : undefined} {...form.register("purchased_on")} />
           <FieldError message={errors.purchased_on?.message} />
         </div>
         <div className="space-y-2">
