@@ -56,10 +56,22 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   if (q.isError && rows.length === 0) return <QueryError error={q.error} />;
   if (rows.length === 0) return <EmptyState illustration="expenses" action={<QuickAdd variant="button" />}>{t("expenses.empty")}</EmptyState>;
 
+  // After a delete the row (and the menu trigger Radix would return focus to) unmounts, so keyboard focus moves to the
+  // neighbouring row's menu (next, else previous), else the page heading, instead of dropping to <body>.
+  const focusAfterDelete = (id: number) => () => {
+    const i = rows.findIndex((r) => r.id === id);
+    const neighbour = rows[i + 1] ?? rows[i - 1];
+    const menu = neighbour ? document.querySelector<HTMLElement>(`[data-row-menu="${neighbour.id}"]`) : null;
+    if (menu) return menu;
+    const heading = document.querySelector<HTMLElement>("main h1");
+    if (heading) heading.tabIndex = -1;
+    return heading;
+  };
+
   const actionsFor = (e: Expense): RowAction[] => [
     { label: t("common.edit"), icon: Pencil, onSelect: () => setEditing(e) },
     { label: t("quickAdd.repeat"), icon: Copy, onSelect: () => { setRepeating(e); setRepeatOpen(true); } },
-    { label: t("common.delete"), icon: Trash2, destructive: true, onSelect: () => request(e.id, t("common.deleted")) },
+    { label: t("common.delete"), icon: Trash2, destructive: true, onSelect: () => request(e.id, t("common.deleted")), focusAfter: focusAfterDelete(e.id) },
   ];
 
   return (
@@ -85,7 +97,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
                       title={e.description || c?.name}
                       meta={[c?.name, method].filter(Boolean).join(" · ")}
                       amount={<Money cents={e.amount} />}
-                      trailing={<RowMenu actions={actions} />}
+                      trailing={<RowMenu actions={actions} rowId={e.id} />}
                     />
                   </SwipeRow>
                 </FadeInItem>

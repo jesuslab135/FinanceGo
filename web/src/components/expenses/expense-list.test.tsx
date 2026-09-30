@@ -63,6 +63,21 @@ describe("ExpenseList", () => {
     expect(removeAsync).not.toHaveBeenCalled();
   });
 
+  it("after deleting from the row menu, keyboard focus moves to the next row's menu, not <body>", async () => {
+    state.expenses = {
+      isPending: false, isError: false, error: null, hasNextPage: false,
+      data: { pages: [{ items: [expense(1, "2026-09-29", 10000, "Tacos"), expense(2, "2026-09-29", 5000, "Café"), expense(3, "2026-09-28", 2000, "Pan")] }] },
+    };
+    renderWithProviders(<ExpenseList filters={{}} />);
+    const user = userEvent.setup();
+    const menus = screen.getAllByRole("button", { name: "Más acciones" });
+    await user.click(menus[0]);
+    await user.keyboard("{ArrowUp}{Enter}"); // last item: Eliminar
+    await waitFor(() => expect(screen.queryByText("Tacos")).not.toBeInTheDocument());
+    await waitFor(() => expect(document.activeElement).toBe(menus[1]));
+    expect(menus[1]).toHaveAttribute("data-row-menu", "2");
+  });
+
   it("repeats an expense through the row menu, opening the quick add on its details step", async () => {
     state.expenses = {
       isPending: false, isError: false, error: null, hasNextPage: false,
