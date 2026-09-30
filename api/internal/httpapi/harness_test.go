@@ -134,3 +134,14 @@ func errFields(r resp) map[string]string {
 	_ = json.Unmarshal(r.Body, &b)
 	return b.Error.Fields
 }
+func (h *harness) signup(email string) string {
+	h.t.Helper()
+	r := h.do("POST", "/api/v1/auth/register", "", M{
+		"email": email, "password": "password123", "name": "Test User",
+		"currency": "MXN", "locale": "es", "timezone": "UTC",
+	})
+	s := expect[struct {
+		AccessToken string `json:"access_token"`
+	}](h.t, r, 201)
+	return s.AccessToken
+}

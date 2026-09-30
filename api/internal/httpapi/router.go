@@ -46,5 +46,13 @@ func NewRouter(cfg config.Config, svc *service.Service, log *slog.Logger) *gin.E
 
 // routes is the single place endpoints are registered; each task adds its lines here.
 func (h *handlers) routes(v1 *gin.RouterGroup) {
-	_ = v1
+	a := v1.Group("/auth", rateLimit(h.cfg.AuthRatePerMin))
+	a.POST("/register", h.register)
+	a.POST("/login", h.login)
+	a.POST("/refresh", h.refresh)
+	a.POST("/logout", h.logout)
+
+	p := v1.Group("", requireAuth(h.svc))
+	p.GET("/me", h.getMe)
+	p.PUT("/me", h.putMe)
 }
