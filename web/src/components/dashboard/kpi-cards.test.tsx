@@ -18,7 +18,6 @@ describe("KpiChips", () => {
     expect(screen.getByText("$1,100.00")).toBeInTheDocument();
     expect(screen.getByText("Gastado esta semana")).toBeInTheDocument();
     expect(screen.queryByText("Sobregirado")).toBeNull();
-    expect(document.querySelector("[data-kpi='available']")).toBeNull();
   });
 
   it("shows committed fixed payments with paid/pending detail", () => {

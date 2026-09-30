@@ -7,7 +7,7 @@ import type { Summary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 // Small hero text sits on a dark pill so it clears AA 4.5 across the whole gradient (see contrast.test.ts);
-// the gradient holds its start color under the amount so the large bold text clears 3.
+// the gradient holds its start color to 70% under the amount so the large bold text clears 3.
 const pill = "inline-flex items-center gap-1.5 rounded-full bg-black/40 px-2.5 py-0.5 text-sm";
 
 export function HeroAvailable({ summary: s, className }: { summary: Summary; className?: string }) {
@@ -21,8 +21,8 @@ export function HeroAvailable({ summary: s, className }: { summary: Summary; cla
       className={cn(
         "relative space-y-2 overflow-hidden rounded-[20px] p-5 text-white shadow-card md:p-7",
         negative
-          ? "bg-[linear-gradient(135deg,var(--critical-hero-from)_0%,var(--critical-hero-from)_55%,var(--critical-hero-to)_100%)]"
-          : "bg-[linear-gradient(135deg,var(--hero-from)_0%,var(--hero-from)_55%,var(--hero-to)_100%)]",
+          ? "bg-[linear-gradient(135deg,var(--critical-hero-from)_0%,var(--critical-hero-from)_70%,var(--critical-hero-to)_100%)]"
+          : "bg-[linear-gradient(135deg,var(--hero-from)_0%,var(--hero-from)_70%,var(--hero-to)_100%)]",
         className,
       )}
     >

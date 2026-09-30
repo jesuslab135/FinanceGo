@@ -10,14 +10,19 @@ export function greetingKey(hour: number): "morning" | "afternoon" | "evening" {
   return "evening";
 }
 
+export function greetingMessageKey(hour: number, name: string): "morning" | "afternoon" | "evening" | "morningNoName" | "afternoonNoName" | "eveningNoName" {
+  const k = greetingKey(hour);
+  return name ? k : (`${k}NoName` as const);
+}
+
 export function Greeting({ now = new Date() }: { now?: Date }) {
   const t = useTranslations("dashboard.greeting");
   const locale = useLocale();
   const { user } = useAuth();
-  const first = (user?.name ?? "").split(" ")[0];
+  const first = (user?.name ?? "").trim().split(/s+/)[0];
   return (
     <div>
-      <h1 className="font-display text-2xl font-extrabold md:text-3xl">{t(greetingKey(now.getHours()), { name: first })}</h1>
+      <h1 className="font-display text-2xl font-extrabold md:text-3xl">{t(greetingMessageKey(now.getHours(), first), { name: first })}</h1>
       <p className="text-sm capitalize text-muted-foreground">{format(now, "LLLL yyyy", { locale: locale === "en" ? enUS : es })}</p>
     </div>
   );
