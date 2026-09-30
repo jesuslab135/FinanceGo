@@ -1,5 +1,6 @@
 "use client";
 
+import { addDays, endOfMonth, min as minDate, startOfMonth, subMonths } from "date-fns";
 import { useTranslations } from "next-intl";
 import { m, useReducedMotion } from "motion/react";
 import { useSearchParams } from "next/navigation";
@@ -9,6 +10,8 @@ import { BudgetMeters } from "@/components/dashboard/budget-meters";
 import { QueryError } from "@/components/common/query-error";
 import { CardsDebt } from "@/components/dashboard/cards-debt";
 import { Greeting } from "@/components/dashboard/greeting";
+import { useFormatMoney } from "@/components/common/money";
+import { InsightsRow } from "@/components/dashboard/insights-row";
 import { HeroAvailable } from "@/components/dashboard/hero-available";
 import { KpiChips } from "@/components/dashboard/kpi-cards";
 import { PeriodControls } from "@/components/dashboard/period-controls";
@@ -17,7 +20,10 @@ import { UpcomingList } from "@/components/dashboard/upcoming-list";
 import { ChartSkeleton, ChipsSkeleton, HeroSkeleton, ListSkeleton } from "@/components/common/skeletons";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Period } from "@/lib/dates";
-import { useBreakdown, useCategories, useSeries, useSummary } from "@/lib/query/hooks";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { computeInsights } from "@/lib/insights";
+import { useBreakdown, useCardsOverview, useCategories, useIncomeSources, useSeries, useSummary, useUpcoming } from "@/lib/query/hooks";
+import { readJSON, userKey } from "@/lib/storage";
 import { useErrorMessage } from "@/lib/api/error-messages";
 import { riseIn } from "@/lib/motion";
 
@@ -56,6 +62,30 @@ function Dashboard() {
   const byPm = useBreakdown("payment_method", pr.from, pr.to);
   const spent = (current.data ?? []).reduce((a, p) => a + p.expenses, 0);
 
+  // Insights always look at the real today, independent of the dashboard's anchor date.
+  const { user } = useAuth();
+  const fmt = useFormatMoney();
+  const today = useMemo(() => new Date(), []);
+  const prevFrom = startOfMonth(subMonths(today, 1));
+  const prevTo = minDate([addDays(prevFrom, today.getDate() - 1), endOfMonth(prevFrom)]);
+  const summaryNow = useSummary(toMonthKey(today));
+  const catNow = useBreakdown("category", toISODate(startOfMonth(today)), toISODate(today));
+  const catPrev = useBreakdown("category", toISODate(prevFrom), toISODate(prevTo));
+  const daily = useSeries("day", toISODate(addDays(today, -14)), toISODate(today));
+  const incomeSources = useIncomeSources();
+  const upcoming = useUpcoming(7);
+  const cards = useCardsOverview();
+  const onboardingSkipped = useMemo(() => user != null && readJSON(userKey(user.id, "onboarding-skipped"), false), [user]);
+  // Hold insights until every input is settled and real: never compute from a placeholder of another range.
+  const ready = summaryNow.data && catNow.data && catPrev.data && daily.data && !daily.isPlaceholderData && incomeSources.data && upcoming.data && cards.data;
+  const insights = useMemo(
+    () => !ready ? [] : computeInsights({
+      today, summary: summaryNow.data, upcoming: upcoming.data ?? [], cards: cards.data ?? [], catNow: catNow.data ?? [], catPrev: catPrev.data ?? [],
+      daily: daily.data ?? [], hasIncome: (incomeSources.data ?? []).some((s) => s.active), onboardingSkipped,
+    }, fmt),
+    [ready, today, summaryNow.data, upcoming.data, cards.data, catNow.data, catPrev.data, daily.data, incomeSources.data, onboardingSkipped, fmt],
+  );
+
   const onChange = (p: Period, d: string) => router.replace({ pathname, query: { period: p, date: d } });
 
   return (
@@ -66,7 +96,7 @@ function Dashboard() {
       </div>
       {summary.data ? <HeroAvailable summary={summary.data} /> : summary.error ? null : <HeroSkeleton />}
       {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
-      <div id="insights-slot" />
+      {insights.length > 0 && <InsightsRow insights={insights} />}
       {summary.data ? <KpiChips summary={summary.data} spent={spent} period={period} spentStale={current.isPlaceholderData} /> : summary.error ? null : <ChipsSkeleton />}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <Rise index={0} className="min-w-0 lg:col-span-2">

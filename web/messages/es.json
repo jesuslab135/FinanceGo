@@ -135,5 +135,17 @@
     "periodColumn": "Periodo", "cardDue": "Pago de tarjeta",
     "next7": "7 días", "next30": "30 días"
   },
+  "insights": {
+    "title": "Para ti", "view": "Ver", "dismiss": "Ocultar",
+    "overdue": "{count, plural, one {Tienes un pago vencido: {name}} other {Tienes # pagos vencidos, como {name}}}",
+    "cardDue": "{name} vence {days, plural, =0 {hoy} one {mañana} other {en # días}}: paga {amount} para no generar intereses",
+    "budgetOver": "Te pasaste del límite de {name} ({pct}%)",
+    "budgetNear": "Vas en {pct}% de tu límite de {name}",
+    "categoryUp": "Gastaste {pct}% más en {name} que el mes pasado a estas fechas",
+    "categoryDown": "¡Bien! {pct}% menos en {name} que el mes pasado",
+    "streak": "🔥 {days} días seguidos gastando menos de tu límite diario",
+    "setup": "Completa tu configuración para ver tus números reales",
+    "tone": { "info": "Aviso", "good": "Buena noticia", "warn": "Atención", "critical": "Urgente" }
+  },
   "icons": {"food":"Comida","coffee":"Café","drinks":"Bebidas","groceries":"Súper","car":"Auto","fuel":"Gasolina","transit":"Transporte público","bike":"Bici","travel":"Viajes","home":"Hogar","utilities":"Servicios","internet":"Internet","phone":"Teléfono","repairs":"Reparaciones","health":"Salud","pharmacy":"Farmacia","gym":"Gimnasio","personalCare":"Cuidado personal","entertainment":"Entretenimiento","music":"Música","games":"Juegos","books":"Libros","education":"Educación","kids":"Hijos","pets":"Mascotas","cat":"Gato","clothing":"Ropa","shopping":"Compras","gifts":"Regalos","tech":"Tecnología","subscriptions":"Suscripciones","fees":"Comisiones","card":"Tarjeta","bills":"Recibos","taxes":"Impuestos","savings":"Ahorro","delivery":"Envíos","salary":"Salario","otherIncome":"Otros ingresos","other":"Otros"}
 }
