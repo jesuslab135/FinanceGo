@@ -2,6 +2,7 @@
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { useToday } from "@/hooks/use-today";
 import { useRouter } from "@/i18n/navigation";
@@ -49,9 +50,9 @@ export function WelcomeFlow() {
 
   const offset = reduce ? 0 : 24 * dir;
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-8 pt-4">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-8 pt-4">
       <header className="flex items-center justify-between">
-        <span className="font-display text-xl font-extrabold text-brand">{t("common.appName")}</span>
+        <Logo withWordmark size={28} />
         <Button type="button" variant="ghost" className="min-h-11 min-w-11 px-4" onClick={skip}>{t("welcome.skip")}</Button>
       </header>
       <div className="py-4"><Progress step={step} /></div>
@@ -73,6 +74,6 @@ export function WelcomeFlow() {
           {step === 3 && <StepCards cards={cards} draft={cardDraft} onDraft={setCardDraft} onAdded={(c) => setCards((l) => [...l, c])} onBack={() => go(2)} onFinish={finish} />}
         </m.section>
       </AnimatePresence>
-    </div>
+    </main>
   );
 }

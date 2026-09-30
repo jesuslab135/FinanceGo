@@ -48,6 +48,13 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
     h.createCard.mockResolvedValue({ id: 300 });
   });
 
+  it("is a main landmark headed by the brand logo", () => {
+    renderWithProviders(<WelcomeFlow />);
+    const main = screen.getByRole("main");
+    expect(main.querySelector("header svg")).not.toBeNull();
+    expect(main.querySelector("header")).toHaveTextContent("FinanceGo");
+  });
+
   it("walks income, fixed payment and finish, saving integer cents", async () => {
     renderWithProviders(<WelcomeFlow />);
     expect(screen.getByRole("img", { name: "Paso 1 de 3" })).toBeInTheDocument();
