@@ -1,4 +1,5 @@
 "use client";
+import { CategoryTile } from "@/components/common/category-tile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategories } from "@/lib/query/hooks";
 
@@ -12,8 +13,10 @@ export function CategorySelect({ kind, value, onChange, id, invalid, placeholder
       <SelectContent>
         {data.filter((c) => c.id !== exclude).map((c) => (
           <SelectItem key={c.id} value={String(c.id)}>
-            <span className="mr-2 inline-block size-2.5 rounded-full" style={{ background: c.color }} aria-hidden />
-            {c.name}
+            <span className="flex items-center gap-2">
+              <CategoryTile icon={c.icon} color={c.color} size="sm" />
+              {c.name}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

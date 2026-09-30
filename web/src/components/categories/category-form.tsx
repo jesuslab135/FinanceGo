@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FieldError } from "@/components/common/field-error";
+import { IconPicker } from "@/components/common/icon-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ export function CategoryForm({ initial, onSubmit, onCancel }: {
   const [name, setName] = useState(initial?.name ?? "");
   const [kind, setKind] = useState<"expense" | "income">((initial?.kind as "expense" | "income") ?? "expense");
   const [color, setColor] = useState(initial?.color ?? "#64748b");
+  const [icon, setIcon] = useState(initial?.icon ?? "tag");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -28,7 +30,7 @@ export function CategoryForm({ initial, onSubmit, onCancel }: {
     setErrors({});
     setBusy(true);
     try {
-      await onSubmit({ name: name.trim(), kind, color, icon: initial?.icon ?? "tag" });
+      await onSubmit({ name: name.trim(), kind, color, icon });
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(localizeFields(err.fields, t));
       else toast.error(errMsg(err));
@@ -57,6 +59,10 @@ export function CategoryForm({ initial, onSubmit, onCancel }: {
           <Label htmlFor="cat-color">{t("categories.color")}</Label>
           <input id="cat-color" type="color" className="h-9 w-full rounded border" value={color} onChange={(e) => setColor(e.target.value)} />
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label>{t("categories.icon")}</Label>
+        <IconPicker value={icon} onChange={setIcon} color={color} />
       </div>
       <div className="flex justify-end gap-2">
         {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>}

@@ -97,7 +97,7 @@
     "cancelPlanConfirm": "Las mensualidades pendientes dejarán de cobrarse; las ya cobradas se conservan en tus estados de cuenta."
   },
   "categories": {
-    "title": "Categorías", "new": "Nueva categoría", "edit": "Editar categoría", "kind": "Tipo",
+    "icon": "Ícono", "title": "Categorías", "new": "Nueva categoría", "edit": "Editar categoría", "kind": "Tipo",
     "kinds": { "expense": "Gasto", "income": "Ingreso" }, "color": "Color", "name": "Nombre",
     "inUse": "Esta categoría está en uso. Elige a cuál mover sus movimientos:", "reassignTo": "Mover a",
     "budget": "Límite mensual", "budgetFor": "Límite mensual de {name}", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
@@ -123,5 +123,6 @@
     "budgetStatus": { "ok": "En orden", "warn": "Cerca del límite", "over": "Excedido" },
     "periodColumn": "Periodo", "cardDue": "Pago de tarjeta",
     "next7": "7 días", "next30": "30 días"
-  }
+  },
+  "icons": {"food":"Comida","coffee":"Café","drinks":"Bebidas","groceries":"Súper","car":"Auto","fuel":"Gasolina","transit":"Transporte público","bike":"Bici","travel":"Viajes","home":"Hogar","utilities":"Servicios","internet":"Internet","phone":"Teléfono","repairs":"Reparaciones","health":"Salud","pharmacy":"Farmacia","gym":"Gimnasio","personalCare":"Cuidado personal","entertainment":"Entretenimiento","music":"Música","games":"Juegos","books":"Libros","education":"Educación","kids":"Hijos","pets":"Mascotas","cat":"Gato","clothing":"Ropa","shopping":"Compras","gifts":"Regalos","tech":"Tecnología","subscriptions":"Suscripciones","fees":"Comisiones","card":"Tarjeta","bills":"Recibos","taxes":"Impuestos","savings":"Ahorro","delivery":"Envíos","salary":"Salario","otherIncome":"Otros ingresos","other":"Otros"}
 }

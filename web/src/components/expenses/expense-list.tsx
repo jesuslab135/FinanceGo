@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { CategoryTile } from "@/components/common/category-tile";
 import { ConfirmButton } from "@/components/common/confirm-button";
 import { EmptyState } from "@/components/common/empty-state";
 import { QueryError } from "@/components/common/query-error";
@@ -60,7 +61,6 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
     const c = catById.get(e.category_id);
     return (
       <span className="inline-flex items-center gap-2">
-        <span className="size-2.5 rounded-full" style={{ background: c?.color }} aria-hidden />
         {c?.name}
       </span>
     );
@@ -72,6 +72,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
       <ul className="space-y-2 md:hidden">
         {rows.map((e) => (
           <li key={e.id} className="flex items-center gap-3 rounded-lg border p-3">
+            <CategoryTile icon={catById.get(e.category_id)?.icon} color={catById.get(e.category_id)?.color} size="md" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{e.description || catById.get(e.category_id)?.name}</p>
               <p className="truncate text-xs text-muted-foreground">

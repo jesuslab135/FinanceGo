@@ -22,4 +22,13 @@ describe("CategoryForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ name: "Súper", kind: "expense", color: "#f97316", icon: "utensils" }));
   });
+  it("submits the chosen icon", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(<CategoryForm onSubmit={onSubmit} />);
+    await userEvent.type(screen.getByLabelText("Nombre"), "Café");
+    await userEvent.click(screen.getByRole("radio", { name: "Café" }));
+    expect(screen.getByRole("radio", { name: "Café" })).toBeChecked();
+    await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: "Café", icon: "coffee" })));
+  });
 });

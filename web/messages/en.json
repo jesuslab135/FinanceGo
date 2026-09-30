@@ -97,7 +97,7 @@
     "cancelPlanConfirm": "Pending installments will stop being billed; installments already billed stay on your statements."
   },
   "categories": {
-    "title": "Categories", "new": "New category", "edit": "Edit category", "kind": "Type",
+    "icon": "Icon", "title": "Categories", "new": "New category", "edit": "Edit category", "kind": "Type",
     "kinds": { "expense": "Expense", "income": "Income" }, "color": "Color", "name": "Name",
     "inUse": "This category is in use. Choose where to move its records:", "reassignTo": "Move to",
     "budget": "Monthly limit", "budgetFor": "Monthly limit for {name}", "noBudget": "No limit", "removeBudget": "Remove limit"
@@ -123,5 +123,6 @@
     "budgetStatus": { "ok": "On track", "warn": "Near the limit", "over": "Over the limit" },
     "periodColumn": "Period", "cardDue": "Card payment",
     "next7": "7 days", "next30": "30 days"
-  }
+  },
+  "icons": {"food":"Food","coffee":"Coffee","drinks":"Drinks","groceries":"Groceries","car":"Car","fuel":"Fuel","transit":"Transit","bike":"Bike","travel":"Travel","home":"Home","utilities":"Utilities","internet":"Internet","phone":"Phone","repairs":"Repairs","health":"Health","pharmacy":"Pharmacy","gym":"Gym","personalCare":"Personal care","entertainment":"Entertainment","music":"Music","games":"Games","books":"Books","education":"Education","kids":"Kids","pets":"Pets","cat":"Cat","clothing":"Clothing","shopping":"Shopping","gifts":"Gifts","tech":"Tech","subscriptions":"Subscriptions","fees":"Fees","card":"Card","bills":"Bills","taxes":"Taxes","savings":"Savings","delivery":"Delivery","salary":"Salary","otherIncome":"Other income","other":"Other"}
 }

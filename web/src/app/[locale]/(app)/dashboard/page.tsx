@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import { BreakdownBars } from "@/components/dashboard/breakdown-bars";
 import { BudgetMeters } from "@/components/dashboard/budget-meters";
 import { QueryError } from "@/components/common/query-error";
@@ -14,7 +14,7 @@ import { UpcomingList } from "@/components/dashboard/upcoming-list";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Period } from "@/lib/dates";
-import { useBreakdown, useSeries, useSummary } from "@/lib/query/hooks";
+import { useBreakdown, useCategories, useSeries, useSummary } from "@/lib/query/hooks";
 import { useErrorMessage } from "@/lib/api/error-messages";
 
 function Dashboard() {
@@ -35,6 +35,8 @@ function Dashboard() {
   const summary = useSummary(toMonthKey(anchor));
   const current = useSeries(period, pr.from, pr.to);
   const series = useSeries(period, sr.from, sr.to);
+  const { data: categories = [] } = useCategories();
+  const icons = useMemo(() => Object.fromEntries(categories.map((c) => [c.id, c.icon])), [categories]);
   const byCat = useBreakdown("category", pr.from, pr.to);
   const byPm = useBreakdown("payment_method", pr.from, pr.to);
   const spent = (current.data ?? []).reduce((a, p) => a + p.expenses, 0);
@@ -56,7 +58,7 @@ function Dashboard() {
         <UpcomingList />
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-        {byCat.error ? <QueryError error={byCat.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} />}
+        {byCat.error ? <QueryError error={byCat.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byCategory")} items={byCat.data ?? []} fallbackName={tc("none")} icons={icons} />}
         {byPm.error ? <QueryError error={byPm.error} className="rounded-xl border p-4" /> : <BreakdownBars title={t("byMethod")} items={byPm.data ?? []} fallbackName={t("noMethod")} />}
       </div>
       <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
