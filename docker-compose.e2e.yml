@@ -1,7 +1,8 @@
 # Overlay for running the Playwright suite (web/e2e) against the local stack:
 #   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
 # The suite registers ~15 accounts per minute; the API's auth rate limit defaults to 10 per minute per IP.
+# Uses E2E_AUTH_RATE_PER_MIN (default 200) so the AUTH_RATE_PER_MIN=10 in .env does not override it.
 services:
   api:
     environment:
-      AUTH_RATE_PER_MIN: ${AUTH_RATE_PER_MIN:-200}
+      AUTH_RATE_PER_MIN: ${E2E_AUTH_RATE_PER_MIN:-200}
