@@ -12,7 +12,7 @@ export function PaymentMethodSelect({ value, onChange, id, creditOnly, allowNone
   const { data = [] } = usePaymentMethods();
   const list = data.filter((p) => (p.active || p.id === value) && (!creditOnly || p.type === "credit"));
   return (
-    <Select value={value ? String(value) : NONE} onValueChange={(v) => onChange(v === NONE ? null : Number(v))}>
+    <Select value={value ? String(value) : allowNone ? NONE : undefined} onValueChange={(v) => onChange(v === NONE ? null : Number(v))}>
       <SelectTrigger id={id} aria-invalid={invalid} className="w-full"><SelectValue /></SelectTrigger>
       <SelectContent>
         {allowNone && <SelectItem value={NONE}>{t("noMethod")}</SelectItem>}
