@@ -120,6 +120,7 @@
     "cardsDebt": "Card debt", "showTable": "Show table", "showChart": "Show chart",
     "noData": "No activity in this period",
     "budgetStatus": { "ok": "On track", "warn": "Near the limit", "over": "Over the limit" },
-    "periodColumn": "Period", "cardDue": "Card payment"
+    "periodColumn": "Period", "cardDue": "Card payment",
+    "next7": "7 days", "next30": "30 days"
   }
 }

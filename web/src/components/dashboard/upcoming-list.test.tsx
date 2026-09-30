@@ -5,11 +5,10 @@ import { UpcomingList } from "./upcoming-list";
 
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
 const mutate = vi.fn();
+const useUpcoming = vi.fn();
 vi.mock("@/lib/query/hooks", () => ({
   useMe: () => ({ data: { currency: "MXN" } }),
-  useUpcoming: () => ({
-    data: [{ type: "fixed", entry_id: 7, payment_method_id: 3, name: "Renta", date: "2026-10-05", amount: 1200000, overdue: false }],
-  }),
+  useUpcoming: (days: number) => { useUpcoming(days); return { data: [{ type: "fixed", entry_id: 7, payment_method_id: 3, name: "Renta", date: "2026-10-05", amount: 1200000, overdue: false }] }; },
   useUpdateEntry: () => ({ mutate, isPending: false }),
 }));
 
@@ -20,5 +19,15 @@ describe("UpcomingList", () => {
     const payload = mutate.mock.calls[0][0];
     expect(payload).toEqual({ id: 7, amount: 1200000, status: "paid", payment_method_id: 3 });
     expect("settled_on" in payload).toBe(false);
+  });
+
+  it("shows the next 7 days by default and switches to 30", () => {
+    useUpcoming.mockClear();
+    renderWithProviders(<UpcomingList />);
+    expect(useUpcoming).toHaveBeenLastCalledWith(7);
+    expect(screen.getByRole("button", { name: "7 días" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "30 días" }));
+    expect(useUpcoming).toHaveBeenLastCalledWith(30);
+    expect(screen.getByRole("button", { name: "30 días" })).toHaveAttribute("aria-pressed", "true");
   });
 });

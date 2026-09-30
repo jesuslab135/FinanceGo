@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { enUS, es } from "date-fns/locale";
 import { AlertTriangle, CreditCard } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Money } from "@/components/common/money";
 import { Button } from "@/components/ui/button";
@@ -16,13 +17,23 @@ export function UpcomingList() {
   const t = useTranslations();
   const errMsg = useErrorMessage();
   const locale = useLocale();
-  const { data = [] } = useUpcoming(30);
+  const [days, setDays] = useState<7 | 30>(7);
+  const { data = [] } = useUpcoming(days);
   const update = useUpdateEntry();
   const day = (s: string) => format(parseISODate(s), "EEE d MMM", { locale: locale === "en" ? enUS : es });
 
   return (
     <section className="space-y-3 rounded-xl border p-4">
-      <h2 className="font-medium">{t("dashboard.upcoming")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-medium">{t("dashboard.upcoming")}</h2>
+        <div className="flex gap-1" role="group" aria-label={t("dashboard.upcoming")}>
+          {([7, 30] as const).map((n) => (
+            <Button key={n} size="sm" variant={days === n ? "secondary" : "ghost"} aria-pressed={days === n} onClick={() => setDays(n)}>
+              {t(n === 7 ? "dashboard.next7" : "dashboard.next30")}
+            </Button>
+          ))}
+        </div>
+      </div>
       {data.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("dashboard.noData")}</p>
       ) : (
