@@ -23,7 +23,8 @@ export function parseMoney(raw: string): number | null {
     } else if (tail.length === 3) {
       // no decimals: every separator groups thousands ("1,234", "1.234.567")
       if (seps.some((g) => g.ch !== last.ch)) return null;
-      if (seps.length === 1 && last.i > 1) return null;
+      // "12.345" stays ambiguous (rejected); "10,000" is unambiguous US-style grouping.
+      if (seps.length === 1 && last.ch === "." && last.i > 1) return null;
       if (s.startsWith("0")) return null;
     } else {
       return null;
