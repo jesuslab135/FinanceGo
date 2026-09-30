@@ -6,9 +6,9 @@ import { EmptyState } from "@/components/common/empty-state";
 import { Money } from "@/components/common/money";
 import { MonthNav } from "@/components/common/month-nav";
 import { EntryRow } from "@/components/month/entry-row";
+import { MonthSummary } from "@/components/month/month-summary";
 import type { Entry } from "@/lib/api/types";
 import { useMonthEntries, useSummary } from "@/lib/query/hooks";
-import { cn } from "@/lib/utils";
 import { useErrorMessage } from "@/lib/api/error-messages";
 
 export default function MonthPage() {
@@ -32,24 +32,7 @@ export default function MonthPage() {
         <h1 className="text-2xl font-semibold">{t("month.title")}</h1>
         <MonthNav month={month} basePath="/month" />
       </div>
-      {s && (
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {([
-            ["dashboard.income", s.income],
-            ["dashboard.fixed", s.fixed_committed],
-            ["dashboard.installments", s.installments],
-            ["dashboard.spent.month", s.spent],
-            ["dashboard.available", s.available],
-          ] as const).map(([k, v]) => (
-            <div key={k} className="rounded-lg border p-3">
-              <dt className="text-xs text-muted-foreground">{t(k)}</dt>
-              <dd className={cn("text-lg font-semibold", k === "dashboard.available" && (v ?? 0) < 0 && "text-critical")}>
-                <Money cents={v ?? 0} />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
+      {s && <MonthSummary s={s} />}
       {entries.error && <p role="alert" className="text-sm text-destructive">{errMsg(entries.error)}</p>}
       {entries.data?.length === 0 && <EmptyState>{t("month.empty")}</EmptyState>}
       {groups.map(([title, list]) =>
