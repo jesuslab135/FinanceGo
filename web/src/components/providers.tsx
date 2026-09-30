@@ -30,12 +30,12 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <MotionProvider>
-      <QueryClientProvider client={qc}>
-        <AuthProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-        </AuthProvider>
-        <ThemedToaster />
-      </QueryClientProvider>
+        <QueryClientProvider client={qc}>
+          <AuthProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthProvider>
+          <ThemedToaster />
+        </QueryClientProvider>
       </MotionProvider>
     </ThemeProvider>
   );

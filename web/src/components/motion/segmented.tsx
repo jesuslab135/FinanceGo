@@ -14,9 +14,10 @@ export function Segmented<V extends string>({ value, options, onChange, ariaLabe
   const idx = options.findIndex((o) => o.value === value);
   const onKey = (e: KeyboardEvent) => {
     const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-    if (!d) return;
+    const target = e.key === "Home" ? 0 : e.key === "End" ? options.length - 1 : null;
+    if (!d && target === null) return;
     e.preventDefault();
-    const next = options[(idx + d + options.length) % options.length];
+    const next = target !== null ? options[target] : options[(idx + d + options.length) % options.length];
     onChange(next.value);
     (e.currentTarget.parentElement?.querySelector(`[data-value="${next.value}"]`) as HTMLElement | null)?.focus();
   };
@@ -34,7 +35,7 @@ export function Segmented<V extends string>({ value, options, onChange, ariaLabe
             data-value={o.value}
             onClick={() => onChange(o.value)}
             onKeyDown={onKey}
-            className={cn("relative min-h-9 rounded-full px-4 text-sm font-medium transition-colors", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
+            className={cn("relative min-h-11 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
             {active && <m.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-full bg-card shadow-card" transition={spring} />}
             <span className="relative">{o.label}</span>

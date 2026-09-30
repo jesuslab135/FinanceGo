@@ -19,3 +19,15 @@ describe("Segmented", () => {
     expect(onChange).toHaveBeenLastCalledWith("day");
   });
 });
+
+describe("Segmented Home/End", () => {
+  it("selects first and last option", async () => {
+    const onChange = vi.fn();
+    renderWithProviders(<Segmented ariaLabel="Periodo" value="week" options={options} onChange={onChange} />);
+    screen.getByRole("radio", { name: "Semana" }).focus();
+    await userEvent.keyboard("{End}");
+    expect(onChange).toHaveBeenLastCalledWith("month");
+    await userEvent.keyboard("{Home}");
+    expect(onChange).toHaveBeenLastCalledWith("day");
+  });
+});
