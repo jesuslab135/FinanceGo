@@ -2,8 +2,11 @@ import { expect, test } from "@playwright/test";
 import { apiSession, register, typeDigits, uniqueEmail } from "./helpers";
 
 test("quick add: keypad + physical keyboard, category, save, then Repetir from the row menu", async ({ page }) => {
+  // One clock for the app and for the expected day header, so the test can't straddle midnight.
+  const now = new Date();
+  await page.clock.setFixedTime(now);
   await register(page, uniqueEmail("quickadd"));
-  const api = await apiSession(page);
+  const api = await apiSession(page, now);
   await api.post("/income-sources", { name: "Salario", amount: 3000000, day_of_month: 1, start_month: api.month });
   await page.goto("/es/dashboard");
 
@@ -28,9 +31,8 @@ test("quick add: keypad + physical keyboard, category, save, then Repetir from t
   // The expense is listed under today's day header with the right amount.
   await page.goto("/es/expenses");
   const todayLabel = new Intl.DateTimeFormat("es-MX", { timeZone: "America/Tijuana", weekday: "long", day: "numeric", month: "long" })
-    .format(new Date())
-    .replace(",", "")
-    .replace(/^(\S+ \d+) (\S+)$/, "$1 de $2");
+    .format(now)
+    .replace(",", "");
   const day = page.locator("section", { has: page.getByRole("heading", { level: 3 }) }).first();
   await expect(day.getByRole("heading", { level: 3 })).toContainText(new RegExp(todayLabel, "i"));
   await expect(day.getByText("$12.50")).toHaveCount(2); // the row and the day total

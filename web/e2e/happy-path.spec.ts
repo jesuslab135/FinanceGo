@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { pick, register, typeDigits, uniqueEmail } from "./helpers";
+import { pageHeader, pick, register, typeDigits, uniqueEmail } from "./helpers";
 
 test("register → income + card fixed payment → card expense → Available → card payment → English", async ({ page }) => {
   await register(page, uniqueEmail("happy"));
@@ -7,8 +7,8 @@ test("register → income + card fixed payment → card expense → Available �
 
   // Credit card
   await page.goto("/es/cards");
-  // The empty state repeats the header's call to action; scope to the page header (the heading's row).
-  await page.getByRole("heading", { level: 1, name: "Tarjetas" }).locator("..").getByRole("button", { name: "Nuevo método de pago" }).click();
+  // The empty state repeats the header's call to action, so scope to the page header.
+  await pageHeader(page).getByRole("button", { name: "Nuevo método de pago" }).click();
   await page.getByLabel("Alias").fill("Visa Oro");
   await page.getByLabel("Tipo").selectOption("credit");
   await page.getByLabel("Últimos 4 dígitos").fill("4242");
@@ -19,7 +19,7 @@ test("register → income + card fixed payment → card expense → Available �
 
   // Income and a fixed payment charged to the card
   await page.goto("/es/recurring");
-  const header = page.getByRole("heading", { level: 1, name: "Recurrentes" }).locator("..");
+  const header = pageHeader(page);
   await header.getByRole("button", { name: "Nueva fuente de ingreso" }).click();
   await page.getByLabel("Nombre").fill("Salario");
   await page.getByLabel("Monto").fill("30,000");

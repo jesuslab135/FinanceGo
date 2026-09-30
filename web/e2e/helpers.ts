@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+import type { components } from "../src/lib/api/schema";
 
 export const uniqueEmail = (tag: string) => `${tag}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
 
@@ -37,8 +38,8 @@ export async function typeDigits(page: Page, digits: string) {
   for (const d of digits) await page.keyboard.press(d);
 }
 
-/** Authenticated API access for the page's signed-in session, plus today's date in the test timezone. */
-export async function apiSession(page: Page) {
+/** Authenticated API access for the page's signed-in session, plus `now`'s date in the test timezone. */
+export async function apiSession(page: Page, now: Date = new Date()) {
   const refreshed = await page.request.post("/api/v1/auth/refresh");
   expect(refreshed.ok()).toBeTruthy();
   const headers = { Authorization: `Bearer ${(await refreshed.json()).access_token}` };
@@ -48,9 +49,10 @@ export async function apiSession(page: Page) {
     const body = await res.json();
     return (body.data ?? body) as { id: number };
   };
-  const cats = await (await page.request.get("/api/v1/categories", { headers })).json();
-  const list: { id: number; kind: string; name: string }[] = cats.data ?? cats.items ?? cats;
-  const today = new Date().toLocaleDateString("sv", { timeZone: "America/Tijuana" });
+  // GET /categories returns { items: Category[] } (see the generated API types).
+  const cats = (await (await page.request.get("/api/v1/categories", { headers })).json()) as { items?: components["schemas"]["service.Category"][] };
+  const list = cats.items ?? [];
+  const today = now.toLocaleDateString("sv", { timeZone: "America/Tijuana" });
   return {
     post: (path: string, data: object) => send("post", path, data),
     put: (path: string, data: object) => send("put", path, data),
@@ -59,4 +61,23 @@ export async function apiSession(page: Page) {
     today,
     month: today.slice(0, 7),
   };
+}
+
+/**
+ * The page's header row: the element holding the page's h1 and its primary action. Lists render an empty-state call to
+ * action with the same accessible name as the header button, so specs scope to the header to stay unambiguous.
+ */
+export const pageHeader = (page: Page) => page.getByRole("main").locator("div:has(> h1)").first();
+
+/** Resolves once the element has stopped moving (two consecutive identical bounding boxes), e.g. after a slide-in. */
+export async function settled(locator: Locator) {
+  let previous = "";
+  await expect
+    .poll(async () => {
+      const current = JSON.stringify(await locator.boundingBox());
+      const same = current === previous && current !== "null";
+      previous = current;
+      return same;
+    }, { intervals: [100], timeout: 10_000 })
+    .toBe(true);
 }

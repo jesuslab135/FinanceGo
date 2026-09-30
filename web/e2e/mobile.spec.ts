@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { register, typeDigits, uniqueEmail } from "./helpers";
+import { apiSession, pageHeader, register, settled, typeDigits, uniqueEmail } from "./helpers";
 
 const LONG_CARD = "Tarjeta de crédito departamental con nombre larguísimo";
 const LONG_CATEGORY = "Entretenimiento, suscripciones y salidas";
@@ -7,21 +7,7 @@ const LONG_NOTE = "Pago parcial registrado desde la aplicación del banco despu�
 
 /** Seeds cards, income, fixed payment, expenses, a budget, a card payment and an MSI plan through the API. */
 async function seed(page: Page) {
-  const refreshed = await page.request.post("/api/v1/auth/refresh");
-  expect(refreshed.ok()).toBeTruthy();
-  const headers = { Authorization: `Bearer ${(await refreshed.json()).access_token}` };
-  const send = async (method: "post" | "put", path: string, data: object) => {
-    const res = await page.request[method](`/api/v1${path}`, { headers, data });
-    expect(res.ok(), `${path}: ${await res.text()}`).toBeTruthy();
-    const body = await res.json();
-    return body.data ?? body;
-  };
-  const post = (path: string, data: object) => send("post", path, data);
-  const cats = await (await page.request.get("/api/v1/categories", { headers })).json();
-  const list: { id: number; kind: string }[] = cats.data ?? cats.items ?? cats;
-  const expenseCat = list.find((c) => c.kind === "expense")!.id;
-  const today = new Date().toLocaleDateString("sv", { timeZone: "America/Tijuana" });
-  const month = today.slice(0, 7);
+  const { post, put, expenseCat, today, month } = await apiSession(page);
   const card = await post("/payment-methods", {
     nickname: "Visa Oro", type: "credit", last4: "4242", color: "#2a78d6", opening_balance: 0,
     statement_day: 15, payment_due_day: 5, credit_limit: 5000000,
@@ -34,14 +20,14 @@ async function seed(page: Page) {
   await post("/fixed-payments", { name: "Renta", amount: 1000000, day_of_month: 5, category_id: expenseCat, payment_method_id: card.id, start_month: month });
   await post("/expenses", { amount: 50000, category_id: expenseCat, description: "Comida", payment_method_id: card.id, spent_on: today });
   const longCat = await post("/categories", { name: LONG_CATEGORY, kind: "expense", color: "#8b5cf6", icon: "tag" });
-  await send("put", `/category-budgets/${longCat.id}`, { monthly_limit: 150000000 });
+  await put(`/category-budgets/${longCat.id}`, { monthly_limit: 150000000 });
   await post("/expenses", { amount: 123456789, category_id: longCat.id, description: LONG_NOTE, payment_method_id: longCard.id, spent_on: today });
   await post("/card-payments", { payment_method_id: longCard.id, amount: 98765432, paid_on: today, note: LONG_NOTE });
   await post("/installment-plans", {
     payment_method_id: longCard.id, description: `Refrigerador ${LONG_NOTE}`.slice(0, 120), total_amount: 4800000,
     installments: 12, purchased_on: today, category_id: expenseCat,
   });
-  return { month, longCardId: longCard.id as number };
+  return { month, longCardId: longCard.id };
 }
 
 /** Walks the quick-add sheet step by step; it must never overflow sideways and its primary action stays in view. */
@@ -100,8 +86,8 @@ test("mobile: bottom navigation, quick add sheet, no horizontal scroll", async (
 test("mobile: a tall form in the bottom sheet can reach and click its submit button", async ({ page }) => {
   await register(page, uniqueEmail("mobile-sheet"));
   await page.goto("/es/cards");
-  // The empty state repeats the header's call to action; scope to the page header (the heading's row).
-  await page.getByRole("heading", { level: 1 }).locator("..").getByRole("button", { name: "Nuevo método de pago" }).click();
+  // The empty state repeats the header's call to action, so scope to the page header.
+  await pageHeader(page).getByRole("button", { name: "Nuevo método de pago" }).click();
   const dialog = page.getByRole("dialog", { name: "Nuevo método de pago" });
   await expect(dialog.getByTestId("drawer-handle")).toBeVisible();
   await dialog.getByLabel("Alias").fill("Tarjeta móvil");
@@ -124,8 +110,8 @@ test.describe("short phone (360x640)", () => {
   test("the tall card form in the bottom sheet scrolls to its submit button, which can be clicked", async ({ page }) => {
     await register(page, uniqueEmail("short-card"));
     await page.goto("/es/cards");
-    // The empty state repeats the header's call to action; scope to the page header (the heading's row).
-    await page.getByRole("heading", { level: 1 }).locator("..").getByRole("button", { name: "Nuevo método de pago" }).click();
+    // The empty state repeats the header's call to action, so scope to the page header.
+    await pageHeader(page).getByRole("button", { name: "Nuevo método de pago" }).click();
     const dialog = page.getByRole("dialog", { name: "Nuevo método de pago" });
     await expect(dialog.getByTestId("drawer-handle")).toBeVisible();
     await expect(dialog.getByLabel("Alias")).toBeVisible();
@@ -133,7 +119,7 @@ test.describe("short phone (360x640)", () => {
     await dialog.getByLabel("Tipo").selectOption("credit");
     await expect(dialog.getByLabel("Día de corte")).toBeAttached();
     await dialog.evaluate((el) => { for (const n of el.querySelectorAll<HTMLElement>("*")) n.scrollTop = 0; });
-    await page.waitForTimeout(600); // let the sheet finish sliding in and settle
+    await settled(dialog); // the sheet has finished sliding in
     const save = dialog.getByRole("button", { name: "Guardar" });
     // At 640px the form is taller than the sheet: the button starts below the fold and only scrolling reaches it.
     await expect(save).not.toBeInViewport({ ratio: 1 });

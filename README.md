@@ -65,7 +65,18 @@ pnpm install
 pnpm gen:api     # after API handler changes (regenerates src/lib/api/schema.d.ts from api/docs/swagger.json)
 pnpm dev         # http://localhost:3000 (proxies /api to http://localhost:8080; override with API_URL)
 pnpm test        # unit/component tests
-pnpm e2e         # Playwright against a running stack (docker compose -f docker-compose.yml up -d --build)
+pnpm e2e         # Playwright against a running stack (see "End-to-end tests" below)
 ```
+
+### End-to-end tests
+
+The suite registers about 15 accounts per minute, but the API rate-limits auth requests to `AUTH_RATE_PER_MIN` (default 10) per IP, so bring the stack up with the e2e overlay, which raises it to 200:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+cd web && pnpm e2e
+```
+
+Visual baselines (`web/e2e/visual.spec.ts-snapshots`) are platform-specific (`*-win32.png`); regenerate them on another OS with `pnpm exec playwright test --project=visual --update-snapshots`.
 
 Installable as a PWA (manifest + icons). Spanish at `/es`, English at `/en`.

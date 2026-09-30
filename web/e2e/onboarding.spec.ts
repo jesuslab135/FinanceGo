@@ -40,11 +40,19 @@ test("onboarding: Saltar never traps the user, and the dashboard offers to finis
   await skipOnboarding(page);
   await expect(page.getByText("Completa tu configuración para ver tus números reales")).toBeVisible();
 
-  // Reload, deep-link and in-app navigation all stay out of /welcome.
+  // Reload and deep links stay out of /welcome. The gate redirects only once the income query has answered, so wait
+  // for page-specific content and an idle network before asserting we were not sent back.
   await page.reload();
+  await expect(page.getByText("Completa tu configuración para ver tus números reales")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await expect(page).not.toHaveURL(/\/welcome/);
   await expect(page).toHaveURL(/\/es\/dashboard/);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
   await page.goto("/es/expenses");
+  await expect(page.getByRole("heading", { level: 1, name: "Gastos" })).toBeVisible();
+  await expect(page.getByText("No hay gastos en este rango")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await expect(page).not.toHaveURL(/\/welcome/);
   await expect(page).toHaveURL(/\/es\/expenses/);
   // Opening /welcome by hand is allowed, and Saltar still leads out of it.
   await page.goto("/es/welcome");

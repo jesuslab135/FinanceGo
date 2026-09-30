@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { apiSession, register, uniqueEmail } from "./helpers";
+import { apiSession, register, settled, uniqueEmail } from "./helpers";
 
 /** A real touch swipe (CDP touch events) from the centre of `box` horizontally by `dx` pixels. */
 async function swipe(page: Page, box: { x: number; y: number; width: number; height: number }, dx: number) {
@@ -24,6 +24,9 @@ async function seedExpense(page: Page, description: string) {
 }
 
 const rowOf = (page: Page, description: string) => page.getByText(description, { exact: true });
+/** Resolves when the API has answered the DELETE for an expense (the undo window closed and the delete committed). */
+const deleteCommitted = (page: Page) =>
+  page.waitForResponse((r) => r.request().method() === "DELETE" && /\/api\/v1\/expenses\/\d+$/.test(r.url()), { timeout: 15_000 });
 const revealedDelete = (page: Page) => page.locator("button", { hasText: "Eliminar" }).first();
 
 test("gestures: swipe a row left, Eliminar, Deshacer brings it back; without undo the delete commits", async ({ page }) => {
@@ -41,12 +44,14 @@ test("gestures: swipe a row left, Eliminar, Deshacer brings it back; without und
   await expect(undo).toBeVisible();
   await undo.tap();
   await expect(rowOf(page, "Tacos gesto")).toBeVisible();
+  await settled(rowOf(page, "Tacos gesto")); // the row has snapped back before it is swiped again
 
-  // Same again without undo: after the 5 s window the DELETE has reached the API, so a reload keeps it gone.
+  // Same again without undo: once the undo window closes the DELETE reaches the API, so a reload keeps it gone.
   await swipe(page, (await rowOf(page, "Tacos gesto").boundingBox())!, -160);
+  const committed = deleteCommitted(page);
   await revealedDelete(page).tap();
   await expect(rowOf(page, "Tacos gesto")).toHaveCount(0);
-  await page.waitForTimeout(5500);
+  expect((await committed).ok()).toBeTruthy();
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByText("Cargando")).toHaveCount(0);
@@ -65,11 +70,13 @@ test("gestures: the menu path (Más → Eliminar) has the same undo and commit b
   await expect(rowOf(page, "Cena menú")).toHaveCount(0);
   await page.getByRole("button", { name: "Deshacer" }).tap();
   await expect(rowOf(page, "Cena menú")).toBeVisible();
+  await settled(rowOf(page, "Cena menú"));
 
   await row.getByRole("button", { name: "Más" }).tap();
+  const committed = deleteCommitted(page);
   await page.getByRole("menuitem", { name: "Eliminar" }).tap();
   await expect(rowOf(page, "Cena menú")).toHaveCount(0);
-  await page.waitForTimeout(5500);
+  expect((await committed).ok()).toBeTruthy();
   await page.reload();
   await expect(page.getByText("Cargando")).toHaveCount(0);
   await expect(rowOf(page, "Cena menú")).toHaveCount(0);
