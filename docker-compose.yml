@@ -7,6 +7,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-finance}
     ports: ["127.0.0.1:${DB_PORT:-5432}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [app]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -21,11 +22,15 @@ services:
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       AUTH_RATE_PER_MIN: ${AUTH_RATE_PER_MIN:-10}
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      # Only the edge proxy is trusted to report the client IP. Not the whole subnet:
+      # traffic to published ports arrives from the network gateway, which must stay untrusted.
+      TRUSTED_PROXIES: 172.28.0.10
     depends_on:
       db:
         condition: service_healthy
+    # Published for local development; direct clients are keyed by their own address.
     ports: ["8080:8080"]
+    networks: [app]
     restart: unless-stopped
   web:
     build:
@@ -35,7 +40,25 @@ services:
     image: financego-web
     depends_on:
       - api
-    ports: ["3000:3000"]
+    # Not published: browsers reach it through the edge.
+    networks: [app]
     restart: unless-stopped
+  edge:
+    image: caddy:2-alpine
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - web
+    ports: ["3000:80"]
+    networks:
+      app:
+        ipv4_address: 172.28.0.10
+    restart: unless-stopped
+networks:
+  app:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
 volumes:
   pgdata:

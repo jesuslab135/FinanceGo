@@ -37,7 +37,7 @@ func accessLog(log *slog.Logger) gin.HandlerFunc {
 		start := time.Now()
 		c.Set(loggerKey, log)
 		c.Next()
-		log.Info("request", "method", c.Request.Method, "route", c.FullPath(), "status", c.Writer.Status(),
+		log.Info("request", "method", c.Request.Method, "route", c.FullPath(), "status", c.Writer.Status(), "client_ip", c.ClientIP(),
 			"duration_ms", time.Since(start).Milliseconds(), "request_id", c.GetString(requestIDKey))
 	}
 }
