@@ -15,6 +15,14 @@ const pairs: Array<[string, string, string, number]> = [
   ["white on primary (light)", "#ffffff", "#b9501f", 4.5],
   ["white on primary (dark)", "#ffffff", "#c4531f", 4.5],
   ["white on critical hero", "#ffffff", "#b42828", 4.5],
+  // Hero: the amount is large bold (3:1) on the held start color or 25% into the blend;
+  // small text sits on a 40% black pill, checked at the gradient end.
+  ["white on hero amount zone (light)", "#ffffff", "#df6f39", 3],
+  ["white on hero amount zone (dark)", "#ffffff", "#c15228", 3],
+  ["white on hero amount zone (critical light)", "#ffffff", "#bd312d", 3],
+  ["white on hero pill, gradient end (light)", "#ffffff", "#8f5c33", 4.5],
+  ["white on hero pill, gradient end (dark)", "#ffffff", "#863e23", 4.5],
+  ["white on hero pill, gradient end (critical light)", "#ffffff", "#822c23", 4.5],
 ];
 
 describe("token contrast (WCAG AA)", () => {

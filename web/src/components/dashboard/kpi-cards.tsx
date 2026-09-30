@@ -1,50 +1,43 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { ArrowDownLeft, Receipt, Repeat, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { useFormatMoney } from "@/components/common/money";
+import { FadeInItem, FadeInList } from "@/components/motion/fade-in-list";
 import type { Summary } from "@/lib/api/types";
 import type { Period } from "@/lib/dates";
-import { cn } from "@/lib/utils";
 
-function Tile({ id, label, value, children, valueClass }: { id: string; label: string; value: string; children?: ReactNode; valueClass?: string }) {
+export function Chip({ id, icon, label, value, children }: { id: string; icon: LucideIcon; label: string; value: string; children?: ReactNode }) {
   return (
-    <div data-kpi={id} className="min-w-0 space-y-1 rounded-xl border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("min-w-0 break-words text-xl font-semibold sm:text-2xl", valueClass)}>{value}</p>
-      {children}
-    </div>
+    <FadeInItem as="div" layout={false} className="min-w-0 space-y-1 rounded-2xl bg-card p-3 shadow-card">
+      <div data-kpi={id} className="min-w-0 space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">{createElement(icon, { className: "size-3.5", "aria-hidden": true })}</span>
+          <p className="min-w-0 text-xs text-muted-foreground">{label}</p>
+        </div>
+        <p className="num min-w-0 break-words font-display text-lg font-bold md:text-xl">{value}</p>
+        {children}
+      </div>
+    </FadeInItem>
   );
 }
 
-export function KpiCards({ summary: s, spent, period }: { summary: Summary; spent: number; period: Period }) {
+export function KpiChips({ summary: s, spent, period }: { summary: Summary; spent: number; period: Period }) {
   const t = useTranslations("dashboard");
   const fmt = useFormatMoney();
-  const negative = s.available < 0;
   const committed = s.fixed_committed + s.installments;
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Tile id="income" label={t("income")} value={fmt(s.income)} />
-      <Tile id="fixed" label={t("fixed")} value={fmt(committed)}>
+    <FadeInList as="div" className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-3 md:gap-3">
+      <Chip id="income" icon={ArrowDownLeft} label={t("income")} value={fmt(s.income)} />
+      <Chip id="fixed" icon={Repeat} label={t("fixed")} value={fmt(committed)}>
         <p className="text-xs text-muted-foreground">{t("fixedDetail", { paid: fmt(s.fixed_paid), pending: fmt(s.fixed_committed - s.fixed_paid) })}</p>
         {s.installments > 0 && <p className="text-xs text-muted-foreground">{t("installments")}: {fmt(s.installments)}</p>}
-      </Tile>
-      <Tile id="spent" label={t(`spent.${period}`)} value={fmt(spent)} />
-      <Tile id="available" label={t("available")} value={fmt(s.available)} valueClass={negative ? "text-critical" : undefined}>
-        {negative ? (
-          <p className="flex items-center gap-1 text-sm font-medium text-critical">
-            <AlertTriangle className="size-4" aria-hidden />
-            {t("overspent")}
-          </p>
-        ) : (
-          s.safe_to_spend_per_day != null && (
-            <p className="text-xs text-muted-foreground">
-              {t("safeToSpend", { amount: fmt(s.safe_to_spend_per_day), days: s.days_remaining ?? 0 })}
-            </p>
-          )
-        )}
-      </Tile>
-    </div>
+      </Chip>
+      <Chip id="spent" icon={Receipt} label={t(`spent.${period}`)} value={fmt(spent)} />
+    </FadeInList>
   );
 }
+
+/** Alias kept until every import uses KpiChips. */
+export const KpiCards = KpiChips;

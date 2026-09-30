@@ -109,6 +109,8 @@
     "confirmPassword": "Type your password to confirm", "language": "Language"
   },
   "dashboard": {
+    "heroLabel": "Left this month", "heroHint": "≈ {amount} a day · {days, plural, one {# day} other {# days}}",
+    "greeting": { "morning": "Good morning, {name}!", "afternoon": "Good afternoon, {name}!", "evening": "Good evening, {name}!" },
     "title": "Overview", "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date", "periodLabel": "Period",
     "income": "Income this month", "fixed": "Fixed this month", "fixedDetail": "{paid} paid · {pending} pending",
     "installments": "Installments this month",

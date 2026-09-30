@@ -109,6 +109,8 @@
     "confirmPassword": "Escribe tu contraseña para confirmar", "language": "Idioma"
   },
   "dashboard": {
+    "heroLabel": "Te quedan este mes", "heroHint": "≈ {amount} al día · {days, plural, one {# día} other {# días}}",
+    "greeting": { "morning": "¡Buenos días, {name}!", "afternoon": "¡Buenas tardes, {name}!", "evening": "¡Buenas noches, {name}!" },
     "title": "Resumen", "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha", "periodLabel": "Periodo",
     "income": "Ingresos del mes", "fixed": "Fijos del mes", "fixedDetail": "{paid} pagado · {pending} pendiente",
     "installments": "MSI del mes",

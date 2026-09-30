@@ -7,11 +7,13 @@ import { BreakdownBars } from "@/components/dashboard/breakdown-bars";
 import { BudgetMeters } from "@/components/dashboard/budget-meters";
 import { QueryError } from "@/components/common/query-error";
 import { CardsDebt } from "@/components/dashboard/cards-debt";
-import { KpiCards } from "@/components/dashboard/kpi-cards";
+import { Greeting } from "@/components/dashboard/greeting";
+import { HeroAvailable } from "@/components/dashboard/hero-available";
+import { KpiChips } from "@/components/dashboard/kpi-cards";
 import { PeriodControls } from "@/components/dashboard/period-controls";
 import { SpendingChart } from "@/components/dashboard/spending-chart";
 import { UpcomingList } from "@/components/dashboard/upcoming-list";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartSkeleton, ChipsSkeleton, HeroSkeleton, ListSkeleton } from "@/components/common/skeletons";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Period } from "@/lib/dates";
 import { useBreakdown, useCategories, useSeries, useSummary } from "@/lib/query/hooks";
@@ -45,15 +47,17 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <Greeting />
         <PeriodControls period={period} anchor={anchorStr} onChange={onChange} />
       </div>
-      {summary.data ? <KpiCards summary={summary.data} spent={spent} period={period} /> : <Skeleton className="h-28 w-full" />}
+      {summary.data ? <HeroAvailable summary={summary.data} /> : summary.error ? null : <HeroSkeleton />}
       {summary.error && <p role="alert" className="text-sm text-destructive">{errMsg(summary.error)}</p>}
+      <div id="insights-slot" />
+      {summary.data ? <KpiChips summary={summary.data} spent={spent} period={period} /> : summary.error ? null : <ChipsSkeleton />}
       <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <div className="min-w-0 lg:col-span-2">
-          {series.error ? <QueryError error={series.error} className="rounded-xl border p-4" /> : series.data ? <SpendingChart points={series.data} period={period} /> : <Skeleton className="h-80 w-full" />}
+          {series.error ? <QueryError error={series.error} className="rounded-xl border p-4" /> : series.data ? <SpendingChart points={series.data} period={period} /> : <ChartSkeleton />}
         </div>
         <UpcomingList />
       </div>
@@ -71,7 +75,7 @@ function Dashboard() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+    <Suspense fallback={<div className="space-y-6"><HeroSkeleton /><ChipsSkeleton /><ListSkeleton rows={3} /></div>}>
       <Dashboard />
     </Suspense>
   );
