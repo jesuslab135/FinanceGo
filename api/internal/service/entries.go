@@ -92,6 +92,11 @@ func (s *Service) UpdateEntry(ctx context.Context, a Actor, id int64, in EntryUp
 		} else {
 			v.Check(in.Status == "pending" || in.Status == "paid" || in.Status == "skipped", "status", "must be pending, paid or skipped")
 		}
+		if in.SettledOn != nil {
+			earliest, latest := e.Month.AddDate(0, 0, -31), s.today(a).AddDate(0, 0, 1)
+			v.Check(!in.SettledOn.Before(earliest) && !in.SettledOn.After(latest), "settled_on",
+				"must be between "+earliest.Format(time.DateOnly)+" and "+latest.Format(time.DateOnly))
+		}
 		if e.Kind == "installment" {
 			v.Check(in.Amount == e.Amount, "amount", "installment amounts are set by the plan")
 			v.Check(eqPtr(in.PaymentMethodID, e.PaymentMethodID), "payment_method_id", "installments stay on the plan's card")

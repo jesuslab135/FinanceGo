@@ -1018,6 +1018,8 @@ paths:
     put:
       consumes:
       - application/json
+      description: settled_on defaults to today; when given it must be between the
+        month's first day minus 31 days and today plus 1 day.
       parameters:
       - description: entry id
         in: path

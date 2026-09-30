@@ -181,7 +181,7 @@ func TestInstallmentPlanStructuralEditDropsPaidRows(t *testing.T) {
 	if len(may) != 1 {
 		t.Fatalf("may %+v", may)
 	}
-	expect[entry](t, h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", may[0].ID), tok, M{"amount": may[0].Amount, "status": "paid", "settled_on": "2026-03-16", "payment_method_id": cc}), 200)
+	expect[entry](t, h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", may[0].ID), tok, M{"amount": may[0].Amount, "status": "paid", "payment_method_id": cc}), 200)
 	body := M{"payment_method_id": cc, "category_id": h.catID(tok, "Entretenimiento"), "description": "TV",
 		"total_amount": 90000, "installments": 3, "purchased_on": "2026-03-16"}
 	expect[plan](t, h.do("PUT", fmt.Sprintf("/api/v1/installment-plans/%d", pl.ID), tok, body), 200)

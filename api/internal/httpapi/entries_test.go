@@ -167,3 +167,24 @@ func TestTemplateEditPropagation(t *testing.T) {
 		t.Fatalf("april not pruned after deactivate: %+v", e)
 	}
 }
+
+// settled_on must fall within [month start - 31 days, today + 1 day].
+func TestEntrySettledOnRange(t *testing.T) {
+	h := newHarness(t) // today 2026-03-15
+	tok := h.signup("settled@example.com")
+	h.fixed(tok, "Renta", 1000000, 1, "2026-01", nil)
+	e := byKind(h.entries(tok, "2026-03"), "fixed")[0]
+	path := fmt.Sprintf("/api/v1/entries/%d", e.ID)
+	for _, bad := range []string{"2026-01-28", "2026-03-17", "2027-03-01"} {
+		r := h.do("PUT", path, tok, M{"amount": 1000000, "status": "paid", "settled_on": bad})
+		if r.Code != 422 || errFields(r)["settled_on"] == "" {
+			t.Fatalf("settled_on %s: %d %s", bad, r.Code, r.Body)
+		}
+	}
+	for _, ok := range []string{"2026-01-29", "2026-03-16"} {
+		got := expect[entry](t, h.do("PUT", path, tok, M{"amount": 1000000, "status": "paid", "settled_on": ok}), 200)
+		if got.SettledOn == nil || *got.SettledOn != ok {
+			t.Fatalf("settled_on %s stored as %v", ok, got.SettledOn)
+		}
+	}
+}
