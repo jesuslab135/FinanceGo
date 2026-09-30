@@ -4,10 +4,15 @@ import type { ReactNode } from "react";
 
 // `ViewTransition` ships in the React canary that Next's App Router bundles, not in the stable React that
 // vitest and jsdom load, so resolve it at runtime and fall back to a plain fragment (navigation just swaps).
-// `default="none"`: the page-level cross-fade is the ::view-transition(root) CSS in globals.css; this boundary
-// only lets named children (the hero amount) morph.
-const ViewTransition = (React as { ViewTransition?: React.ComponentType<{ default?: string; children?: ReactNode }> }).ViewTransition;
+type VTProps = { name?: string; share?: string; enter?: string; exit?: string; default?: string; children?: ReactNode };
+const ViewTransition = (React as { ViewTransition?: React.ComponentType<VTProps> }).ViewTransition;
 
+/** Route boundary: the outgoing page fades out and the incoming one rises in (classes in globals.css). Named children still morph. */
 export function PageTransition({ children }: { children: ReactNode }) {
-  return ViewTransition ? <ViewTransition default="none">{children}</ViewTransition> : <>{children}</>;
+  return ViewTransition ? <ViewTransition enter="vt-rise-in" exit="vt-fade-out" default="none">{children}</ViewTransition> : <>{children}</>;
+}
+
+/** A shared element: the same `name` on two routes morphs between them. `default="none"` keeps it still on unrelated transitions. */
+export function SharedElement({ name, children }: { name: string; children: ReactNode }) {
+  return ViewTransition ? <ViewTransition name={name} share="vt-morph" default="none">{children}</ViewTransition> : <>{children}</>;
 }

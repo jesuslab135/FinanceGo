@@ -21,7 +21,7 @@ export function Sidebar() {
             href={item.href}
             aria-current={isActive(pathname, item) ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-2 py-2 font-display text-sm hover:bg-accent",
+              "flex items-center gap-3 rounded-md px-2 py-2 text-sm hover:bg-accent",
               isActive(pathname, item) && "bg-accent font-medium",
             )}
           >

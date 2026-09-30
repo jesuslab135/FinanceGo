@@ -24,7 +24,7 @@ function TemplateList({ rows, onEdit, onToggle, onAdd, addLabel }: {
   rows: Row[]; onEdit: (r: Row) => void; onToggle: (r: Row) => void; onAdd: () => void; addLabel: string;
 }) {
   const t = useTranslations();
-  if (rows.length === 0) return <EmptyState illustration="recurring" action={<Button onClick={onAdd}><Plus /> {addLabel}</Button>}>{t("common.empty")}</EmptyState>;
+  if (rows.length === 0) return <EmptyState illustration="recurring" action={<Button size="touch" onClick={onAdd}><Plus /> {addLabel}</Button>}>{t("common.empty")}</EmptyState>;
   return (
     <ul className="space-y-2">
       {rows.map((r) => (

@@ -32,7 +32,7 @@ export function QuickAdd({ variant, prefill, open, onOpenChange }: {
           </m.button>
         </Button>
       )}
-      {variant === "button" && <Button className="w-full" onClick={() => setOpen(true)}><Plus /> {t("nav.quickAdd")}</Button>}
+      {variant === "button" && <Button size="touch" className="w-full" onClick={() => setOpen(true)}><Plus /> {t("nav.quickAdd")}</Button>}
       <ResponsiveDialog
         open={isOpen}
         onOpenChange={setOpen}

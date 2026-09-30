@@ -1,6 +1,7 @@
 "use client";
 import { AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { SharedElement } from "@/components/motion/page-transition";
 import { AnimatedAmount } from "@/components/motion/animated-amount";
 import { useFormatMoney } from "@/components/common/money";
 import type { Summary } from "@/lib/api/types";
@@ -15,9 +16,8 @@ export function HeroAvailable({ summary: s, className }: { summary: Summary; cla
   const fmt = useFormatMoney();
   const negative = s.available < 0;
   return (
-    <section
+    <SharedElement name="hero-amount"><section
       data-tone={negative ? "critical" : "brand"}
-      style={{ viewTransitionName: "hero-amount" }}
       className={cn(
         "relative space-y-2 overflow-hidden rounded-[20px] p-5 text-white shadow-card md:p-7",
         negative
@@ -42,6 +42,6 @@ export function HeroAvailable({ summary: s, className }: { summary: Summary; cla
         )
       )}
       <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
-    </section>
+    </section></SharedElement>
   );
 }

@@ -177,10 +177,10 @@
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
 
-/* Page transitions: React's <ViewTransition> (app layout) drives the browser's View Transitions API; without
-   support navigation is a plain swap. The reduced-motion block above turns all of this off. */
-::view-transition-old(root) { animation: 200ms cubic-bezier(.4,0,1,1) both vt-fade-out; }
-::view-transition-new(root) { animation: 200ms cubic-bezier(.2,.8,.2,1) both vt-rise-in; }
+/* Page transitions: React's <ViewTransition> (PageTransition / SharedElement) drives the browser's View
+   Transitions API; without support navigation is a plain swap. The reduced-motion block above turns all of this off. */
+::view-transition-old(.vt-fade-out) { animation: 200ms cubic-bezier(.4,0,1,1) both vt-fade-out; }
+::view-transition-new(.vt-rise-in) { animation: 200ms cubic-bezier(.2,.8,.2,1) both vt-rise-in; }
 @keyframes vt-fade-out { to { opacity: 0; } }
 @keyframes vt-rise-in { from { opacity: 0; transform: translateY(6px); } }
-::view-transition-group(hero-amount) { animation-duration: 280ms; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
+::view-transition-group(.vt-morph) { animation-duration: 280ms; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
