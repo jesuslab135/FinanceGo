@@ -80,7 +80,7 @@ test("cards: a card with records can't be deleted, an unused one can", async ({ 
   const card = { type: "credit", color: "#2a78d6", opening_balance: 0, statement_day: 15, payment_due_day: 5 };
   const used = await post("/payment-methods", { ...card, nickname: "Usada" });
   const unused = await post("/payment-methods", { ...card, nickname: "Sin uso" });
-  const cats: { id: number; kind: string }[] = await (await page.request.get("/api/v1/categories", { headers })).json().then((b) => b.data ?? b);
+  const cats: { id: number; kind: string }[] = await (await page.request.get("/api/v1/categories", { headers })).json().then((b) => b.data ?? b.items ?? b);
   await post("/expenses", { amount: 1000, category_id: cats.find((c) => c.kind === "expense")!.id, payment_method_id: used.id, spent_on: today });
 
   await page.goto(`/es/cards/${used.id}`);

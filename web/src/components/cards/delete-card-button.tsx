@@ -15,14 +15,16 @@ export function DeleteCardButton({ id, onDeleted }: { id: number; onDeleted: () 
   const remove = useDeletePaymentMethod();
   return (
     <ConfirmButton
+      // mutateAsync, not mutate(cb): the success refetch drops the card from the list, which can unmount
+      // this button before per-call callbacks would run.
       onConfirm={() =>
-        remove.mutate(id, {
-          onSuccess: () => {
+        remove.mutateAsync(id).then(
+          () => {
             toast.success(t("deleted"));
             onDeleted();
           },
-          onError: (e) => toast.error(errMsg(e)),
-        })
+          (e: unknown) => toast.error(errMsg(e)),
+        )
       }
     >
       <Button variant="outline" disabled={remove.isPending}><Trash2 /> {t("delete")}</Button>
