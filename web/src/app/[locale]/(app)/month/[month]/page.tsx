@@ -29,14 +29,14 @@ function EntrySection({ title, list }: { title: string; list: Entry[] }) {
         <button
           type="button"
           aria-expanded={open}
-          aria-controls={id}
-          aria-label={t("month.collapse", { section: title })}
+          aria-controls={open ? id : undefined}
           onClick={() => setOpen((o) => !o)}
           className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl text-sm font-medium text-muted-foreground"
         >
           <span className="flex min-w-0 items-center gap-1">
             <ChevronDown aria-hidden className={cn("size-4 shrink-0 transition-transform motion-reduce:transition-none", !open && "-rotate-90")} />
-            <span className="truncate">{title}</span>
+            <span className="sr-only">{t("month.collapse", { section: title })}</span>
+            <span aria-hidden className="truncate">{title}</span>
           </span>
           <Money cents={total} />
         </button>

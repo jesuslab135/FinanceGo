@@ -54,5 +54,5 @@ export function CardTile({ pm, summary, href }: { pm: PaymentMethod; summary?: C
     </div>
   );
 
-  return href ? <Link href={href} className="block max-w-sm rounded-2xl">{tile}</Link> : tile;
+  return href ? <Link href={href} aria-label={`${pm.nickname}${pm.last4 ? ` ···· ${pm.last4}` : ""}`} className="block max-w-sm rounded-2xl">{tile}</Link> : tile;
 }

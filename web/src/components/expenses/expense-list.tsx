@@ -101,6 +101,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
       )}
       {repeating && (
         <QuickAdd
+          key={repeating.id}
           variant="none"
           open={repeatOpen}
           onOpenChange={setRepeatOpen}

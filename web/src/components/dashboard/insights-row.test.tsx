@@ -35,4 +35,11 @@ describe("InsightsRow", () => {
     expect(screen.queryByText("Te pasaste del límite de Comida (120%)")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Ocultar" })).not.toBeInTheDocument();
   });
+
+  it("renders no empty region once every insight is dismissed", () => {
+    localStorage.setItem("fin:insights-dismissed:1", JSON.stringify({ a: toISODate(new Date()), b: toISODate(new Date()) }));
+    const { container } = renderWithProviders(<InsightsRow insights={items} />);
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
+  });
 });

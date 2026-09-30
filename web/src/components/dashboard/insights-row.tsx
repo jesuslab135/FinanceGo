@@ -39,6 +39,8 @@ export function InsightsRow({ insights }: { insights: Insight[] }) {
   };
 
   const visible = insights.filter((i) => dismissed[i.id] !== today);
+  // With everything dismissed, render nothing: an empty labelled region would still leave a gap in the layout.
+  if (visible.length === 0) return null;
 
   return (
     <section aria-label={t("title")}>

@@ -34,7 +34,8 @@ function ThemeChooser() {
   const { theme, setTheme } = useTheme();
   // next-themes only knows the stored choice on the client; render the default until then to match the server HTML.
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
-  const current = mounted && theme ? theme : "system";
+  // An unknown stored value (older build, hand-edited storage) falls back to "system" so one radio stays tabbable.
+  const current = mounted && THEMES.some((o) => o.value === theme) ? theme : "system";
   const move = (e: React.KeyboardEvent, i: number) => {
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
     if (!step) return;

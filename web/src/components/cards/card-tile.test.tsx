@@ -30,6 +30,11 @@ describe("CardTile", () => {
     expect((container.firstChild as HTMLElement).getAttribute("style")).toContain("linear-gradient");
   });
 
+  it("names the card link by nickname and last digits, not the whole card text", () => {
+    renderWithProviders(<CardTile pm={credit} summary={summary} href="/cards/1" />);
+    expect(screen.getByRole("link")).toHaveAccessibleName("BBVA Oro ···· 4242");
+  });
+
   it("renders no meter for a debit card", () => {
     renderWithProviders(<CardTile pm={{ ...credit, type: "debit", network: undefined }} />);
     expect(screen.queryByRole("meter")).toBeNull();
