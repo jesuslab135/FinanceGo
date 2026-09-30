@@ -16,8 +16,11 @@ vi.mock("@/lib/query/hooks", () => ({
   useCategories: () => ({ data: [{ id: 1, name: "Comida", color: "#d9602f", icon: "utensils" }] }),
   usePaymentMethods: () => ({ data: [] }),
   useUpdateExpense: () => ({ mutateAsync: vi.fn() }),
+  useCreateExpense: () => ({ mutateAsync: vi.fn() }),
   useDeleteExpense: () => ({ mutateAsync: removeAsync }),
 }));
+
+vi.mock("@/lib/auth/auth-provider", () => ({ useAuth: () => ({ user: { id: 1 } }) }));
 
 const expense = (id: number, spent_on: string, amount: number, description: string) => ({ id, spent_on, amount, description, category_id: 1 });
 
@@ -58,5 +61,18 @@ describe("ExpenseList", () => {
     toastMock.mock.calls[0][1].action.onClick();
     expect(await screen.findByText("Tacos")).toBeInTheDocument();
     expect(removeAsync).not.toHaveBeenCalled();
+  });
+
+  it("repeats an expense through the row menu, opening the quick add on its details step", async () => {
+    state.expenses = {
+      isPending: false, isError: false, error: null, hasNextPage: false,
+      data: { pages: [{ items: [expense(1, "2026-09-29", 10000, "Tacos")] }] },
+    };
+    renderWithProviders(<ExpenseList filters={{}} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Repetir" }));
+    expect(await screen.findByRole("heading", { name: "Detalles" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Descripción")).toHaveValue("Tacos");
   });
 });

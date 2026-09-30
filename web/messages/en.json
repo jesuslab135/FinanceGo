@@ -57,6 +57,16 @@
     "paymentMethod": "Payment method", "description": "Description", "date": "Date", "noMethod": "No method",
     "loadMore": "Load more", "dayTotal": "Day total", "empty": "No expenses in this range", "searchPlaceholder": "Search description"
   },
+  "quickAdd": {
+    "amount": "How much?",
+    "continue": "Continue",
+    "back": "Back",
+    "backspace": "Delete digit",
+    "category": "On what?",
+    "details": "Details",
+    "suggestCategory": "Category: {name}?",
+    "repeat": "Repeat"
+  },
   "month": {
     "title": "Month", "income": "Income", "fixed": "Fixed payments", "installments": "Interest-free installments",
     "status": { "pending": "Pending", "paid": "Paid", "received": "Received", "skipped": "Skipped" },

@@ -57,6 +57,16 @@
     "paymentMethod": "Método de pago", "description": "Descripción", "date": "Fecha", "noMethod": "Sin método",
     "loadMore": "Cargar más", "dayTotal": "Total del día", "empty": "No hay gastos en este rango", "searchPlaceholder": "Buscar descripción"
   },
+  "quickAdd": {
+    "amount": "¿Cuánto?",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "backspace": "Borrar",
+    "category": "¿En qué?",
+    "details": "Detalles",
+    "suggestCategory": "¿Categoría: {name}?",
+    "repeat": "Repetir"
+  },
   "month": {
     "title": "Mes", "income": "Ingresos", "fixed": "Pagos fijos", "installments": "Meses sin intereses",
     "status": { "pending": "Pendiente", "paid": "Pagado", "received": "Recibido", "skipped": "Omitido" },

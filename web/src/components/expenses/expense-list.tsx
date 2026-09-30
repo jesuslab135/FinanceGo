@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { enUS, es } from "date-fns/locale";
-import { Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import {
   useCategories, useDeleteExpense, useExpenses, usePaymentMethods, useUpdateExpense, type ExpenseFilters,
 } from "@/lib/query/hooks";
 import { ExpenseForm } from "./expense-form";
+import { QuickAdd } from "./quick-add";
 
 export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const t = useTranslations();
@@ -33,6 +34,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
   const update = useUpdateExpense();
   const remove = useDeleteExpense();
   const [editing, setEditing] = useState<Expense | null>(null);
+  const [repeating, setRepeating] = useState<Expense | null>(null);
   const { hidden, request } = useUndoableDelete({ remove: (id) => remove.mutateAsync(id) });
 
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -54,6 +56,7 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
 
   const actionsFor = (e: Expense): RowAction[] => [
     { label: t("common.edit"), icon: Pencil, onSelect: () => setEditing(e) },
+    { label: t("quickAdd.repeat"), icon: Copy, onSelect: () => setRepeating(e) },
     { label: t("common.delete"), icon: Trash2, destructive: true, onSelect: () => request(e.id, t("common.deleted")) },
   ];
 
@@ -93,6 +96,19 @@ export function ExpenseList({ filters }: { filters: ExpenseFilters }) {
         <div className="flex justify-center">
           <Button variant="outline" onClick={() => q.fetchNextPage()} disabled={q.isFetchingNextPage}>{t("expenses.loadMore")}</Button>
         </div>
+      )}
+      {repeating && (
+        <QuickAdd
+          variant="none"
+          open
+          onOpenChange={(o) => !o && setRepeating(null)}
+          prefill={{
+            amount: repeating.amount,
+            category_id: repeating.category_id,
+            payment_method_id: repeating.payment_method_id ?? undefined,
+            description: repeating.description,
+          }}
+        />
       )}
       <ResponsiveDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} title={t("expenses.edit")}>
         {editing && (
