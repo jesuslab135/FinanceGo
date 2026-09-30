@@ -3249,14 +3249,14 @@ export default function RecurringPage() {
   const updateFixed = useUpdateFixedPayment();
   const offFixed = useDeactivateFixedPayment();
 
-  // Reactivation is a full PUT with active=true (the API has no separate endpoint).
+  // Reactivation is a full PUT with active=true and end_month=null: deactivating set end_month to that month (API ruling I2).
   const toggle = (kind: "income" | "fixed", r: Row) => {
     const done = { onSuccess: () => toast.success(t("common.saved")), onError: (e: Error) => toast.error(e.message) };
     if (r.active) return kind === "income" ? offIncome.mutate(r.id, done) : offFixed.mutate(r.id, done);
     const { id, ...rest } = r;
     return kind === "income"
-      ? updateIncome.mutate({ id, ...(rest as IncomeSource), active: true }, done)
-      : updateFixed.mutate({ id, ...(rest as FixedPayment), active: true }, done);
+      ? updateIncome.mutate({ id, ...(rest as IncomeSource), active: true, end_month: null }, done)
+      : updateFixed.mutate({ id, ...(rest as FixedPayment), active: true, end_month: null }, done);
   };
 
   const title = dialog
