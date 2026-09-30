@@ -123,9 +123,10 @@ func (q *Queries) GetPaymentMethod(ctx context.Context, arg GetPaymentMethodPara
 }
 
 const listCreditCards = `-- name: ListCreditCards :many
-SELECT id, user_id, nickname, type, bank, network, last4, color, active, credit_limit, statement_day, payment_due_day, opening_balance, opening_balance_date, created_at, updated_at FROM payment_methods WHERE user_id = $1 AND type = 'credit' AND active ORDER BY nickname, id
+SELECT id, user_id, nickname, type, bank, network, last4, color, active, credit_limit, statement_day, payment_due_day, opening_balance, opening_balance_date, created_at, updated_at FROM payment_methods WHERE user_id = $1 AND type = 'credit' ORDER BY nickname, id
 `
 
+// Includes inactive cards: callers keep those that still carry a balance.
 func (q *Queries) ListCreditCards(ctx context.Context, userID int64) ([]PaymentMethod, error) {
 	rows, err := q.db.Query(ctx, listCreditCards, userID)
 	if err != nil {

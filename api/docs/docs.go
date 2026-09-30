@@ -592,7 +592,7 @@ const docTemplate = `{
                 "tags": [
                     "dashboard"
                 ],
-                "summary": "Debt summary per active credit card",
+                "summary": "Debt summary per active credit card (inactive cards too while they carry a balance)",
                 "responses": {
                     "200": {
                         "description": "OK",

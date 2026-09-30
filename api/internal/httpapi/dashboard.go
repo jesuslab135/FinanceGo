@@ -157,7 +157,7 @@ func (h *handlers) dashboardBreakdown(c *gin.Context) {
 }
 
 // dashboardCards godoc
-// @Summary  Debt summary per active credit card
+// @Summary  Debt summary per active credit card (inactive cards too while they carry a balance)
 // @Tags     dashboard
 // @Produce  json
 // @Security BearerAuth

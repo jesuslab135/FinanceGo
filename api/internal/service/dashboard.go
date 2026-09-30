@@ -82,9 +82,15 @@ func (s *Service) Summary(ctx context.Context, a Actor, month *time.Time) (Summa
 	}
 	for _, r := range rows {
 		out.Budgets = append(out.Budgets, BudgetStatus{CategoryID: r.CategoryID, Name: r.Name, Color: r.Color,
-			Limit: r.MonthlyLimit, Spent: r.Spent, Pct: int32(r.Spent * 100 / r.MonthlyLimit)})
+			Limit: r.MonthlyLimit, Spent: r.Spent, Pct: budgetPct(r.Spent, r.MonthlyLimit)})
 	}
 	return out, nil
+}
+
+// budgetPct is spent as a percentage of limit, clamped to [0, 100000] so it
+// always fits the int32 field.
+func budgetPct(spent, limit int64) int32 {
+	return int32(min(max(spent*100/limit, 0), 100000))
 }
 
 type CategoryBudget struct {
@@ -252,6 +258,8 @@ func (s *Service) Breakdown(ctx context.Context, a Actor, by string, from, to ti
 	return out, nil
 }
 
+// CardsOverview reports every active credit card plus inactive ones that still
+// carry a balance.
 func (s *Service) CardsOverview(ctx context.Context, a Actor) ([]CardSummary, error) {
 	pms, err := s.q.ListCreditCards(ctx, a.UserID)
 	if err != nil {
@@ -265,6 +273,9 @@ func (s *Service) CardsOverview(ctx context.Context, a Actor) ([]CardSummary, er
 			return nil, err
 		}
 		r := st.compute(cards.RelevantCycle(today, st.card.StatementDay, st.card.DueDay))
+		if !pm.Active && r.CurrentBalance == 0 { // retired and settled: nothing to show
+			continue
+		}
 		util, avail := utilization(r.CurrentBalance, pm.CreditLimit)
 		out = append(out, CardSummary{PaymentMethodID: pm.ID, Nickname: pm.Nickname, Color: pm.Color, Last4: pm.Last4,
 			CurrentBalance: r.CurrentBalance, CreditLimit: pm.CreditLimit, AvailableCredit: avail, Utilization: util,

@@ -9,7 +9,8 @@ RETURNING *;
 SELECT * FROM payment_methods WHERE user_id = @user_id ORDER BY active DESC, nickname, id;
 
 -- name: ListCreditCards :many
-SELECT * FROM payment_methods WHERE user_id = @user_id AND type = 'credit' AND active ORDER BY nickname, id;
+-- Includes inactive cards: callers keep those that still carry a balance.
+SELECT * FROM payment_methods WHERE user_id = @user_id AND type = 'credit' ORDER BY nickname, id;
 
 -- name: GetPaymentMethod :one
 SELECT * FROM payment_methods WHERE id = @id AND user_id = @user_id;

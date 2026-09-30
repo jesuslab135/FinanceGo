@@ -931,7 +931,8 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Debt summary per active credit card
+      summary: Debt summary per active credit card (inactive cards too while they
+        carry a balance)
       tags:
       - dashboard
   /dashboard/series:

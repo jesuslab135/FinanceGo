@@ -95,3 +95,40 @@ func TestCardsOverviewAndUpcoming(t *testing.T) {
 	}
 	_ = fmt.Sprint(cc)
 }
+
+// A deactivated card that still owes money stays on the cards overview and in
+// upcoming dues; one with a zero balance drops off.
+func TestCardsOverviewKeepsInactiveCardsWithBalance(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("inactive-cards@example.com")
+	owing := h.creditCard(tok)
+	paidOff := h.creditCard(tok)
+	h.expense(tok, "Comida", 20000, "2026-03-01", "", &owing)
+	for _, id := range []int64{owing, paidOff} {
+		expect[paymentMethod](t, h.do("PUT", fmt.Sprintf("/api/v1/payment-methods/%d", id), tok, M{
+			"nickname": "BBVA Oro", "type": "credit", "credit_limit": 5000000, "statement_day": 15, "payment_due_day": 5,
+			"opening_balance": 0, "opening_balance_date": "2026-01-01", "active": false,
+		}), 200)
+	}
+	cs := expect[list[M]](t, h.do("GET", "/api/v1/dashboard/cards", tok, nil), 200).Items
+	if len(cs) != 1 || cs[0]["payment_method_id"] != float64(owing) || cs[0]["current_balance"] != float64(20000) {
+		t.Fatalf("cards %v", cs)
+	}
+	up := expect[list[M]](t, h.do("GET", "/api/v1/dashboard/upcoming?days=30", tok, nil), 200).Items
+	if len(up) != 1 || up[0]["type"] != "card" || up[0]["amount"] != float64(20000) {
+		t.Fatalf("upcoming %v", up)
+	}
+}
+
+// Budget pct is clamped so a tiny limit cannot overflow int32.
+func TestBudgetPctClamped(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("pct@example.com")
+	food := h.catID(tok, "Comida")
+	expect[M](t, h.do("PUT", fmt.Sprintf("/api/v1/category-budgets/%d", food), tok, M{"monthly_limit": 1}), 200)
+	h.expense(tok, "Comida", 100000000, "2026-03-10", "", nil)
+	s := expect[summary](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200)
+	if len(s.Budgets) != 1 || s.Budgets[0].Pct != 100000 {
+		t.Fatalf("budgets %+v", s.Budgets)
+	}
+}
