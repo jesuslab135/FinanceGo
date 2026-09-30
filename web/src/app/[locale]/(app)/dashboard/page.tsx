@@ -20,6 +20,7 @@ import { UpcomingList } from "@/components/dashboard/upcoming-list";
 import { ChartSkeleton, ChipsSkeleton, HeroSkeleton, ListSkeleton } from "@/components/common/skeletons";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Period } from "@/lib/dates";
+import { useToday } from "@/hooks/use-today";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeInsights } from "@/lib/insights";
 import { useBreakdown, useCardsOverview, useCategories, useIncomeSources, useSeries, useSummary, useUpcoming } from "@/lib/query/hooks";
@@ -65,7 +66,7 @@ function Dashboard() {
   // Insights always look at the real today, independent of the dashboard's anchor date.
   const { user } = useAuth();
   const fmt = useFormatMoney();
-  const today = useMemo(() => new Date(), []);
+  const today = useToday();
   const prevFrom = startOfMonth(subMonths(today, 1));
   const prevTo = minDate([addDays(prevFrom, today.getDate() - 1), endOfMonth(prevFrom)]);
   const summaryNow = useSummary(toMonthKey(today));
@@ -76,14 +77,14 @@ function Dashboard() {
   const upcoming = useUpcoming(7);
   const cards = useCardsOverview();
   const onboardingSkipped = useMemo(() => user != null && readJSON(userKey(user.id, "onboarding-skipped"), false), [user]);
-  // Hold insights until every input is settled and real: never compute from a placeholder of another range.
-  const ready = summaryNow.data && catNow.data && catPrev.data && daily.data && !daily.isPlaceholderData && incomeSources.data && upcoming.data && cards.data;
+  // Each insight uses only the inputs it needs: a loading, failed or placeholder query leaves its input
+  // undefined and hides only the insights that depend on it.
   const insights = useMemo(
-    () => !ready ? [] : computeInsights({
-      today, summary: summaryNow.data, upcoming: upcoming.data ?? [], cards: cards.data ?? [], catNow: catNow.data ?? [], catPrev: catPrev.data ?? [],
-      daily: daily.data ?? [], hasIncome: (incomeSources.data ?? []).some((s) => s.active), onboardingSkipped,
+    () => computeInsights({
+      today, summary: summaryNow.data, upcoming: upcoming.data, cards: cards.data, catNow: catNow.data, catPrev: catPrev.data,
+      daily: daily.isPlaceholderData ? undefined : daily.data, hasIncome: incomeSources.data?.some((s) => s.active), onboardingSkipped,
     }, fmt),
-    [ready, today, summaryNow.data, upcoming.data, cards.data, catNow.data, catPrev.data, daily.data, incomeSources.data, onboardingSkipped, fmt],
+    [today, summaryNow.data, upcoming.data, cards.data, catNow.data, catPrev.data, daily.data, daily.isPlaceholderData, incomeSources.data, onboardingSkipped, fmt],
   );
 
   const onChange = (p: Period, d: string) => router.replace({ pathname, query: { period: p, date: d } });

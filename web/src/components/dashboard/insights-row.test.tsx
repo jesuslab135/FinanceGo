@@ -31,7 +31,8 @@ describe("InsightsRow", () => {
 
   it("stays hidden on remount after a dismissal today", () => {
     localStorage.setItem("fin:insights-dismissed:1", JSON.stringify({ a: toISODate(new Date()), b: toISODate(new Date()) }));
-    const { container } = renderWithProviders(<InsightsRow insights={items} />);
-    expect(container).toBeEmptyDOMElement();
+    renderWithProviders(<InsightsRow insights={items} />);
+    expect(screen.queryByText("Te pasaste del límite de Comida (120%)")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ocultar" })).not.toBeInTheDocument();
   });
 });

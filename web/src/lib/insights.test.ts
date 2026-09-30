@@ -95,4 +95,25 @@ describe("computeInsights", () => {
     expect(r).toHaveLength(3);
     expect(r.map((i) => i.kind)).toEqual(["overdue", "setup", "budget"]);
   });
+
+  it("streak needs at least one day with spending", () => {
+    const daily = ["2026-03-11", "2026-03-12", "2026-03-13", "2026-03-14"].map((d) => ({ start: d, expenses: 0, committed: 0 }));
+    expect(computeInsights({ ...base, daily }, fmt)).toEqual([]);
+  });
+
+  it("overdue link points at the month of the overdue item", () => {
+    const r = computeInsights({ ...base, upcoming: [{ type: "fixed", date: "2026-02-27", name: "Luz", amount: 1, overdue: true, entry_id: 1 }] }, fmt);
+    expect(r[0].href).toBe("/month/2026-02");
+  });
+
+  it("degrades per input: an unavailable input hides only the insights that need it", () => {
+    const upcoming = [{ type: "fixed", date: "2026-03-10", name: "Luz", amount: 1, overdue: true, entry_id: 1 }];
+    const budgets = [{ category_id: 1, name: "A", color: "", limit: 1, spent: 2, pct: 200 }];
+    const r = computeInsights({ ...base, upcoming, summary: { ...summary, budgets }, daily: undefined, cards: undefined, catNow: undefined, catPrev: undefined }, fmt);
+    expect(r.map((i) => i.kind)).toEqual(["overdue", "budget"]);
+    const r2 = computeInsights({ ...base, upcoming: undefined, summary: { ...summary, budgets } }, fmt);
+    expect(r2.map((i) => i.kind)).toEqual(["budget"]);
+    const r3 = computeInsights({ ...base, summary: undefined, hasIncome: undefined, onboardingSkipped: true, upcoming }, fmt);
+    expect(r3.map((i) => i.kind)).toEqual(["overdue"]);
+  });
 });

@@ -6,6 +6,7 @@ import { createElement, useState } from "react";
 import { FadeInItem, FadeInList } from "@/components/motion/fade-in-list";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { useToday } from "@/hooks/use-today";
 import { toISODate } from "@/lib/dates";
 import type { Insight } from "@/lib/insights";
 import { readJSON, userKey, writeJSON } from "@/lib/storage";
@@ -23,22 +24,25 @@ export function InsightsRow({ insights }: { insights: Insight[] }) {
   const t = useTranslations("insights");
   const { user } = useAuth();
   const userId = user?.id ?? 0;
-  const today = toISODate(new Date());
-  const [dismissed, setDismissed] = useState<Dismissed>(() => readJSON<Dismissed>(userKey(userId, "insights-dismissed"), {}));
+  const today = toISODate(useToday());
+  const storageKey = userKey(userId, "insights-dismissed");
+  // Re-read when the user changes (userId is 0 until auth loads).
+  const [store, setStore] = useState(() => ({ key: storageKey, map: readJSON<Dismissed>(storageKey, {}) }));
+  if (store.key !== storageKey) setStore({ key: storageKey, map: readJSON<Dismissed>(storageKey, {}) });
+  const dismissed = store.key === storageKey ? store.map : {};
 
   const dismiss = (id: string) => {
     // Keep only today's entries so the stored map cannot grow without bound.
     const next: Dismissed = { ...Object.fromEntries(Object.entries(dismissed).filter(([, d]) => d === today)), [id]: today };
-    setDismissed(next);
-    writeJSON(userKey(userId, "insights-dismissed"), next);
+    setStore({ key: storageKey, map: next });
+    writeJSON(storageKey, next);
   };
 
   const visible = insights.filter((i) => dismissed[i.id] !== today);
-  if (visible.length === 0) return null;
 
   return (
     <section aria-label={t("title")}>
-      <FadeInList as="div" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 [scrollbar-width:none] md:grid md:grid-cols-3 md:overflow-visible">
+      <FadeInList as="div" className={`flex snap-x snap-mandatory gap-3 overflow-x-auto ${visible.length ? "pb-1" : ""} [scrollbar-width:none] md:grid md:grid-cols-3 md:overflow-visible`}>
         {visible.map((i) => {
           const tone = TONE[i.tone];
           return (

@@ -12,27 +12,28 @@ export type Insight = {
   priority: number;
 };
 
+/** An input that is undefined is unavailable (loading, failed or placeholder); only insights that need it are skipped. */
 export type InsightInput = {
-  today: Date; summary?: Summary; upcoming: UpcomingItem[]; cards: CardSummary[];
-  catNow: BreakdownItem[]; catPrev: BreakdownItem[]; daily: SeriesPoint[];
-  hasIncome: boolean; onboardingSkipped: boolean;
+  today: Date; summary?: Summary; upcoming?: UpcomingItem[]; cards?: CardSummary[];
+  catNow?: BreakdownItem[]; catPrev?: BreakdownItem[]; daily?: SeriesPoint[];
+  hasIncome?: boolean; onboardingSkipped: boolean;
 };
 
 export function computeInsights(i: InsightInput, fmt: (cents: number) => string): Insight[] {
   const out: Insight[] = [];
   const todayISO = toISODate(i.today);
 
-  const overdue = i.upcoming.filter((u) => u.type === "fixed" && u.overdue);
+  const overdue = (i.upcoming ?? []).filter((u) => u.type === "fixed" && u.overdue);
   if (overdue.length) {
     out.push({ id: `overdue-${todayISO}`, kind: "overdue", tone: "critical", messageKey: "insights.overdue",
-      values: { count: overdue.length, name: overdue[0].name }, href: `/month/${todayISO.slice(0, 7)}`, priority: 100 });
+      values: { count: overdue.length, name: overdue[0].name }, href: `/month/${overdue[0].date.slice(0, 7)}`, priority: 100 });
   }
 
-  if (i.onboardingSkipped && !i.hasIncome) {
+  if (i.onboardingSkipped && i.hasIncome === false) {
     out.push({ id: "setup", kind: "setup", tone: "info", messageKey: "insights.setup", values: {}, href: "/welcome", priority: 95 });
   }
 
-  for (const c of i.cards) {
+  for (const c of i.cards ?? []) {
     const days = differenceInCalendarDays(parseISODate(c.due_on), i.today);
     if (c.amount_due > 0 && days >= 0 && days <= 3) {
       out.push({ id: `card-${c.payment_method_id}-${c.due_on}`, kind: "card_due", tone: "warn", messageKey: "insights.cardDue",
@@ -49,7 +50,7 @@ export function computeInsights(i: InsightInput, fmt: (cents: number) => string)
 
   // Day 1-2 have too little data to compare; no income means the 1% floor is meaningless.
   const income = i.summary?.income ?? 0;
-  if (i.today.getDate() >= 3 && income > 0) {
+  if (i.today.getDate() >= 3 && income > 0 && i.catNow && i.catPrev) {
     const prev = new Map(i.catPrev.map((c) => [c.id, c.amount]));
     let up: { name: string; pct: number } | null = null;
     let down: { name: string; pct: number } | null = null;
@@ -66,14 +67,16 @@ export function computeInsights(i: InsightInput, fmt: (cents: number) => string)
   }
 
   const safe = i.summary?.safe_to_spend_per_day;
-  if (safe != null && safe > 0) {
+  if (safe != null && safe > 0 && i.daily) {
     const days = [...i.daily].filter((d) => d.start < todayISO).sort((a, b) => (a.start < b.start ? 1 : -1));
     let streak = 0;
+    let spentAny = false;
     for (const d of days) {
-      if (d.expenses <= safe) streak++;
+      if (d.expenses <= safe) { streak++; if (d.expenses > 0) spentAny = true; }
       else break;
     }
-    if (streak >= 3) out.push({ id: `streak-${todayISO}`, kind: "streak", tone: "good", messageKey: "insights.streak", values: { days: streak }, priority: 30 });
+    // A streak of empty days is no-data, not thrift.
+    if (streak >= 3 && spentAny) out.push({ id: `streak-${todayISO}`, kind: "streak", tone: "good", messageKey: "insights.streak", values: { days: streak }, priority: 30 });
   }
 
   return out.sort((a, b) => b.priority - a.priority).slice(0, 3);
