@@ -42,7 +42,7 @@ describe("CardTile", () => {
   });
 
   it("picks dark ink on light colors and white on dark ones, keeping a dark color unchanged", () => {
-    expect(cardPalette("#fafafa")).toEqual({ from: "#fafafa", ink: "#2a1d14" });
+    expect(cardPalette("#fafafa")).toEqual({ from: "#fafafa", ink: "#2b1a22" });
     expect(cardPalette("#1f4ea8")).toEqual({ from: "#1f4ea8", ink: "#ffffff" });
   });
 });

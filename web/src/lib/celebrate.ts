@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import type { Summary } from "@/lib/api/types";
 
-const COLORS = ["#d9602f", "#ef9a55", "#0a8a74", "#fab219"];
+const COLORS = ["#d6467a", "#e98bab", "#3d5a99", "#fab219"];
 
 export type CelebrationKind = "firstExpense" | "cardPaidOff" | "monthUnderBudget" | "welcome";
 

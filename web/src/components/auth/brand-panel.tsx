@@ -6,8 +6,8 @@ import { formatMoney } from "@/lib/money";
 
 const BARS = [38, 62, 45, 80, 54, 70, 48];
 const ROWS = [
-  { icon: "utensils", label: "food", color: "#d9602f", cents: 18000 },
-  { icon: "shopping-cart", label: "groceries", color: "#0a8a74", cents: 124050 },
+  { icon: "utensils", label: "food", color: "#d6467a", cents: 18000 },
+  { icon: "shopping-cart", label: "groceries", color: "#3d5a99", cents: 124050 },
   { icon: "fuel", label: "fuel", color: "#5b43c2", cents: 65000 },
 ] as const;
 
@@ -54,7 +54,7 @@ export function BrandPanel() {
 function PhonePreview({ money, label, names, budget }: { money: (c: number) => string; label: string; names: string[]; budget: string }) {
   return (
     <div aria-hidden className="relative mx-auto w-[272px] shrink-0 motion-safe:animate-[float_6s_ease-in-out_infinite]">
-      <div className="rotate-[-4deg] rounded-[40px] bg-[#2a1d14] p-2.5 shadow-[0_30px_60px_-20px_rgb(74_45_25/0.45)]">
+      <div className="rotate-[-4deg] rounded-[40px] bg-[#2b1a22] p-2.5 shadow-[0_30px_60px_-20px_rgb(74_30_50/0.45)]">
         <div className="space-y-3 overflow-hidden rounded-[32px] bg-background p-4">
           <div className="mx-auto h-1.5 w-16 rounded-full bg-muted" />
           <div className="rounded-[20px] bg-[linear-gradient(135deg,var(--hero-from)_0%,var(--hero-from)_70%,var(--hero-to)_100%)] p-4 text-white">
@@ -77,7 +77,7 @@ function PhonePreview({ money, label, names, budget }: { money: (c: number) => s
           </div>
         </div>
       </div>
-      <div className="absolute top-[150px] -right-12 w-48 rotate-[5deg] whitespace-nowrap rounded-2xl bg-card p-3 shadow-[0_16px_40px_-12px_rgb(74_45_25/0.35)]">
+      <div className="absolute top-[150px] -right-12 w-48 rotate-[5deg] whitespace-nowrap rounded-2xl bg-card p-3 shadow-[0_16px_40px_-12px_rgb(74_30_50/0.35)]">
         <div className="mb-2 flex items-center gap-2 text-xs font-semibold"><TrendingDown className="size-4 text-[var(--accent-teal)]" />{budget}</div>
         <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full w-[72%] rounded-full bg-[var(--accent-teal)]" /></div>
       </div>

@@ -15,7 +15,7 @@ export function contrastRatio(a: string, b: string): number {
   return (l1 + 0.05) / (l2 + 0.05);
 }
 
-const DARK_INK = "#2a1d14";
+const DARK_INK = "#2b1a22";
 
 function shift(hex: string, target: 0 | 255, p: number): string {
   const h = hex.replace("#", "");
