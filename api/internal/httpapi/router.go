@@ -119,6 +119,11 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.GET("/savings-accounts/:id/valuations", h.listValuations)
 	p.PUT("/savings-accounts/:id/valuations/:date", h.putValuation)
 	p.DELETE("/savings-accounts/:id/valuations/:date", h.deleteValuation)
+	p.GET("/savings-goals", h.listSavingsGoals)
+	p.POST("/savings-goals", h.createSavingsGoal)
+	p.GET("/savings-goals/emergency-suggestion", h.emergencySuggestion)
+	p.PUT("/savings-goals/:id", h.updateSavingsGoal)
+	p.DELETE("/savings-goals/:id", h.deleteSavingsGoal)
 	p.DELETE("/me", authLimit, h.deleteMe) // password check: same budget as login
 	p.GET("/export/expenses.csv", h.exportExpenses)
 	p.GET("/export/entries.csv", h.exportEntries)

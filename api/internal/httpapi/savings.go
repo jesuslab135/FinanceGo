@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -198,4 +199,109 @@ func (h *handlers) deleteValuation(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// listSavingsGoals godoc
+// @Summary  List savings goals with progress and status
+// @Tags     savings
+// @Produce  json
+// @Security BearerAuth
+// @Param    include_archived query bool false "include archived goals"
+// @Success  200 {object} object{items=[]service.SavingsGoal}
+// @Router   /savings-goals [get]
+func (h *handlers) listSavingsGoals(c *gin.Context) {
+	list, err := h.svc.ListSavingsGoals(c.Request.Context(), actorOf(c), c.Query("include_archived") == "true")
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, items(list))
+}
+
+// createSavingsGoal godoc
+// @Summary  Create a savings goal on an account
+// @Tags     savings
+// @Accept   json
+// @Produce  json
+// @Security BearerAuth
+// @Param    body body     service.SavingsGoalInput true "goal"
+// @Success  201  {object} service.SavingsGoal
+// @Failure  422  {object} ErrorResponse
+// @Router   /savings-goals [post]
+func (h *handlers) createSavingsGoal(c *gin.Context) {
+	var in service.SavingsGoalInput
+	if !bind(c, &in) {
+		return
+	}
+	out, err := h.svc.CreateSavingsGoal(c.Request.Context(), actorOf(c), in)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, out)
+}
+
+// updateSavingsGoal godoc
+// @Summary  Replace a goal (its account cannot change)
+// @Tags     savings
+// @Accept   json
+// @Produce  json
+// @Security BearerAuth
+// @Param    id   path     int                      true "goal id"
+// @Param    body body     service.SavingsGoalInput true "goal"
+// @Success  200  {object} service.SavingsGoal
+// @Router   /savings-goals/{id} [put]
+func (h *handlers) updateSavingsGoal(c *gin.Context) {
+	id, ok := pathID(c)
+	var in service.SavingsGoalInput
+	if !ok || !bind(c, &in) {
+		return
+	}
+	out, err := h.svc.UpdateSavingsGoal(c.Request.Context(), actorOf(c), id, in)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, out)
+}
+
+// deleteSavingsGoal godoc
+// @Summary  Delete a goal (its movements stay, untagged)
+// @Tags     savings
+// @Security BearerAuth
+// @Param    id path int true "goal id"
+// @Success  204
+// @Router   /savings-goals/{id} [delete]
+func (h *handlers) deleteSavingsGoal(c *gin.Context) {
+	id, ok := pathID(c)
+	if !ok {
+		return
+	}
+	if err := h.svc.DeleteSavingsGoal(c.Request.Context(), actorOf(c), id); err != nil {
+		fail(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// emergencySuggestion godoc
+// @Summary  Suggested emergency-fund target from recent months
+// @Tags     savings
+// @Produce  json
+// @Security BearerAuth
+// @Param    months query int true "3 or 6"
+// @Success  200 {object} service.EmergencySuggestion
+// @Router   /savings-goals/emergency-suggestion [get]
+func (h *handlers) emergencySuggestion(c *gin.Context) {
+	months, err := strconv.Atoi(c.Query("months"))
+	if err != nil {
+		fail(c, apperr.BadRequest("months: must be an integer"))
+		return
+	}
+	out, err := h.svc.EmergencySuggestion(c.Request.Context(), actorOf(c), months)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, out)
 }

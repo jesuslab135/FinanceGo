@@ -134,3 +134,121 @@ func TestSavingsAccountsAndValuations(t *testing.T) {
 		t.Fatalf("missing account %d", r.Code)
 	}
 }
+
+type savingsGoal struct {
+	ID               int64   `json:"id"`
+	AccountID        int64   `json:"account_id"`
+	Status           string  `json:"status"`
+	Progress         int64   `json:"progress"`
+	Remaining        int64   `json:"remaining"`
+	Pct              int32   `json:"pct"`
+	RequiredMonthly  *int64  `json:"required_monthly"`
+	BehindBy         *int64  `json:"behind_by"`
+	PlannedThisMonth int64   `json:"planned_this_month"`
+	StartMonth       string  `json:"start_month"`
+	AchievedOn       *string `json:"achieved_on"`
+	Archived         bool    `json:"archived"`
+}
+
+func (h *harness) savingsGoal(tok string, body M) savingsGoal {
+	h.t.Helper()
+	return expect[savingsGoal](h.t, h.do("POST", "/api/v1/savings-goals", tok, body), 201)
+}
+
+func (h *harness) goals(tok, q string) []savingsGoal {
+	h.t.Helper()
+	return expect[struct {
+		Items []savingsGoal `json:"items"`
+	}](h.t, h.do("GET", "/api/v1/savings-goals"+q, tok, nil), 200).Items
+}
+
+func TestSavingsGoals(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-goal@example.com")
+	acc := h.savingsAccount(tok, "Cajita", "bank", "Nu", 0, "2026-03-01")
+
+	g := h.savingsGoal(tok, M{"account_id": acc, "name": "Viaje Japón", "target_amount": 12_000_000, "target_date": "2026-12-31"})
+	if g.Status != "on_track" || g.RequiredMonthly == nil || *g.RequiredMonthly != 1_200_000 ||
+		g.PlannedThisMonth != 1_200_000 || g.StartMonth != "2026-03" || g.Remaining != 12_000_000 {
+		t.Fatalf("created %+v", g)
+	}
+
+	bad := []struct {
+		field string
+		body  M
+	}{
+		{"target_date", M{"account_id": acc, "name": "x", "target_amount": 100, "target_date": "2026-02-28"}},
+		{"emergency_months", M{"account_id": acc, "name": "x", "target_amount": 100, "kind": "emergency"}},
+		{"emergency_months", M{"account_id": acc, "name": "x", "target_amount": 100, "kind": "emergency", "emergency_months": 4}},
+		{"emergency_months", M{"account_id": acc, "name": "x", "target_amount": 100, "emergency_months": 3}},
+		{"target_amount", M{"account_id": acc, "name": "x", "target_amount": 0}},
+		{"monthly_amount", M{"account_id": acc, "name": "x", "target_amount": 100, "monthly_amount": 0}},
+		{"name", M{"account_id": acc, "name": "", "target_amount": 100}},
+	}
+	for _, c := range bad {
+		if r := h.do("POST", "/api/v1/savings-goals", tok, c.body); r.Code != 422 || errFields(r)[c.field] == "" {
+			t.Errorf("%s: %d %s", c.field, r.Code, r.Body)
+		}
+	}
+	if r := h.do("POST", "/api/v1/savings-goals", tok, M{"account_id": 999999, "name": "x", "target_amount": 100}); errCode(r) != "invalid_reference" {
+		t.Fatalf("missing account %d %s", r.Code, r.Body)
+	}
+
+	archived := h.savingsAccount(tok, "Vieja", "bank", "BBVA", 0, "2026-03-01")
+	expect[savingsAccount](t, h.do("PUT", fmt.Sprintf("/api/v1/savings-accounts/%d", archived), tok,
+		M{"name": "Vieja", "kind": "bank", "institution": "BBVA", "opening_date": "2026-03-01", "archived": true}), 200)
+	if r := h.do("POST", "/api/v1/savings-goals", tok, M{"account_id": archived, "name": "x", "target_amount": 100}); r.Code != 422 || errFields(r)["account_id"] == "" {
+		t.Fatalf("archived account %d %s", r.Code, r.Body)
+	}
+
+	gurl := fmt.Sprintf("/api/v1/savings-goals/%d", g.ID)
+	upd := M{"account_id": acc, "name": "Viaje Japón", "target_amount": 12_000_000, "target_date": "2026-12-31", "monthly_amount": 500_000}
+	if got := expect[savingsGoal](t, h.do("PUT", gurl, tok, upd), 200); got.PlannedThisMonth != 500_000 {
+		t.Fatalf("monthly amount drives the plan: %+v", got)
+	}
+	other := h.savingsAccount(tok, "Otra", "bank", "Nu", 0, "2026-03-01")
+	upd["account_id"] = other
+	if r := h.do("PUT", gurl, tok, upd); r.Code != 422 || errFields(r)["account_id"] == "" {
+		t.Fatalf("account change %d %s", r.Code, r.Body)
+	}
+	upd["account_id"], upd["archived"] = acc, true
+	expect[savingsGoal](t, h.do("PUT", gurl, tok, upd), 200)
+	if l := h.goals(tok, ""); len(l) != 0 {
+		t.Fatalf("archived goal listed: %+v", l)
+	}
+	if l := h.goals(tok, "?include_archived=true"); len(l) != 1 || !l[0].Archived {
+		t.Fatalf("include_archived: %+v", l)
+	}
+	if r := h.do("DELETE", gurl, tok, nil); r.Code != 204 {
+		t.Fatalf("delete %d", r.Code)
+	}
+	if r := h.do("DELETE", gurl, tok, nil); r.Code != 404 {
+		t.Fatalf("delete twice %d", r.Code)
+	}
+}
+
+func TestSavingsEmergencySuggestion(t *testing.T) {
+	h := newHarness(t) // 2026-03-15: completed months are Dec, Jan, Feb
+	tok := h.signup("sav-emergency@example.com")
+	h.fixed(tok, "Renta", 1_000_000, 1, "2026-01", nil)
+	h.expense(tok, "Comida", 200_000, "2026-02-10", "", nil)
+
+	// Dec has no data and is skipped; Jan 1000000, Feb 1200000 → average 1100000.
+	s := expect[M](t, h.do("GET", "/api/v1/savings-goals/emergency-suggestion?months=3", tok, nil), 200)
+	if s["monthly_need"] != float64(1_100_000) || s["months"] != float64(3) || s["target"] != float64(3_300_000) {
+		t.Fatalf("suggestion %v", s)
+	}
+	if s := expect[M](t, h.do("GET", "/api/v1/savings-goals/emergency-suggestion?months=6", tok, nil), 200); s["target"] != float64(6_600_000) {
+		t.Fatalf("6 months %v", s)
+	}
+	if r := h.do("GET", "/api/v1/savings-goals/emergency-suggestion?months=4", tok, nil); r.Code != 422 {
+		t.Fatalf("months=4 %d", r.Code)
+	}
+
+	// No completed month with data: fall back to the current month (an expense of 12345 → 37035 → rounded up to 40000).
+	fresh := h.signup("sav-emergency-2@example.com")
+	h.expense(fresh, "Comida", 12_345, "2026-03-02", "", nil)
+	if s := expect[M](t, h.do("GET", "/api/v1/savings-goals/emergency-suggestion?months=3", fresh, nil), 200); s["monthly_need"] != float64(12_345) || s["target"] != float64(40_000) {
+		t.Fatalf("fallback %v", s)
+	}
+}
