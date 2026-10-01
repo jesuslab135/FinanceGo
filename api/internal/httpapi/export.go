@@ -52,3 +52,18 @@ func (h *handlers) exportEntries(c *gin.Context) {
 		return h.svc.ExportEntriesCSV(c.Request.Context(), actorOf(c), from, to, buf)
 	})
 }
+
+// exportSavings godoc
+// @Summary  Download savings openings, movements and value updates as CSV
+// @Tags     export
+// @Produce  text/csv
+// @Security BearerAuth
+// @Param    from query string true "YYYY-MM-DD"
+// @Param    to   query string true "YYYY-MM-DD"
+// @Success  200 {file} file
+// @Router   /export/savings.csv [get]
+func (h *handlers) exportSavings(c *gin.Context) {
+	h.sendCSV(c, "savings", func(from, to time.Time, buf *bytes.Buffer) error {
+		return h.svc.ExportSavingsCSV(c.Request.Context(), actorOf(c), from, to, buf)
+	})
+}

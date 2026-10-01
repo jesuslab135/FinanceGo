@@ -40,6 +40,88 @@ definitions:
     - email
     - password
     type: object
+  service.AccountMovement:
+    properties:
+      account_id:
+        type: integer
+      amount:
+        type: integer
+      created_at:
+        type: string
+      goal_id:
+        type: integer
+      id:
+        type: integer
+      kind:
+        enum:
+        - deposit
+        - withdrawal
+        - transfer
+        type: string
+      note:
+        type: string
+      occurred_on:
+        type: string
+      to_account_id:
+        type: integer
+    required:
+    - account_id
+    - amount
+    - created_at
+    - id
+    - kind
+    - note
+    - occurred_on
+    type: object
+  service.AccountMovementInput:
+    properties:
+      account_id:
+        type: integer
+      amount:
+        type: integer
+      goal_id:
+        type: integer
+      kind:
+        enum:
+        - deposit
+        - withdrawal
+        - transfer
+        type: string
+      note:
+        type: string
+      occurred_on:
+        type: string
+      to_account_id:
+        type: integer
+    required:
+    - account_id
+    - amount
+    - kind
+    - occurred_on
+    type: object
+  service.AccountValuation:
+    properties:
+      value:
+        type: integer
+      valued_on:
+        type: string
+    required:
+    - value
+    - valued_on
+    type: object
+  service.AllocationSlice:
+    properties:
+      amount:
+        type: integer
+      kind:
+        type: string
+      pct:
+        type: integer
+    required:
+    - amount
+    - kind
+    - pct
+    type: object
   service.BreakdownItem:
     properties:
       amount:
@@ -189,6 +271,19 @@ definitions:
     - icon
     - kind
     - name
+    type: object
+  service.EmergencySuggestion:
+    properties:
+      monthly_need:
+        type: integer
+      months:
+        type: integer
+      target:
+        type: integer
+    required:
+    - monthly_need
+    - months
+    - target
     type: object
   service.Entry:
     properties:
@@ -462,6 +557,25 @@ definitions:
     - purchased_on
     - total_amount
     type: object
+  service.InsuranceWarning:
+    properties:
+      excess:
+        type: integer
+      institution:
+        type: string
+      kind:
+        type: string
+      limit:
+        type: integer
+      total:
+        type: integer
+    required:
+    - excess
+    - institution
+    - kind
+    - limit
+    - total
+    type: object
   service.PaymentMethod:
     properties:
       active:
@@ -567,6 +681,248 @@ definitions:
     - name
     - password
     - timezone
+    type: object
+  service.SavingsAccount:
+    properties:
+      anchor_date:
+        type: string
+      annual_rate_bp:
+        type: integer
+      archived_on:
+        type: string
+      balance:
+        type: integer
+      color:
+        type: string
+      estimated_yield:
+        type: integer
+      gain:
+        type: integer
+      gain_pct:
+        type: number
+      has_history:
+        type: boolean
+      has_money_history:
+        type: boolean
+      id:
+        type: integer
+      institution:
+        type: string
+      insured:
+        type: boolean
+      kind:
+        type: string
+      name:
+        type: string
+      opening_balance:
+        type: integer
+      opening_date:
+        type: string
+      put_in:
+        type: integer
+      stale:
+        type: boolean
+    required:
+    - anchor_date
+    - balance
+    - color
+    - gain
+    - has_history
+    - has_money_history
+    - id
+    - institution
+    - insured
+    - kind
+    - name
+    - opening_balance
+    - opening_date
+    - put_in
+    - stale
+    type: object
+  service.SavingsAccountDetail:
+    properties:
+      account:
+        $ref: '#/definitions/service.SavingsAccount'
+      goals:
+        items:
+          $ref: '#/definitions/service.SavingsGoal'
+        type: array
+    required:
+    - account
+    - goals
+    type: object
+  service.SavingsAccountInput:
+    properties:
+      annual_rate_bp:
+        type: integer
+      archived:
+        type: boolean
+      color:
+        type: string
+      institution:
+        type: string
+      kind:
+        type: string
+      name:
+        type: string
+      opening_balance:
+        type: integer
+      opening_date:
+        type: string
+    required:
+    - institution
+    - kind
+    - name
+    - opening_date
+    type: object
+  service.SavingsGoal:
+    properties:
+      account_id:
+        type: integer
+      achieved_on:
+        type: string
+      archived:
+        type: boolean
+      behind_by:
+        type: integer
+      color:
+        type: string
+      emergency_months:
+        type: integer
+      icon:
+        type: string
+      id:
+        type: integer
+      kind:
+        type: string
+      monthly_amount:
+        type: integer
+      name:
+        type: string
+      pct:
+        type: integer
+      planned_this_month:
+        type: integer
+      progress:
+        type: integer
+      remaining:
+        type: integer
+      required_monthly:
+        type: integer
+      start_month:
+        type: string
+      status:
+        enum:
+        - achieved
+        - no_date
+        - ahead
+        - on_track
+        - behind
+        type: string
+      target_amount:
+        type: integer
+      target_date:
+        type: string
+    required:
+    - account_id
+    - archived
+    - color
+    - icon
+    - id
+    - kind
+    - name
+    - pct
+    - planned_this_month
+    - progress
+    - remaining
+    - start_month
+    - status
+    - target_amount
+    type: object
+  service.SavingsGoalInput:
+    properties:
+      account_id:
+        type: integer
+      archived:
+        type: boolean
+      color:
+        type: string
+      emergency_months:
+        type: integer
+      icon:
+        type: string
+      kind:
+        type: string
+      monthly_amount:
+        type: integer
+      name:
+        type: string
+      target_amount:
+        type: integer
+      target_date:
+        type: string
+    required:
+    - account_id
+    - name
+    - target_amount
+    type: object
+  service.SavingsMonth:
+    properties:
+      deposited:
+        type: integer
+      planned:
+        type: integer
+      saved:
+        type: integer
+      withdrawn:
+        type: integer
+    required:
+    - deposited
+    - planned
+    - saved
+    - withdrawn
+    type: object
+  service.SavingsOverview:
+    properties:
+      allocation:
+        items:
+          $ref: '#/definitions/service.AllocationSlice'
+        type: array
+      assets:
+        type: integer
+      card_debt:
+        type: integer
+      insurance_warnings:
+        items:
+          $ref: '#/definitions/service.InsuranceWarning'
+        type: array
+      month:
+        $ref: '#/definitions/service.SavingsMonth'
+      net_worth:
+        type: integer
+      udi_value:
+        type: number
+    required:
+    - allocation
+    - assets
+    - card_debt
+    - insurance_warnings
+    - month
+    - net_worth
+    - udi_value
+    type: object
+  service.SavingsPoint:
+    properties:
+      month:
+        type: string
+      put_in:
+        type: integer
+      value:
+        type: integer
+    required:
+    - month
+    - put_in
+    - value
     type: object
   service.SeriesPoint:
     properties:
@@ -707,6 +1063,14 @@ definitions:
         type: string
       safe_to_spend_per_day:
         type: integer
+      saved:
+        type: integer
+      saved_deposited:
+        type: integer
+      saved_planned:
+        type: integer
+      saved_withdrawn:
+        type: integer
       spent:
         type: integer
     required:
@@ -718,6 +1082,10 @@ definitions:
     - income
     - installments
     - month
+    - saved
+    - saved_deposited
+    - saved_planned
+    - saved_withdrawn
     - spent
     type: object
   service.UpcomingItem:
@@ -768,11 +1136,88 @@ definitions:
     - name
     - timezone
     type: object
+  service.ValuationInput:
+    properties:
+      value:
+        type: integer
+    required:
+    - value
+    type: object
 info:
   contact: {}
   title: Finance API
   version: "1.0"
 paths:
+  /account-movements:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: movement
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.AccountMovementInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.AccountMovement'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Record a deposit, withdrawal or transfer
+      tags:
+      - savings
+  /account-movements/{id}:
+    delete:
+      parameters:
+      - description: movement id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a movement
+      tags:
+      - savings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: movement id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: movement
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.AccountMovementInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.AccountMovement'
+      security:
+      - BearerAuth: []
+      summary: Replace a movement
+      tags:
+      - savings
   /auth/login:
     post:
       consumes:
@@ -1414,6 +1859,31 @@ paths:
       summary: Download expenses as CSV
       tags:
       - export
+  /export/savings.csv:
+    get:
+      parameters:
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - BearerAuth: []
+      summary: Download savings openings, movements and value updates as CSV
+      tags:
+      - export
   /fixed-payments:
     get:
       produces:
@@ -1927,6 +2397,395 @@ paths:
       summary: 'Credit-card statement for a cycle (default: the one currently due)'
       tags:
       - cards
+  /savings-accounts:
+    get:
+      parameters:
+      - description: include archived accounts
+        in: query
+        name: include_archived
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.SavingsAccount'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List savings and investment accounts with computed balances
+      tags:
+      - savings
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: account
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.SavingsAccountInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.SavingsAccount'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a savings or investment account
+      tags:
+      - savings
+  /savings-accounts/{id}:
+    delete:
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete an account with no history (409 account_has_history otherwise)
+      tags:
+      - savings
+    get:
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.SavingsAccountDetail'
+      security:
+      - BearerAuth: []
+      summary: One account with its goals
+      tags:
+      - savings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: account
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.SavingsAccountInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.SavingsAccount'
+      security:
+      - BearerAuth: []
+      summary: Replace an account (archived=true archives it; the opening is locked
+        once it has history)
+      tags:
+      - savings
+  /savings-accounts/{id}/movements:
+    get:
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: YYYY-MM-DD
+        in: query
+        name: from
+        type: string
+      - description: YYYY-MM-DD
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.AccountMovement'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: An account's movements (both sides of transfers), newest first
+      tags:
+      - savings
+  /savings-accounts/{id}/valuations:
+    get:
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.AccountValuation'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: An account's value updates, newest first
+      tags:
+      - savings
+  /savings-accounts/{id}/valuations/{date}:
+    delete:
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: YYYY-MM-DD
+        in: path
+        name: date
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a value update
+      tags:
+      - savings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: account id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: YYYY-MM-DD
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: value
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.ValuationInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.AccountValuation'
+      security:
+      - BearerAuth: []
+      summary: Record the account's value on a date (one per day; replaces)
+      tags:
+      - savings
+  /savings-goals:
+    get:
+      parameters:
+      - description: include archived goals
+        in: query
+        name: include_archived
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.SavingsGoal'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List savings goals with progress and status
+      tags:
+      - savings
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: goal
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.SavingsGoalInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/service.SavingsGoal'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a savings goal on an account
+      tags:
+      - savings
+  /savings-goals/{id}:
+    delete:
+      parameters:
+      - description: goal id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a goal (its movements stay, untagged)
+      tags:
+      - savings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: goal id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: goal
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.SavingsGoalInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.SavingsGoal'
+      security:
+      - BearerAuth: []
+      summary: Replace a goal (its account cannot change)
+      tags:
+      - savings
+  /savings-goals/emergency-suggestion:
+    get:
+      parameters:
+      - description: 3 or 6
+        in: query
+        name: months
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.EmergencySuggestion'
+      security:
+      - BearerAuth: []
+      summary: Suggested emergency-fund target from recent months
+      tags:
+      - savings
+  /savings/overview:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.SavingsOverview'
+      security:
+      - BearerAuth: []
+      summary: Net worth, this month's savings, allocation and insurance warnings
+      tags:
+      - savings
+  /savings/series:
+    get:
+      parameters:
+      - description: YYYY-MM
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: YYYY-MM
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              items:
+                items:
+                  $ref: '#/definitions/service.SavingsPoint'
+                type: array
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Month-end value and money put in, per month (at most 24 months)
+      tags:
+      - savings
 securityDefinitions:
   BearerAuth:
     in: header

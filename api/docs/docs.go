@@ -15,6 +15,120 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/account-movements": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Record a deposit, withdrawal or transfer",
+                "parameters": [
+                    {
+                        "description": "movement",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.AccountMovementInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/service.AccountMovement"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/account-movements/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Replace a movement",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movement id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "movement",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.AccountMovementInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.AccountMovement"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Delete a movement",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movement id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "consumes": [
@@ -1044,6 +1158,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/export/savings.csv": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "export"
+                ],
+                "summary": "Download savings openings, movements and value updates as CSV",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/fixed-payments": {
             "get": {
                 "security": [
@@ -1870,6 +2024,636 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/savings-accounts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "List savings and investment accounts with computed balances",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "include archived accounts",
+                        "name": "include_archived",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/service.SavingsAccount"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Create a savings or investment account",
+                "parameters": [
+                    {
+                        "description": "account",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsAccountInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsAccount"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/savings-accounts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "One account with its goals",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsAccountDetail"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Replace an account (archived=true archives it; the opening is locked once it has history)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "account",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsAccountInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsAccount"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Delete an account with no history (409 account_has_history otherwise)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/savings-accounts/{id}/movements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "An account's movements (both sides of transfers), newest first",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/service.AccountMovement"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/savings-accounts/{id}/valuations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "An account's value updates, newest first",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/service.AccountValuation"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/savings-accounts/{id}/valuations/{date}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Record the account's value on a date (one per day; replaces)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "date",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "value",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.ValuationInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.AccountValuation"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Delete a value update",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "account id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM-DD",
+                        "name": "date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/savings-goals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "List savings goals with progress and status",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "include archived goals",
+                        "name": "include_archived",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/service.SavingsGoal"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Create a savings goal on an account",
+                "parameters": [
+                    {
+                        "description": "goal",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsGoalInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsGoal"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/savings-goals/emergency-suggestion": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Suggested emergency-fund target from recent months",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "3 or 6",
+                        "name": "months",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.EmergencySuggestion"
+                        }
+                    }
+                }
+            }
+        },
+        "/savings-goals/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Replace a goal (its account cannot change)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "goal id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "goal",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsGoalInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsGoal"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Delete a goal (its movements stay, untagged)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "goal id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/savings/overview": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Net worth, this month's savings, allocation and insurance warnings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.SavingsOverview"
+                        }
+                    }
+                }
+            }
+        },
+        "/savings/series": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "savings"
+                ],
+                "summary": "Month-end value and money put in, per month (at most 24 months)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "YYYY-MM",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/service.SavingsPoint"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1932,6 +2716,123 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "service.AccountMovement": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "amount",
+                "created_at",
+                "id",
+                "kind",
+                "note",
+                "occurred_on"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "goal_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "deposit",
+                        "withdrawal",
+                        "transfer"
+                    ]
+                },
+                "note": {
+                    "type": "string"
+                },
+                "occurred_on": {
+                    "type": "string"
+                },
+                "to_account_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.AccountMovementInput": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "amount",
+                "kind",
+                "occurred_on"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "amount": {
+                    "type": "integer"
+                },
+                "goal_id": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "deposit",
+                        "withdrawal",
+                        "transfer"
+                    ]
+                },
+                "note": {
+                    "type": "string"
+                },
+                "occurred_on": {
+                    "type": "string"
+                },
+                "to_account_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.AccountValuation": {
+            "type": "object",
+            "required": [
+                "value",
+                "valued_on"
+            ],
+            "properties": {
+                "value": {
+                    "type": "integer"
+                },
+                "valued_on": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.AllocationSlice": {
+            "type": "object",
+            "required": [
+                "amount",
+                "kind",
+                "pct"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "pct": {
+                    "type": "integer"
                 }
             }
         },
@@ -2147,6 +3048,25 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "service.EmergencySuggestion": {
+            "type": "object",
+            "required": [
+                "monthly_need",
+                "months",
+                "target"
+            ],
+            "properties": {
+                "monthly_need": {
+                    "type": "integer"
+                },
+                "months": {
+                    "type": "integer"
+                },
+                "target": {
+                    "type": "integer"
                 }
             }
         },
@@ -2539,6 +3459,33 @@ const docTemplate = `{
                 }
             }
         },
+        "service.InsuranceWarning": {
+            "type": "object",
+            "required": [
+                "excess",
+                "institution",
+                "kind",
+                "limit",
+                "total"
+            ],
+            "properties": {
+                "excess": {
+                    "type": "integer"
+                },
+                "institution": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "service.PaymentMethod": {
             "type": "object",
             "required": [
@@ -2689,6 +3636,349 @@ const docTemplate = `{
                 },
                 "timezone": {
                     "type": "string"
+                }
+            }
+        },
+        "service.SavingsAccount": {
+            "type": "object",
+            "required": [
+                "anchor_date",
+                "balance",
+                "color",
+                "gain",
+                "has_history",
+                "has_money_history",
+                "id",
+                "institution",
+                "insured",
+                "kind",
+                "name",
+                "opening_balance",
+                "opening_date",
+                "put_in",
+                "stale"
+            ],
+            "properties": {
+                "anchor_date": {
+                    "type": "string"
+                },
+                "annual_rate_bp": {
+                    "type": "integer"
+                },
+                "archived_on": {
+                    "type": "string"
+                },
+                "balance": {
+                    "type": "integer"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "estimated_yield": {
+                    "type": "integer"
+                },
+                "gain": {
+                    "type": "integer"
+                },
+                "gain_pct": {
+                    "type": "number"
+                },
+                "has_history": {
+                    "type": "boolean"
+                },
+                "has_money_history": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "institution": {
+                    "type": "string"
+                },
+                "insured": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opening_balance": {
+                    "type": "integer"
+                },
+                "opening_date": {
+                    "type": "string"
+                },
+                "put_in": {
+                    "type": "integer"
+                },
+                "stale": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "service.SavingsAccountDetail": {
+            "type": "object",
+            "required": [
+                "account",
+                "goals"
+            ],
+            "properties": {
+                "account": {
+                    "$ref": "#/definitions/service.SavingsAccount"
+                },
+                "goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.SavingsGoal"
+                    }
+                }
+            }
+        },
+        "service.SavingsAccountInput": {
+            "type": "object",
+            "required": [
+                "institution",
+                "kind",
+                "name",
+                "opening_date"
+            ],
+            "properties": {
+                "annual_rate_bp": {
+                    "type": "integer"
+                },
+                "archived": {
+                    "type": "boolean"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "institution": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opening_balance": {
+                    "type": "integer"
+                },
+                "opening_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.SavingsGoal": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "archived",
+                "color",
+                "icon",
+                "id",
+                "kind",
+                "name",
+                "pct",
+                "planned_this_month",
+                "progress",
+                "remaining",
+                "start_month",
+                "status",
+                "target_amount"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "achieved_on": {
+                    "type": "string"
+                },
+                "archived": {
+                    "type": "boolean"
+                },
+                "behind_by": {
+                    "type": "integer"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "emergency_months": {
+                    "type": "integer"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "monthly_amount": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pct": {
+                    "type": "integer"
+                },
+                "planned_this_month": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "remaining": {
+                    "type": "integer"
+                },
+                "required_monthly": {
+                    "type": "integer"
+                },
+                "start_month": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "achieved",
+                        "no_date",
+                        "ahead",
+                        "on_track",
+                        "behind"
+                    ]
+                },
+                "target_amount": {
+                    "type": "integer"
+                },
+                "target_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.SavingsGoalInput": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "name",
+                "target_amount"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "archived": {
+                    "type": "boolean"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "emergency_months": {
+                    "type": "integer"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "monthly_amount": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "target_amount": {
+                    "type": "integer"
+                },
+                "target_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.SavingsMonth": {
+            "type": "object",
+            "required": [
+                "deposited",
+                "planned",
+                "saved",
+                "withdrawn"
+            ],
+            "properties": {
+                "deposited": {
+                    "type": "integer"
+                },
+                "planned": {
+                    "type": "integer"
+                },
+                "saved": {
+                    "type": "integer"
+                },
+                "withdrawn": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.SavingsOverview": {
+            "type": "object",
+            "required": [
+                "allocation",
+                "assets",
+                "card_debt",
+                "insurance_warnings",
+                "month",
+                "net_worth",
+                "udi_value"
+            ],
+            "properties": {
+                "allocation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.AllocationSlice"
+                    }
+                },
+                "assets": {
+                    "type": "integer"
+                },
+                "card_debt": {
+                    "type": "integer"
+                },
+                "insurance_warnings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.InsuranceWarning"
+                    }
+                },
+                "month": {
+                    "$ref": "#/definitions/service.SavingsMonth"
+                },
+                "net_worth": {
+                    "type": "integer"
+                },
+                "udi_value": {
+                    "type": "number"
+                }
+            }
+        },
+        "service.SavingsPoint": {
+            "type": "object",
+            "required": [
+                "month",
+                "put_in",
+                "value"
+            ],
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "put_in": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "integer"
                 }
             }
         },
@@ -2864,6 +4154,10 @@ const docTemplate = `{
                 "income",
                 "installments",
                 "month",
+                "saved",
+                "saved_deposited",
+                "saved_planned",
+                "saved_withdrawn",
                 "spent"
             ],
             "properties": {
@@ -2898,6 +4192,18 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "safe_to_spend_per_day": {
+                    "type": "integer"
+                },
+                "saved": {
+                    "type": "integer"
+                },
+                "saved_deposited": {
+                    "type": "integer"
+                },
+                "saved_planned": {
+                    "type": "integer"
+                },
+                "saved_withdrawn": {
                     "type": "integer"
                 },
                 "spent": {
@@ -2970,6 +4276,17 @@ const docTemplate = `{
                 },
                 "timezone": {
                     "type": "string"
+                }
+            }
+        },
+        "service.ValuationInput": {
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "type": "integer"
                 }
             }
         }

@@ -41,6 +41,7 @@ All services share the `app` compose network (172.28.0.0/24). `edge` has the fix
 | `API_PORT` | `8080` | |
 | `COOKIE_SECURE` | `true` | set `false` only for plain-HTTP local dev |
 | `AUTH_RATE_PER_MIN` | `10` | per-IP limit on `/auth/*` and `DELETE /me` |
+| `UDI_VALUE` | `8.70` | Pesos per UDI, used for the IPAB (400,000 UDI) and PROSOFIPO (25,000 UDI) insurance warnings. Update it a few times a year from Banxico's published UDI value. |
 | `TRUSTED_PROXIES` | empty (trust none) | comma-separated IPs/CIDRs of reverse proxies whose `X-Forwarded-For` is honored for the client IP (rate limiting). Set it to your proxy's address when running behind one, otherwise every client shares the proxy's bucket. `docker-compose.yml` sets it to the edge (172.28.0.10) and ignores `.env` |
 
 The compose file publishes Postgres on `127.0.0.1:5432` only.

@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -535,5 +536,114 @@ func TestSavingsGoalDeleteKeepsMovements(t *testing.T) {
 	}
 	if s := expect[summarySaved](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200); s.SavedPlanned != 0 || s.Saved != 5_000 {
 		t.Fatalf("summary after delete %+v", s)
+	}
+}
+
+func TestSavingsExportCSV(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-csv@example.com")
+	a := h.savingsAccount(tok, "Cajita", "bank", "Nu", 100_000, "2026-03-01")
+	b := h.savingsAccount(tok, "=GBM", "broker", "GBM", 0, "2026-03-01") // formula-looking name must be neutralized
+	g := h.savingsGoal(tok, M{"account_id": a, "name": "Japón", "target_amount": 1_000_000}).ID
+	h.move(tok, M{"account_id": a, "kind": "deposit", "goal_id": g, "amount": 2_500, "occurred_on": "2026-03-02", "note": "quincena"})
+	h.move(tok, M{"account_id": a, "kind": "transfer", "to_account_id": b, "amount": 1_000, "occurred_on": "2026-03-03"})
+	expect[valuation](t, h.do("PUT", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-04", a), tok, M{"value": 101_600}), 200)
+
+	r := h.do("GET", "/api/v1/export/savings.csv?from=2026-03-01&to=2026-03-31", tok, nil)
+	if r.Code != 200 || !strings.Contains(r.Header.Get("Content-Disposition"), "savings_2026-03-01_2026-03-31.csv") {
+		t.Fatalf("%d %v", r.Code, r.Header)
+	}
+	body := strings.TrimPrefix(string(r.Body), "\ufeff")
+	lines := strings.Split(strings.TrimSpace(body), "\n")
+	want := []string{
+		"date,account,type,goal,amount,note",
+		"2026-03-01,Cajita,opening,,1000.00,",
+		"2026-03-01,'=GBM,opening,,0.00,",
+		"2026-03-02,Cajita,deposit,Japón,25.00,quincena",
+		"2026-03-03,Cajita,transfer_out,,10.00,",
+		"2026-03-03,'=GBM,transfer_in,,10.00,",
+		"2026-03-04,Cajita,valuation,,1016.00,",
+	}
+	if len(lines) != len(want) {
+		t.Fatalf("lines:\n%s", body)
+	}
+	for i := range want {
+		if strings.TrimRight(lines[i], "\r") != want[i] {
+			t.Errorf("line %d = %q, want %q", i, lines[i], want[i])
+		}
+	}
+}
+
+func TestSavingsCrossTenant(t *testing.T) {
+	h := newHarness(t)
+	a := h.signup("sav-alice@example.com")
+	b := h.signup("sav-bob@example.com")
+	aAcc := h.savingsAccount(a, "A", "bank", "Nu", 1_000, "2026-03-01")
+	aGoal := h.savingsGoal(a, M{"account_id": aAcc, "name": "G", "target_amount": 100}).ID
+	aMove := h.move(a, M{"account_id": aAcc, "kind": "deposit", "amount": 100, "occurred_on": "2026-03-02"})
+	expect[valuation](t, h.do("PUT", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-03", aAcc), a, M{"value": 1}), 200)
+	bAcc := h.savingsAccount(b, "B", "bank", "Nu", 1_000, "2026-03-01")
+
+	accBody := M{"name": "x", "kind": "bank", "institution": "x", "opening_date": "2026-03-01"}
+	moveBody := M{"account_id": bAcc, "kind": "deposit", "amount": 1, "occurred_on": "2026-03-02"}
+	for _, c := range []struct {
+		method, path string
+		body         any
+	}{
+		{"GET", fmt.Sprintf("/api/v1/savings-accounts/%d", aAcc), nil},
+		{"PUT", fmt.Sprintf("/api/v1/savings-accounts/%d", aAcc), accBody},
+		{"DELETE", fmt.Sprintf("/api/v1/savings-accounts/%d", aAcc), nil},
+		{"GET", fmt.Sprintf("/api/v1/savings-accounts/%d/movements", aAcc), nil},
+		{"GET", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations", aAcc), nil},
+		{"PUT", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-03", aAcc), M{"value": 5}},
+		{"DELETE", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-03", aAcc), nil},
+		{"PUT", fmt.Sprintf("/api/v1/savings-goals/%d", aGoal), M{"account_id": bAcc, "name": "x", "target_amount": 1}},
+		{"DELETE", fmt.Sprintf("/api/v1/savings-goals/%d", aGoal), nil},
+		{"PUT", fmt.Sprintf("/api/v1/account-movements/%d", aMove), moveBody},
+		{"DELETE", fmt.Sprintf("/api/v1/account-movements/%d", aMove), nil},
+	} {
+		if r := h.do(c.method, c.path, b, c.body); r.Code != 404 {
+			t.Errorf("%s %s: %d", c.method, c.path, r.Code)
+		}
+	}
+	for field, body := range map[string]M{
+		"account_id":    {"account_id": aAcc, "kind": "deposit", "amount": 1, "occurred_on": "2026-03-02"},
+		"to_account_id": {"account_id": bAcc, "kind": "transfer", "to_account_id": aAcc, "amount": 1, "occurred_on": "2026-03-02"},
+		"goal_id":       {"account_id": bAcc, "kind": "deposit", "goal_id": aGoal, "amount": 1, "occurred_on": "2026-03-02"},
+	} {
+		if r := h.do("POST", "/api/v1/account-movements", b, body); errCode(r) != "invalid_reference" || errFields(r)[field] == "" {
+			t.Errorf("movement %s: %d %s", field, r.Code, r.Body)
+		}
+	}
+	if r := h.do("POST", "/api/v1/savings-goals", b, M{"account_id": aAcc, "name": "x", "target_amount": 1}); errCode(r) != "invalid_reference" {
+		t.Errorf("goal on A's account: %d %s", r.Code, r.Body)
+	}
+	if l := h.goals(b, "?include_archived=true"); len(l) != 0 {
+		t.Errorf("B sees goals %+v", l)
+	}
+	if o := expect[M](t, h.do("GET", "/api/v1/savings/overview", b, nil), 200); o["assets"] != float64(1_000) {
+		t.Errorf("B overview %v", o)
+	}
+	// A's data is untouched.
+	if acc := h.getAccount(a, aAcc); acc.Balance != 1 {
+		t.Errorf("A balance %+v", acc)
+	}
+}
+
+func TestDeleteMeRemovesSavings(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-bye@example.com")
+	acc := h.savingsAccount(tok, "A", "bank", "Nu", 1_000, "2026-03-01")
+	g := h.savingsGoal(tok, M{"account_id": acc, "name": "G", "target_amount": 100}).ID
+	h.move(tok, M{"account_id": acc, "kind": "deposit", "goal_id": g, "amount": 100, "occurred_on": "2026-03-02"})
+	expect[valuation](t, h.do("PUT", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-03", acc), tok, M{"value": 1}), 200)
+	if r := h.do("DELETE", "/api/v1/me", tok, M{"password": "password123"}); r.Code != 204 {
+		t.Fatalf("delete me %d %s", r.Code, r.Body)
+	}
+	var n int
+	err := h.pool.QueryRow(t.Context(), `SELECT (SELECT count(*) FROM savings_accounts) + (SELECT count(*) FROM savings_goals)
+		+ (SELECT count(*) FROM account_movements) + (SELECT count(*) FROM account_valuations)`).Scan(&n)
+	if err != nil || n != 0 {
+		t.Fatalf("savings rows left: %d (err %v)", n, err)
 	}
 }
