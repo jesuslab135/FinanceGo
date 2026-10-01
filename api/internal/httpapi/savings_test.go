@@ -647,3 +647,89 @@ func TestDeleteMeRemovesSavings(t *testing.T) {
 		t.Fatalf("savings rows left: %d (err %v)", n, err)
 	}
 }
+
+func TestSavingsArchiveAccountArchivesGoals(t *testing.T) {
+	h := newHarness(t) // clock: 2026-03-15
+	tok := h.signup("sav-arch@example.com")
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 0, "2026-03-01")
+	g := h.savingsGoal(tok, M{"account_id": a, "name": "G", "target_amount": 10_000_000, "monthly_amount": 200_000})
+	aurl := fmt.Sprintf("/api/v1/savings-accounts/%d", a)
+	acc := M{"name": "A", "kind": "bank", "institution": "Nu", "opening_date": "2026-03-01", "archived": true}
+	expect[savingsAccount](t, h.do("PUT", aurl, tok, acc), 200)
+
+	if got := h.goalByID(tok, g.ID); !got.Archived {
+		t.Fatalf("archiving the account must archive its goals: %+v", got)
+	}
+	s := expect[summarySaved](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200)
+	if s.SavedPlanned != 0 {
+		t.Fatalf("archived account's goals must not plan: %+v", s)
+	}
+	gurl := fmt.Sprintf("/api/v1/savings-goals/%d", g.ID)
+	upd := M{"account_id": a, "name": "G", "target_amount": 10_000_000, "monthly_amount": 200_000, "archived": false}
+	if r := h.do("PUT", gurl, tok, upd); r.Code != 422 || errFields(r)["account_id"] != "is archived" {
+		t.Fatalf("unarchive goal on archived account %d %s", r.Code, r.Body)
+	}
+
+	// Un-archiving the account does not un-archive its goals; then the goal can be un-archived.
+	acc["archived"] = false
+	expect[savingsAccount](t, h.do("PUT", aurl, tok, acc), 200)
+	if got := h.goalByID(tok, g.ID); !got.Archived {
+		t.Fatalf("un-archiving the account must leave goals archived: %+v", got)
+	}
+	if got := expect[savingsGoal](t, h.do("PUT", gurl, tok, upd), 200); got.Archived {
+		t.Fatalf("goal un-archive %+v", got)
+	}
+}
+
+func TestSavingsDeletesAndEditsCannotOverdraw(t *testing.T) {
+	h := newHarness(t) // clock: 2026-03-15
+	tok := h.signup("sav-overdraw@example.com")
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 0, "2026-03-01")
+	movs := func() int {
+		return len(expect[struct {
+			Items []M `json:"items"`
+		}](t, h.do("GET", fmt.Sprintf("/api/v1/savings-accounts/%d/movements", a), tok, nil), 200).Items)
+	}
+
+	dep := h.move(tok, M{"account_id": a, "kind": "deposit", "amount": 1000, "occurred_on": "2026-03-02"})
+	h.move(tok, M{"account_id": a, "kind": "withdrawal", "amount": 1000, "occurred_on": "2026-03-03"})
+	durl := fmt.Sprintf("/api/v1/account-movements/%d", dep)
+	if r := h.do("DELETE", durl, tok, nil); errCode(r) != "insufficient_balance" {
+		t.Fatalf("delete deposit %d %s", r.Code, r.Body)
+	}
+	if n := movs(); n != 2 {
+		t.Fatalf("the deposit must still exist: %d movements", n)
+	}
+	if r := h.do("PUT", durl, tok, M{"account_id": a, "kind": "deposit", "amount": 999, "occurred_on": "2026-03-02"}); errCode(r) != "insufficient_balance" {
+		t.Fatalf("lower deposit %d %s", r.Code, r.Body)
+	}
+	b := h.savingsAccount(tok, "B", "bank", "Klar", 0, "2026-03-01")
+	if r := h.do("PUT", durl, tok, M{"account_id": b, "kind": "deposit", "amount": 1000, "occurred_on": "2026-03-02"}); errCode(r) != "insufficient_balance" {
+		t.Fatalf("move deposit away %d %s", r.Code, r.Body)
+	}
+	if acc := h.getAccount(tok, a); acc.Balance != 0 {
+		t.Fatalf("balance after rejected edits %+v", acc)
+	}
+	expect[M](t, h.do("PUT", durl, tok, M{"account_id": a, "kind": "deposit", "amount": 1500, "occurred_on": "2026-03-02"}), 200)
+
+	// A transfer into C whose destination is changed while C has spent it.
+	c := h.savingsAccount(tok, "C", "bank", "BBVA", 0, "2026-03-01")
+	tr := h.move(tok, M{"account_id": a, "kind": "transfer", "to_account_id": c, "amount": 500, "occurred_on": "2026-03-04"})
+	h.move(tok, M{"account_id": c, "kind": "withdrawal", "amount": 500, "occurred_on": "2026-03-05"})
+	if r := h.do("PUT", fmt.Sprintf("/api/v1/account-movements/%d", tr), tok,
+		M{"account_id": a, "kind": "transfer", "to_account_id": b, "amount": 500, "occurred_on": "2026-03-04"}); errCode(r) != "insufficient_balance" {
+		t.Fatalf("change transfer destination %d %s", r.Code, r.Body)
+	}
+
+	// The valuation is the only thing backing the later withdrawal.
+	v := h.savingsAccount(tok, "V", "fund", "GBM", 0, "2026-03-01")
+	vurl := fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-05", v)
+	expect[valuation](t, h.do("PUT", vurl, tok, M{"value": 100_000}), 200)
+	h.move(tok, M{"account_id": v, "kind": "withdrawal", "amount": 100_000, "occurred_on": "2026-03-10"})
+	if r := h.do("DELETE", vurl, tok, nil); errCode(r) != "insufficient_balance" {
+		t.Fatalf("delete valuation %d %s", r.Code, r.Body)
+	}
+	if acc := h.getAccount(tok, v); acc.Balance != 0 || !acc.HasMoneyHistory {
+		t.Fatalf("valuation must still exist %+v", acc)
+	}
+}

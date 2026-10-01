@@ -36,6 +36,10 @@ RETURNING *;
 -- name: SetSavingsGoalAchieved :exec
 UPDATE savings_goals SET achieved_on = sqlc.narg(achieved_on), updated_at = now() WHERE id = @id AND user_id = @user_id;
 
+-- name: ArchiveGoalsOfAccount :exec
+UPDATE savings_goals SET archived = true, updated_at = now()
+WHERE user_id = @user_id AND account_id = @account_id AND NOT archived;
+
 -- name: GetSavingsGoal :one
 SELECT * FROM savings_goals WHERE id = @id AND user_id = @user_id;
 

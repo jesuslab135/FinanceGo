@@ -10,6 +10,21 @@ import (
 	"time"
 )
 
+const archiveGoalsOfAccount = `-- name: ArchiveGoalsOfAccount :exec
+UPDATE savings_goals SET archived = true, updated_at = now()
+WHERE user_id = $1 AND account_id = $2 AND NOT archived
+`
+
+type ArchiveGoalsOfAccountParams struct {
+	UserID    int64
+	AccountID int64
+}
+
+func (q *Queries) ArchiveGoalsOfAccount(ctx context.Context, arg ArchiveGoalsOfAccountParams) error {
+	_, err := q.db.Exec(ctx, archiveGoalsOfAccount, arg.UserID, arg.AccountID)
+	return err
+}
+
 const createAccountMovement = `-- name: CreateAccountMovement :one
 INSERT INTO account_movements (user_id, account_id, kind, to_account_id, goal_id, amount, occurred_on, note)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

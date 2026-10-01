@@ -190,6 +190,11 @@ func (s *Service) UpdateSavingsAccount(ctx context.Context, a Actor, id int64, i
 		if err != nil {
 			return err
 		}
+		if cur.ArchivedOn == nil && archivedOn != nil { // an archived account's goals stop planning too
+			if err := q.ArchiveGoalsOfAccount(ctx, store.ArchiveGoalsOfAccountParams{UserID: a.UserID, AccountID: id}); err != nil {
+				return err
+			}
+		}
 		return s.syncAchieved(ctx, q, a, id) // the opening may have changed the balance
 	})
 	if err != nil {
@@ -264,6 +269,6 @@ func (s *Service) DeleteValuation(ctx context.Context, a Actor, accountID int64,
 		if n == 0 {
 			return apperr.NotFound()
 		}
-		return s.syncAchieved(ctx, q, a, accountID)
+		return s.settle(ctx, q, a, accountID) // later withdrawals may have relied on the value
 	})
 }

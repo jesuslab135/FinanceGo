@@ -5,6 +5,7 @@ import (
 	"slices"
 	"time"
 
+	"financego/internal/apperr"
 	"financego/internal/savings"
 	"financego/internal/store"
 )
@@ -117,6 +118,27 @@ func (s *Service) syncAchieved(ctx context.Context, q *store.Queries, a Actor, a
 	if err != nil {
 		return err
 	}
+	return s.syncLoaded(ctx, q, a, d, accountIDs)
+}
+
+// settle is syncAchieved for a write that can take money away after the fact (deleting or editing a
+// movement, deleting a valuation): it fails with insufficient_balance, rolling the transaction back,
+// when any of accountIDs would be below zero today.
+func (s *Service) settle(ctx context.Context, q *store.Queries, a Actor, accountIDs ...int64) error {
+	d, err := s.loadSavings(ctx, q, a.UserID)
+	if err != nil {
+		return err
+	}
+	today := s.today(a)
+	for _, id := range accountIDs {
+		if d.balance(id, today) < 0 {
+			return apperr.InsufficientBalance()
+		}
+	}
+	return s.syncLoaded(ctx, q, a, d, accountIDs)
+}
+
+func (s *Service) syncLoaded(ctx context.Context, q *store.Queries, a Actor, d savingsData, accountIDs []int64) error {
 	today := s.today(a)
 	for _, g := range d.goals {
 		if !slices.Contains(accountIDs, g.AccountID) {

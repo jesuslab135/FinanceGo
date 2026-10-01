@@ -194,6 +194,11 @@ func (s *Service) UpdateSavingsGoal(ctx context.Context, a Actor, id int64, in S
 		if in.AccountID != cur.AccountID {
 			return apperr.Validation(map[string]string{"account_id": "cannot be changed"})
 		}
+		if !in.Archived { // a goal stays archived while its account is
+			if err := goalAccount(ctx, q, a, cur.AccountID); err != nil {
+				return err
+			}
+		}
 		if _, err := q.UpdateSavingsGoal(ctx, store.UpdateSavingsGoalParams{Name: in.Name, Kind: in.Kind,
 			EmergencyMonths: in.EmergencyMonths, TargetAmount: in.TargetAmount, TargetDate: datePtrTime(in.TargetDate),
 			MonthlyAmount: in.MonthlyAmount, Color: in.Color, Icon: in.Icon, Archived: in.Archived, ID: id, UserID: a.UserID}); err != nil {

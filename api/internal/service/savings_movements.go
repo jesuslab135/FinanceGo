@@ -161,7 +161,7 @@ func (s *Service) UpdateAccountMovement(ctx context.Context, a Actor, id int64, 
 			return err
 		}
 		ids := append(touched(cur.AccountID, cur.ToAccountID), touched(in.AccountID, in.ToAccountID)...)
-		return s.syncAchieved(ctx, q, a, ids...)
+		return s.settle(ctx, q, a, ids...) // lowering or moving money away can overdraw an account
 	})
 	if err != nil {
 		return AccountMovement{}, err
@@ -178,6 +178,6 @@ func (s *Service) DeleteAccountMovement(ctx context.Context, a Actor, id int64) 
 		if _, err := q.DeleteAccountMovement(ctx, store.DeleteAccountMovementParams{ID: id, UserID: a.UserID}); err != nil {
 			return err
 		}
-		return s.syncAchieved(ctx, q, a, touched(cur.AccountID, cur.ToAccountID)...)
+		return s.settle(ctx, q, a, touched(cur.AccountID, cur.ToAccountID)...)
 	})
 }
