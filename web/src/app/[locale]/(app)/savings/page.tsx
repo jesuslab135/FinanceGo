@@ -14,10 +14,11 @@ import { NetWorthHero } from "@/components/savings/net-worth-hero";
 import { SavingsChart } from "@/components/savings/savings-chart";
 import { SavingsSheet, type SheetState } from "@/components/savings/savings-sheet";
 import { Button } from "@/components/ui/button";
+import { useSetAccountArchived } from "@/hooks/use-set-account-archived";
 import { useToday } from "@/hooks/use-today";
 import { useErrorMessage } from "@/lib/api/error-messages";
 import type { SavingsAccount } from "@/lib/api/types";
-import { useDeleteSavingsAccount, useSavingsAccounts, useSavingsGoals, useSavingsOverview, useSavingsSeries, useUpdateSavingsAccount } from "@/lib/query/hooks";
+import { useDeleteSavingsAccount, useSavingsAccounts, useSavingsGoals, useSavingsOverview, useSavingsSeries } from "@/lib/query/hooks";
 import { monthsWindow } from "@/lib/savings";
 
 export default function SavingsPage() {
@@ -27,19 +28,13 @@ export default function SavingsPage() {
   const [sheet, setSheet] = useState<SheetState>(null);
   const [showArchived, setShowArchived] = useState(false);
   const overview = useSavingsOverview();
-  const accounts = useSavingsAccounts(showArchived);
+  const accounts = useSavingsAccounts(true); // archived too: the empty state and the toggle depend on all of them
   const goals = useSavingsGoals();
   const w = monthsWindow(today, 12);
   const series = useSavingsSeries(w.from, w.to);
-  const update = useUpdateSavingsAccount();
   const remove = useDeleteSavingsAccount();
 
-  const setArchived = async (a: SavingsAccount, archived: boolean) => {
-    try {
-      await update.mutateAsync({ id: a.id, name: a.name, institution: a.institution, kind: a.kind, color: a.color,
-        annual_rate_bp: a.annual_rate_bp ?? undefined, opening_balance: a.opening_balance, opening_date: a.opening_date, archived });
-    } catch (err) { toast.error(errMsg(err)); }
-  };
+  const setArchived = useSetAccountArchived();
   const actionsFor = (a: SavingsAccount) => [
     { label: t("savings.updateValue"), icon: TrendingUp, onSelect: () => setSheet({ type: "valuation", account: a }) },
     { label: t("common.edit"), icon: Pencil, onSelect: () => setSheet({ type: "account", account: a }) },
@@ -50,7 +45,8 @@ export default function SavingsPage() {
       onSelect: () => remove.mutateAsync(a.id).catch((err) => toast.error(errMsg(err))) }] : []),
   ];
 
-  const empty = accounts.data?.length === 0 && !showArchived;
+  const empty = accounts.data?.length === 0;
+  const shownAccounts = (accounts.data ?? []).filter((a) => showArchived || a.archived_on == null);
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -77,7 +73,7 @@ export default function SavingsPage() {
         <>
           <section className="space-y-3">
             <h2 className="text-sm font-medium text-muted-foreground">{t("savings.goals")}</h2>
-            {goals.isPending ? <ListSkeleton rows={2} /> : (
+            {goals.isPending ? <ListSkeleton rows={2} /> : goals.error ? <QueryError error={goals.error} /> : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {(goals.data ?? []).map((g) => (
                   <GoalCard key={g.id} goal={g}
@@ -97,16 +93,16 @@ export default function SavingsPage() {
               <h2 className="text-sm font-medium text-muted-foreground">{t("savings.accounts")}</h2>
               <Button variant="ghost" size="sm" onClick={() => setShowArchived((v) => !v)} aria-pressed={showArchived}>{t("savings.archived")}</Button>
             </div>
-            {accounts.isPending ? <ListSkeleton /> : (
+            {accounts.isPending ? <ListSkeleton /> : accounts.error ? <QueryError error={accounts.error} /> : (
               <ul className="space-y-2">
-                {(accounts.data ?? []).map((a) => (
+                {shownAccounts.map((a) => (
                   <li key={a.id}><AccountRow account={a} href={`/savings/accounts/${a.id}`} actions={actionsFor(a)} /></li>
                 ))}
               </ul>
             )}
           </section>
 
-          {series.isPending ? <ChartSkeleton /> : series.data && <SavingsChart points={series.data} />}
+          {series.isPending ? <ChartSkeleton /> : series.data ? <SavingsChart points={series.data} /> : <QueryError error={series.error} />}
           {overview.data && <AllocationBar slices={overview.data.allocation} />}
         </>
       )}

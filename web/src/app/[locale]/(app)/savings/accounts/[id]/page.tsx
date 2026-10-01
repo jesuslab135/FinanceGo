@@ -1,7 +1,7 @@
 "use client";
 import { format } from "date-fns";
 import { enUS, es } from "date-fns/locale";
-import { ArrowDownLeft, ArrowLeft, ArrowLeftRight, ArrowUpRight, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowDownLeft, ArrowLeft, ArrowLeftRight, ArrowUpRight, Pencil, Plus, Trash2, TrendingUp } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +16,7 @@ import { SwipeRow } from "@/components/common/swipe-row";
 import { GoalCard } from "@/components/savings/goal-card";
 import { SavingsSheet, type SheetState } from "@/components/savings/savings-sheet";
 import { Button } from "@/components/ui/button";
+import { useSetAccountArchived } from "@/hooks/use-set-account-archived";
 import { useUndoableDelete } from "@/hooks/use-undoable-delete";
 import { Link } from "@/i18n/navigation";
 import { useErrorMessage } from "@/lib/api/error-messages";
@@ -34,6 +35,7 @@ export default function SavingsAccountPage() {
   const valuations = useValuations(id);
   const delMove = useDeleteMovement();
   const delVal = useDeleteValuation();
+  const setArchived = useSetAccountArchived();
   const { hidden, request } = useUndoableDelete({ remove: (mid) => delMove.mutateAsync(mid) });
   const [sheet, setSheet] = useState<SheetState>(null);
   const day = (iso: string) => format(parseISODate(iso), "d MMM yyyy", { locale: locale === "en" ? enUS : es });
@@ -57,7 +59,12 @@ export default function SavingsAccountPage() {
             <h1 className="text-2xl font-semibold">{a.name}</h1>
             <p className="text-sm text-muted-foreground">{a.institution} · {t(`savings.kinds.${a.kind}`)}</p>
           </div>
-          <Button variant="ghost" size="icon" className="size-11" aria-label={t("savings.editAccount")} onClick={() => setSheet({ type: "account", account: a })}><Pencil /></Button>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="size-11" aria-label={t("savings.editAccount")} onClick={() => setSheet({ type: "account", account: a })}><Pencil /></Button>
+            {a.archived_on == null
+              ? <Button variant="ghost" size="icon" className="size-11" aria-label={t("savings.archive")} onClick={() => void setArchived(a, true)}><Archive /></Button>
+              : <Button variant="ghost" size="icon" className="size-11" aria-label={t("savings.unarchive")} onClick={() => void setArchived(a, false)}><ArchiveRestore /></Button>}
+          </div>
         </div>
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {([["savings.balance", a.balance], ["savings.putIn", a.put_in], ["savings.gain", a.gain]] as const).map(([k, v]) => (
@@ -88,7 +95,7 @@ export default function SavingsAccountPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-medium text-muted-foreground">{t("savings.movements")}</h2>
-        {movements.isPending ? <ListSkeleton /> : visible.length === 0 ? (
+        {movements.isPending ? <ListSkeleton /> : movements.error ? <QueryError error={movements.error} /> : visible.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("savings.noMovements")}</p>
         ) : (
           <ul className="space-y-2">
@@ -115,6 +122,7 @@ export default function SavingsAccountPage() {
         )}
       </section>
 
+      {valuations.error && <QueryError error={valuations.error} />}
       {(valuations.data ?? []).length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-medium text-muted-foreground">{t("savings.valuations")}</h2>
