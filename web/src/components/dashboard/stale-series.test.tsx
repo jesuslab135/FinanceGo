@@ -7,7 +7,7 @@ import { SpendingChart } from "./spending-chart";
 
 vi.mock("@/lib/query/hooks", () => ({ useMe: () => ({ data: { currency: "MXN" } }) }));
 
-const s: Summary = { month: "2026-03", currency: "MXN", income: 0, fixed_committed: 0, fixed_paid: 0, installments: 0, spent: 0, available: 0, budgets: [] };
+const s: Summary = { month: "2026-03", currency: "MXN", income: 0, fixed_committed: 0, fixed_paid: 0, saved: 0, saved_planned: 0, saved_deposited: 0, saved_withdrawn: 0, installments: 0, spent: 0, available: 0, budgets: [] };
 const points = [{ start: "2026-03-01", expenses: 100, committed: 0 }];
 
 describe("placeholder (stale) series", () => {

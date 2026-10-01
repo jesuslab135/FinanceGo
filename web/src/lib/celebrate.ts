@@ -3,7 +3,7 @@ import type { Summary } from "@/lib/api/types";
 
 const COLORS = ["#d6467a", "#e98bab", "#3d5a99", "#fab219"];
 
-export type CelebrationKind = "firstExpense" | "cardPaidOff" | "monthUnderBudget" | "welcome";
+export type CelebrationKind = "firstExpense" | "cardPaidOff" | "monthUnderBudget" | "welcome" | "goalAchieved";
 
 /**
  * A toast (which also carries the message for screen readers) plus, unless reduced motion is on,

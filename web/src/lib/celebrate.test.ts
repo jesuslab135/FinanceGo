@@ -8,7 +8,7 @@ vi.mock("sonner", () => ({ toast: toastMock }));
 import type { Summary } from "@/lib/api/types";
 import { celebrate, shouldCelebrateMonth } from "./celebrate";
 
-const s = (over: Partial<Summary>): Summary => ({ month: "2026-02", currency: "MXN", income: 1, fixed_committed: 0, fixed_paid: 0, installments: 0, spent: 0, available: 100, budgets: [], ...over });
+const s = (over: Partial<Summary>): Summary => ({ month: "2026-02", currency: "MXN", income: 1, fixed_committed: 0, fixed_paid: 0, saved: 0, saved_planned: 0, saved_deposited: 0, saved_withdrawn: 0, installments: 0, spent: 0, available: 100, budgets: [], ...over });
 
 describe("celebrate", () => {
   beforeEach(() => { confettiMock.mockReset(); toastMock.success.mockReset(); });

@@ -4,6 +4,111 @@
  */
 
 export interface paths {
+    "/account-movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a deposit, withdrawal or transfer */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["service.AccountMovementInput"];
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.AccountMovement"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["httpapi.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/account-movements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace a movement */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description movement id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["service.AccountMovementInput"];
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.AccountMovement"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Delete a movement */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description movement id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -1030,6 +1135,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/export/savings.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download savings openings, movements and value updates as CSV */
+        get: {
+            parameters: {
+                query: {
+                    /** @description YYYY-MM-DD */
+                    from: string;
+                    /** @description YYYY-MM-DD */
+                    to: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fixed-payments": {
         parameters: {
             query?: never;
@@ -1766,6 +1912,581 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/savings-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List savings and investment accounts with computed balances */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description include archived accounts */
+                    include_archived?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["service.SavingsAccount"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a savings or investment account */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["service.SavingsAccountInput"];
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.SavingsAccount"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["httpapi.ErrorResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["httpapi.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One account with its goals */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.SavingsAccountDetail"];
+                    };
+                };
+            };
+        };
+        /** Replace an account (archived=true archives it; the opening is locked once it has history) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["service.SavingsAccountInput"];
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.SavingsAccount"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Delete an account with no history (409 account_has_history otherwise) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "*/*": components["schemas"]["httpapi.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-accounts/{id}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An account's movements (both sides of transfers), newest first */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description YYYY-MM-DD */
+                    from?: string;
+                    /** @description YYYY-MM-DD */
+                    to?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["service.AccountMovement"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-accounts/{id}/valuations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An account's value updates, newest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["service.AccountValuation"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-accounts/{id}/valuations/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Record the account's value on a date (one per day; replaces) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                    /** @description YYYY-MM-DD */
+                    date: string;
+                };
+                cookie?: never;
+            };
+            /** @description value */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["service.ValuationInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.AccountValuation"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Delete a value update */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description account id */
+                    id: number;
+                    /** @description YYYY-MM-DD */
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List savings goals with progress and status */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description include archived goals */
+                    include_archived?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["service.SavingsGoal"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a savings goal on an account */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["service.SavingsGoalInput"];
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.SavingsGoal"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["httpapi.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-goals/emergency-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggested emergency-fund target from recent months */
+        get: {
+            parameters: {
+                query: {
+                    /** @description 3 or 6 */
+                    months: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.EmergencySuggestion"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings-goals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace a goal (its account cannot change) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description goal id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["service.SavingsGoalInput"];
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.SavingsGoal"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Delete a goal (its movements stay, untagged) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description goal id */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Net worth, this month's savings, allocation and insurance warnings */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.SavingsOverview"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/savings/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Month-end value and money put in, per month (at most 24 months) */
+        get: {
+            parameters: {
+                query: {
+                    /** @description YYYY-MM */
+                    from: string;
+                    /** @description YYYY-MM */
+                    to: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["service.SavingsPoint"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1789,6 +2510,37 @@ export interface components {
         "httpapi.loginInput": {
             email: string;
             password: string;
+        };
+        "service.AccountMovement": {
+            account_id: number;
+            amount: number;
+            created_at: string;
+            goal_id?: number;
+            id: number;
+            /** @enum {string} */
+            kind: "deposit" | "withdrawal" | "transfer";
+            note: string;
+            occurred_on: string;
+            to_account_id?: number;
+        };
+        "service.AccountMovementInput": {
+            account_id: number;
+            amount: number;
+            goal_id?: number;
+            /** @enum {string} */
+            kind: "deposit" | "withdrawal" | "transfer";
+            note?: string;
+            occurred_on: string;
+            to_account_id?: number;
+        };
+        "service.AccountValuation": {
+            value: number;
+            valued_on: string;
+        };
+        "service.AllocationSlice": {
+            amount: number;
+            kind: string;
+            pct: number;
         };
         "service.BreakdownItem": {
             amount: number;
@@ -1846,6 +2598,11 @@ export interface components {
             icon: string;
             kind: string;
             name: string;
+        };
+        "service.EmergencySuggestion": {
+            monthly_need: number;
+            months: number;
+            target: number;
         };
         "service.Entry": {
             amount: number;
@@ -1952,6 +2709,13 @@ export interface components {
             purchased_on: string;
             total_amount: number;
         };
+        "service.InsuranceWarning": {
+            excess: number;
+            institution: string;
+            kind: string;
+            limit: number;
+            total: number;
+        };
         "service.PaymentMethod": {
             active: boolean;
             bank?: string;
@@ -1994,6 +2758,96 @@ export interface components {
             name: string;
             password: string;
             timezone: string;
+        };
+        "service.SavingsAccount": {
+            anchor_date: string;
+            annual_rate_bp?: number;
+            archived_on?: string;
+            balance: number;
+            color: string;
+            estimated_yield?: number;
+            gain: number;
+            gain_pct?: number;
+            has_history: boolean;
+            has_money_history: boolean;
+            id: number;
+            institution: string;
+            insured: boolean;
+            kind: string;
+            name: string;
+            opening_balance: number;
+            opening_date: string;
+            put_in: number;
+            stale: boolean;
+        };
+        "service.SavingsAccountDetail": {
+            account: components["schemas"]["service.SavingsAccount"];
+            goals: components["schemas"]["service.SavingsGoal"][];
+        };
+        "service.SavingsAccountInput": {
+            annual_rate_bp?: number;
+            archived?: boolean;
+            color?: string;
+            institution: string;
+            kind: string;
+            name: string;
+            opening_balance?: number;
+            opening_date: string;
+        };
+        "service.SavingsGoal": {
+            account_id: number;
+            achieved_on?: string;
+            archived: boolean;
+            behind_by?: number;
+            color: string;
+            emergency_months?: number;
+            icon: string;
+            id: number;
+            kind: string;
+            monthly_amount?: number;
+            name: string;
+            pct: number;
+            planned_this_month: number;
+            progress: number;
+            remaining: number;
+            required_monthly?: number;
+            start_month: string;
+            /** @enum {string} */
+            status: "achieved" | "no_date" | "ahead" | "on_track" | "behind";
+            target_amount: number;
+            target_date?: string;
+        };
+        "service.SavingsGoalInput": {
+            account_id: number;
+            archived?: boolean;
+            color?: string;
+            emergency_months?: number;
+            icon?: string;
+            kind?: string;
+            monthly_amount?: number;
+            name: string;
+            target_amount: number;
+            target_date?: string;
+        };
+        "service.SavingsMonth": {
+            deposited: number;
+            planned: number;
+            saved: number;
+            withdrawn: number;
+        };
+        "service.SavingsOverview": {
+            allocation: components["schemas"]["service.AllocationSlice"][];
+            assets: number;
+            card_debt: number;
+            insurance_warnings: components["schemas"]["service.InsuranceWarning"][];
+            month: components["schemas"]["service.SavingsMonth"];
+            net_worth: number;
+            udi_value: number;
+        };
+        "service.SavingsPoint": {
+            month: string;
+            put_in: number;
+            value: number;
         };
         "service.SeriesPoint": {
             committed: number;
@@ -2049,6 +2903,10 @@ export interface components {
             installments: number;
             month: string;
             safe_to_spend_per_day?: number;
+            saved: number;
+            saved_deposited: number;
+            saved_planned: number;
+            saved_withdrawn: number;
             spent: number;
         };
         "service.UpcomingItem": {
@@ -2069,6 +2927,9 @@ export interface components {
             name: string;
             timezone: string;
         };
+        "service.ValuationInput": {
+            value: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -2079,10 +2940,22 @@ export interface components {
                 "application/json": components["schemas"]["service.CategoryInput"];
             };
         };
+        /** @description account */
+        "service.SavingsAccountInput": {
+            content: {
+                "application/json": components["schemas"]["service.SavingsAccountInput"];
+            };
+        };
         /** @description plan */
         "service.InstallmentPlanInput": {
             content: {
                 "application/json": components["schemas"]["service.InstallmentPlanInput"];
+            };
+        };
+        /** @description goal */
+        "service.SavingsGoalInput": {
+            content: {
+                "application/json": components["schemas"]["service.SavingsGoalInput"];
             };
         };
         /** @description income source */
@@ -2095,6 +2968,12 @@ export interface components {
         "service.PaymentMethodInput": {
             content: {
                 "application/json": components["schemas"]["service.PaymentMethodInput"];
+            };
+        };
+        /** @description movement */
+        "service.AccountMovementInput": {
+            content: {
+                "application/json": components["schemas"]["service.AccountMovementInput"];
             };
         };
         /** @description expense */

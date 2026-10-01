@@ -4,7 +4,7 @@ import { computeInsights, type InsightInput } from "./insights";
 
 const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
 const summary: Summary = {
-  month: "2026-03", currency: "MXN", income: 3000000, fixed_committed: 0, fixed_paid: 0, installments: 0, spent: 0,
+  month: "2026-03", currency: "MXN", income: 3000000, fixed_committed: 0, fixed_paid: 0, saved: 0, saved_planned: 0, saved_deposited: 0, saved_withdrawn: 0, installments: 0, spent: 0,
   available: 3000000, budgets: [], safe_to_spend_per_day: 50000, days_remaining: 17,
 };
 const base: InsightInput = {

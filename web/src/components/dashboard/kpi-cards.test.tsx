@@ -7,7 +7,7 @@ import { KpiChips } from "./kpi-cards";
 vi.mock("@/lib/query/hooks", () => ({ useMe: () => ({ data: { currency: "MXN" } }) }));
 
 const base: Summary = {
-  month: "2026-03", currency: "MXN", income: 100000, fixed_committed: 80000, fixed_paid: 30000,
+  month: "2026-03", currency: "MXN", income: 100000, fixed_committed: 80000, fixed_paid: 30000, saved: 0, saved_planned: 0, saved_deposited: 0, saved_withdrawn: 0,
   installments: 30000, spent: 10000, available: -20000, budgets: [],
 };
 

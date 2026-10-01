@@ -10,6 +10,7 @@
     "dialogHint": "Presiona Escape para cerrar."
   },
   "nav": {
+    "savings": "Ahorro",
     "dashboard": "Inicio", "expenses": "Gastos", "month": "Mes", "recurring": "Recurrentes", "cards": "Tarjetas",
     "categories": "Categorías", "settings": "Ajustes", "more": "Más", "quickAdd": "Agregar gasto",
     "logout": "Cerrar sesión", "theme": "Tema", "themeLight": "Claro", "themeDark": "Oscuro", "themeSystem": "Sistema",
@@ -26,12 +27,14 @@
     "previewBudget": "Comida · 72% usado", "footnote": "Tus datos son tuyos. Sin anuncios."
   },
   "validation": {
+    "len60": "Escribe entre 1 y 60 caracteres.", "notFuture": "La fecha no puede ser futura.", "beforeOpening": "La fecha es anterior a la apertura de la cuenta.", "archived": "Está archivada.", "goalOtherAccount": "Esa meta es de otra cuenta.", "sameAccount": "Elige una cuenta distinta.", "overBalance": "Es más que el saldo de la cuenta.", "pastMonth": "Elige una fecha de este mes en adelante.", "rate": "Escribe una tasa entre 0 y 100.", "locked": "Ya no se puede cambiar.", "months36": "Elige 3 o 6 meses.",
     "required": "Requerido", "amount": "Escribe un monto válido, p. ej. 1,234.50", "email": "Correo inválido",
     "min8": "Mínimo 8 caracteres", "last4": "Exactamente 4 dígitos", "day": "Día entre 1 y 31",
     "installments": "Entre 2 y 48 mensualidades", "max200": "Máximo 200 caracteres",
     "endBeforeStart": "El mes final no puede ser anterior al de inicio"
   },
   "errors": {
+    "account_has_history": "La cuenta tiene movimientos o metas; archívala en lugar de eliminarla.", "insufficient_balance": "El monto es mayor que el saldo de la cuenta.", "savings_account_exists": "Ya tienes una cuenta con ese nombre.",
     "invalid_credentials": "Correo o contraseña incorrectos",
     "email_taken": "Ya existe una cuenta con este correo",
     "category_exists": "Ya existe una categoría con ese nombre",
@@ -119,6 +122,7 @@
     "budget": "Límite mensual", "budgetFor": "Límite mensual de {name}", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
   },
   "settings": {
+    "exportSavings": "Ahorro (CSV)",
     "theme": "Apariencia",
     "title": "Ajustes", "profile": "Perfil", "export": "Exportar datos", "exportExpenses": "Gastos (CSV)",
     "exportEntries": "Ingresos y pagos fijos (CSV)", "danger": "Zona de peligro", "deleteAccount": "Eliminar cuenta",
@@ -126,6 +130,7 @@
     "confirmPassword": "Escribe tu contraseña para confirmar", "language": "Idioma"
   },
   "dashboard": {
+    "saved": "Ahorro", "savedDetail": "Planeado {planned} · depositado {deposited}",
     "heroLabel": "Te quedan este mes", "heroHint": "≈ {amount} al día · {days, plural, one {# día} other {# días}}",
     "greeting": { "morning": "¡Buenos días, {name}!", "afternoon": "¡Buenas tardes, {name}!", "evening": "¡Buenas noches, {name}!", "morningNoName": "¡Buenos días!", "afternoonNoName": "¡Buenas tardes!", "eveningNoName": "¡Buenas noches!" },
     "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha", "periodLabel": "Periodo",
@@ -143,6 +148,7 @@
     "next7": "7 días", "next30": "30 días"
   },
   "insights": {
+    "goalBehind": "Tu meta {name} va atrasada {amount}.", "insurance": "{institution} tiene más de lo que cubre su seguro de depósito.", "staleValue": "Actualiza el valor de {name}: no cambia desde hace {days} días.", "goalAchieved": "¡Lograste tu meta {name}!",
     "title": "Para ti", "view": "Ver", "dismiss": "Ocultar",
     "overdue": "{count, plural, one {Tienes un pago vencido: {name}} other {Tienes # pagos vencidos, como {name}}}",
     "cardDue": "{name} vence {days, plural, =0 {hoy} one {mañana} other {en # días}}: paga {amount} para no generar intereses",
@@ -165,6 +171,41 @@
     "cardAdd": "Agregar", "cardType": "Tipo", "cardsAdded": "Tarjetas agregadas",
     "sug": { "rent": "Renta", "power": "Luz", "water": "Agua", "internet": "Internet", "phone": "Teléfono", "netflix": "Streaming", "gym": "Gimnasio", "insurance": "Seguro" }
   },
-  "celebrate": { "firstExpense":"¡Primer gasto registrado! Vas muy bien 🎉", "cardPaidOff":"¡{name} al corriente! 🎉", "monthUnderBudget":"¡Cerraste {month} dentro de tu presupuesto! 🎉", "welcome":"¡Todo listo! Estos son tus números 🎉" },
+  "celebrate": { "goalAchieved":"¡Meta {name} lograda! 🎉", "firstExpense":"¡Primer gasto registrado! Vas muy bien 🎉", "cardPaidOff":"¡{name} al corriente! 🎉", "monthUnderBudget":"¡Cerraste {month} dentro de tu presupuesto! 🎉", "welcome":"¡Todo listo! Estos son tus números 🎉" },
+  "savings": {
+  "title": "Ahorro e inversiones", "netWorth": "Patrimonio", "netWorthDetail": "Ahorros {assets} − Deuda de tarjetas {debt}",
+  "chartTitle": "Tu dinero en el tiempo", "chartValue": "Valor", "chartPutIn": "Lo que aportaste",
+  "goals": "Metas", "accounts": "Cuentas", "allocation": "Distribución", "allocationItem": "{kind}: {pct}%",
+  "newGoal": "Nueva meta", "newAccount": "Agregar cuenta", "editGoal": "Editar meta", "editAccount": "Editar cuenta",
+  "emergencyCta": "Crear fondo de emergencia",
+  "empty": "Aún no registras ahorros. Empieza con una cuenta o con tu fondo de emergencia.",
+  "contribute": "Abonar", "movement": "Movimiento", "editMovement": "Editar movimiento", "updateValue": "Actualizar valor",
+  "progressOf": "{progress} de {target}", "requiredMonthly": "{amount} al mes para llegar", "progressLabel": "Progreso de {name}: {pct}%",
+  "status": { "on_track": "Vas bien", "behind": "Atrasada {amount}", "ahead": "Vas adelantada", "achieved": "¡Lograda!", "no_date": "Sin fecha" },
+  "kinds": { "bank": "Banco", "sofipo": "SOFIPO", "fund": "Fondo", "government": "CETES / Bonos", "broker": "Casa de bolsa", "afore": "AFORE", "ppr": "PPR", "crypto": "Cripto", "other": "Otro" },
+  "insuredBank": "Protegido por el IPAB hasta 400,000 UDIs por persona y banco.",
+  "insuredSofipo": "Protegido por PROSOFIPO hasta 25,000 UDIs por persona y SOFIPO.",
+  "notInsured": "Este tipo de inversión no tiene seguro de depósito.",
+  "balance": "Saldo", "putIn": "Aportado", "gain": "Ganancia", "estimated": "≈ {amount} estimado",
+  "stale": "Actualiza el valor (hace {days} días)", "archived": "Archivada",
+  "insuranceWarning": "Tienes {total} en {institution}; {fund} cubre ≈{limit}.", "fundIPAB": "el IPAB", "fundPROSOFIPO": "PROSOFIPO",
+  "thisMonth": "Este mes", "savedOfPlanned": "Ahorrado {saved} de {planned} planeado", "seeAll": "Ver ahorro",
+  "movements": "Movimientos", "valuations": "Actualizaciones de valor", "noMovements": "Sin movimientos todavía.",
+  "movementKinds": { "deposit": "Depósito", "withdrawal": "Retiro", "transfer_in": "Transferencia recibida", "transfer_out": "Transferencia enviada" },
+  "archive": "Archivar", "unarchive": "Desarchivar",
+  "deleteAccountConfirm": "Se eliminará la cuenta.", "deleteGoalConfirm": "Se eliminará la meta; sus movimientos se conservan.",
+  "deleteMovementConfirm": "Se eliminará el movimiento.", "deleteValuationConfirm": "Se eliminará esta actualización de valor.",
+  "form": {
+    "name": "Nombre", "institution": "Institución", "institutionHint": "Ej. Nu, Klar, GBM, CETES Directo", "kind": "Tipo",
+    "rate": "Tasa anual (%)", "rateHint": "Solo para estimar rendimiento entre actualizaciones.", "openingBalance": "Saldo inicial",
+    "openingDate": "Desde", "openingLocked": "El saldo inicial ya no se puede cambiar porque la cuenta tiene movimientos.",
+    "color": "Color", "account": "Cuenta", "goal": "Meta", "noGoal": "Sin meta", "toAccount": "A la cuenta",
+    "amount": "Monto", "date": "Fecha", "note": "Nota", "kindLegend": "Tipo de movimiento",
+    "deposit": "Depositar", "withdrawal": "Retirar", "transfer": "Transferir",
+    "target": "¿Cuánto quieres juntar?", "targetDate": "Fecha objetivo", "monthly": "Apartar al mes", "useRequired": "Usar {amount} al mes",
+    "emergency": "Fondo de emergencia", "emergencyMonths": "{months} meses", "emergencyHow": "Tus pagos fijos, MSI y gastos promedian {need} al mes.",
+    "value": "Valor actual", "overBalanceHint": "¿El saldo real es mayor? Actualiza el valor primero."
+  }
+},
   "icons": {"food":"Comida","coffee":"Café","drinks":"Bebidas","groceries":"Súper","car":"Auto","fuel":"Gasolina","transit":"Transporte público","bike":"Bici","travel":"Viajes","home":"Hogar","utilities":"Servicios","internet":"Internet","phone":"Teléfono","repairs":"Reparaciones","health":"Salud","pharmacy":"Farmacia","gym":"Gimnasio","personalCare":"Cuidado personal","entertainment":"Entretenimiento","music":"Música","games":"Juegos","books":"Libros","education":"Educación","kids":"Hijos","pets":"Mascotas","cat":"Gato","clothing":"Ropa","shopping":"Compras","gifts":"Regalos","tech":"Tecnología","subscriptions":"Suscripciones","fees":"Comisiones","card":"Tarjeta","bills":"Recibos","taxes":"Impuestos","savings":"Ahorro","delivery":"Envíos","salary":"Salario","otherIncome":"Otros ingresos","other":"Otros"}
 }

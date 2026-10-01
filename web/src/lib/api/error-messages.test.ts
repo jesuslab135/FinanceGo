@@ -48,4 +48,10 @@ describe("fieldMessageKey", () => {
       expect(lookup(en, key), key).toEqual(expect.any(String));
     }
   });
+
+  it("maps the savings errors", () => {
+    expect(errorMessageKey(new ApiError(422, "insufficient_balance", "x", { amount: "exceeds the account balance" }))).toBe("errors.insufficient_balance");
+    expect(fieldMessageKey("exceeds the account balance")).toBe("validation.overBalance");
+    expect(fieldMessageKey("must not be in the future")).toBe("validation.notFuture");
+  });
 });

@@ -11,7 +11,7 @@ vi.mock("@/lib/query/hooks", () => ({ useMe: () => ({ data: { currency: "MXN" } 
 vi.mock("motion/react", async (o) => ({ ...(await o<typeof import("motion/react")>()), useReducedMotion: () => true }));
 
 const base: Summary = {
-  month: "2026-03", currency: "MXN", income: 100000, fixed_committed: 90000, fixed_paid: 0, installments: 0,
+  month: "2026-03", currency: "MXN", income: 100000, fixed_committed: 90000, fixed_paid: 0, saved: 0, saved_planned: 0, saved_deposited: 0, saved_withdrawn: 0, installments: 0,
   spent: 20000, available: -10000, budgets: [],
 };
 

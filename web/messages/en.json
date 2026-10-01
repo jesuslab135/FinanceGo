@@ -10,6 +10,7 @@
     "dialogHint": "Press Escape to close."
   },
   "nav": {
+    "savings": "Savings",
     "dashboard": "Home", "expenses": "Expenses", "month": "Month", "recurring": "Recurring", "cards": "Cards",
     "categories": "Categories", "settings": "Settings", "more": "More", "quickAdd": "Add expense",
     "logout": "Log out", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "themeSystem": "System",
@@ -26,12 +27,14 @@
     "previewBudget": "Food · 72% used", "footnote": "Your data is yours. No ads."
   },
   "validation": {
+    "len60": "Use 1 to 60 characters.", "notFuture": "The date can't be in the future.", "beforeOpening": "The date is before the account was opened.", "archived": "It is archived.", "goalOtherAccount": "That goal belongs to another account.", "sameAccount": "Pick a different account.", "overBalance": "It's more than the account balance.", "pastMonth": "Pick a date from this month on.", "rate": "Enter a rate between 0 and 100.", "locked": "This can no longer change.", "months36": "Pick 3 or 6 months.",
     "required": "Required", "amount": "Enter a valid amount, e.g. 1,234.50", "email": "Invalid email",
     "min8": "At least 8 characters", "last4": "Exactly 4 digits", "day": "Day between 1 and 31",
     "installments": "Between 2 and 48 installments", "max200": "At most 200 characters",
     "endBeforeStart": "The end month can't be before the start month"
   },
   "errors": {
+    "account_has_history": "The account has movements or goals; archive it instead.", "insufficient_balance": "The amount is larger than the account balance.", "savings_account_exists": "You already have an account with that name.",
     "invalid_credentials": "Wrong email or password",
     "email_taken": "An account with this email already exists",
     "category_exists": "A category with this name already exists",
@@ -119,6 +122,7 @@
     "budget": "Monthly limit", "budgetFor": "Monthly limit for {name}", "noBudget": "No limit", "removeBudget": "Remove limit"
   },
   "settings": {
+    "exportSavings": "Savings (CSV)",
     "theme": "Appearance",
     "title": "Settings", "profile": "Profile", "export": "Export data", "exportExpenses": "Expenses (CSV)",
     "exportEntries": "Income & fixed payments (CSV)", "danger": "Danger zone", "deleteAccount": "Delete account",
@@ -126,6 +130,7 @@
     "confirmPassword": "Type your password to confirm", "language": "Language"
   },
   "dashboard": {
+    "saved": "Savings", "savedDetail": "Planned {planned} · deposited {deposited}",
     "heroLabel": "Left this month", "heroHint": "≈ {amount} a day · {days, plural, one {# day} other {# days}}",
     "greeting": { "morning": "Good morning, {name}!", "afternoon": "Good afternoon, {name}!", "evening": "Good evening, {name}!", "morningNoName": "Good morning!", "afternoonNoName": "Good afternoon!", "eveningNoName": "Good evening!" },
     "period": { "day": "Day", "week": "Week", "month": "Month" }, "anchor": "Date", "periodLabel": "Period",
@@ -143,6 +148,7 @@
     "next7": "7 days", "next30": "30 days"
   },
   "insights": {
+    "goalBehind": "Your goal {name} is behind by {amount}.", "insurance": "{institution} holds more than its deposit insurance covers.", "staleValue": "Update {name}'s value: it hasn't changed in {days} days.", "goalAchieved": "You reached your goal {name}!",
     "title": "For you", "view": "View", "dismiss": "Dismiss",
     "overdue": "{count, plural, one {You have an overdue payment: {name}} other {You have # overdue payments, like {name}}}",
     "cardDue": "{name} is due {days, plural, =0 {today} one {tomorrow} other {in # days}}: pay {amount} to avoid interest",
@@ -165,6 +171,41 @@
     "cardAdd": "Add", "cardType": "Type", "cardsAdded": "Cards added",
     "sug": { "rent": "Rent", "power": "Electricity", "water": "Water", "internet": "Internet", "phone": "Phone", "netflix": "Streaming", "gym": "Gym", "insurance": "Insurance" }
   },
-  "celebrate": { "firstExpense":"First expense logged, great start 🎉", "cardPaidOff":"{name} is paid off 🎉", "monthUnderBudget":"You closed {month} within budget 🎉", "welcome":"All set, here are your numbers 🎉" },
+  "celebrate": { "goalAchieved":"Goal {name} reached! 🎉", "firstExpense":"First expense logged, great start 🎉", "cardPaidOff":"{name} is paid off 🎉", "monthUnderBudget":"You closed {month} within budget 🎉", "welcome":"All set, here are your numbers 🎉" },
+  "savings": {
+  "title": "Savings & investments", "netWorth": "Net worth", "netWorthDetail": "Savings {assets} − Card debt {debt}",
+  "chartTitle": "Your money over time", "chartValue": "Value", "chartPutIn": "What you put in",
+  "goals": "Goals", "accounts": "Accounts", "allocation": "Allocation", "allocationItem": "{kind}: {pct}%",
+  "newGoal": "New goal", "newAccount": "Add account", "editGoal": "Edit goal", "editAccount": "Edit account",
+  "emergencyCta": "Create an emergency fund",
+  "empty": "No savings yet. Start with an account or with your emergency fund.",
+  "contribute": "Add money", "movement": "Movement", "editMovement": "Edit movement", "updateValue": "Update value",
+  "progressOf": "{progress} of {target}", "requiredMonthly": "{amount} a month to get there", "progressLabel": "{name} progress: {pct}%",
+  "status": { "on_track": "On track", "behind": "Behind by {amount}", "ahead": "Ahead", "achieved": "Reached!", "no_date": "No date" },
+  "kinds": { "bank": "Bank", "sofipo": "SOFIPO", "fund": "Fund", "government": "CETES / Bonds", "broker": "Brokerage", "afore": "AFORE", "ppr": "PPR", "crypto": "Crypto", "other": "Other" },
+  "insuredBank": "Covered by IPAB up to 400,000 UDIs per person per bank.",
+  "insuredSofipo": "Covered by PROSOFIPO up to 25,000 UDIs per person per SOFIPO.",
+  "notInsured": "This kind of investment has no deposit insurance.",
+  "balance": "Balance", "putIn": "Put in", "gain": "Gain", "estimated": "≈ {amount} estimated",
+  "stale": "Update the value ({days} days ago)", "archived": "Archived",
+  "insuranceWarning": "You hold {total} at {institution}; {fund} covers ≈{limit}.", "fundIPAB": "IPAB", "fundPROSOFIPO": "PROSOFIPO",
+  "thisMonth": "This month", "savedOfPlanned": "Saved {saved} of {planned} planned", "seeAll": "View savings",
+  "movements": "Movements", "valuations": "Value updates", "noMovements": "No movements yet.",
+  "movementKinds": { "deposit": "Deposit", "withdrawal": "Withdrawal", "transfer_in": "Transfer in", "transfer_out": "Transfer out" },
+  "archive": "Archive", "unarchive": "Unarchive",
+  "deleteAccountConfirm": "The account will be deleted.", "deleteGoalConfirm": "The goal will be deleted; its movements are kept.",
+  "deleteMovementConfirm": "The movement will be deleted.", "deleteValuationConfirm": "This value update will be deleted.",
+  "form": {
+    "name": "Name", "institution": "Institution", "institutionHint": "e.g. Nu, Klar, GBM, CETES Directo", "kind": "Kind",
+    "rate": "Annual rate (%)", "rateHint": "Only used to estimate yield between updates.", "openingBalance": "Opening balance",
+    "openingDate": "Since", "openingLocked": "The opening balance can no longer change because the account has movements.",
+    "color": "Color", "account": "Account", "goal": "Goal", "noGoal": "No goal", "toAccount": "To account",
+    "amount": "Amount", "date": "Date", "note": "Note", "kindLegend": "Movement type",
+    "deposit": "Deposit", "withdrawal": "Withdraw", "transfer": "Transfer",
+    "target": "How much do you want to save?", "targetDate": "Target date", "monthly": "Set aside per month", "useRequired": "Use {amount} a month",
+    "emergency": "Emergency fund", "emergencyMonths": "{months} months", "emergencyHow": "Your fixed payments, installments and spending average {need} a month.",
+    "value": "Current value", "overBalanceHint": "Is the real balance higher? Update the value first."
+  }
+},
   "icons": {"food":"Food","coffee":"Coffee","drinks":"Drinks","groceries":"Groceries","car":"Car","fuel":"Fuel","transit":"Transit","bike":"Bike","travel":"Travel","home":"Home","utilities":"Utilities","internet":"Internet","phone":"Phone","repairs":"Repairs","health":"Health","pharmacy":"Pharmacy","gym":"Gym","personalCare":"Personal care","entertainment":"Entertainment","music":"Music","games":"Games","books":"Books","education":"Education","kids":"Kids","pets":"Pets","cat":"Cat","clothing":"Clothing","shopping":"Shopping","gifts":"Gifts","tech":"Tech","subscriptions":"Subscriptions","fees":"Fees","card":"Card","bills":"Bills","taxes":"Taxes","savings":"Savings","delivery":"Delivery","salary":"Salary","otherIncome":"Other income","other":"Other"}
 }
