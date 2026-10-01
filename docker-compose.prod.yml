@@ -1,0 +1,27 @@
+# Production overlay for the VPS behind the shared nginx (/opt/sga, container sga_nginx), which terminates TLS
+# for finance-go.jesuslab135.com and proxies to this stack's Caddy edge over the dedicated network edge-financego.
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml -p financego up -d --build
+# Nothing is published on the host: only nginx can reach the edge.
+services:
+  db:
+    ports: !reset []
+    restart: unless-stopped
+  api:
+    ports: !reset []
+    environment:
+      WEB_ORIGIN: ${WEB_ORIGIN:?set WEB_ORIGIN in .env}
+      COOKIE_SECURE: "true"
+      # The edge, plus nginx on edge-financego: nginx appends the real client to X-Forwarded-For and Caddy
+      # appends nginx, so both hops must be trusted for the API to see the visitor's address.
+      TRUSTED_PROXIES: 172.28.0.10,172.30.0.0/24
+  edge:
+    ports: !reset []
+    volumes:
+      - ./deploy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+    networks:
+      public:
+        aliases: [financego-edge]
+networks:
+  public:
+    name: edge-financego
+    external: true

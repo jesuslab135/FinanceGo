@@ -80,3 +80,11 @@ cd web && pnpm e2e
 Visual baselines (`web/e2e/visual.spec.ts-snapshots`) are platform-specific (`*-win32.png`); regenerate them on another OS with `pnpm exec playwright test --project=visual --update-snapshots`.
 
 Installable as a PWA (manifest + icons). Spanish at `/es`, English at `/en`.
+
+## Production (VPS)
+
+Runs at https://finance-go.jesuslab135.com behind the VPS's shared nginx (`/opt/sga`, container `sga_nginx`), which terminates TLS.
+
+- Code lives in `/opt/financego`, compose project `financego`, with a `.env` holding `POSTGRES_PASSWORD`, `JWT_SECRET` and `WEB_ORIGIN=https://finance-go.jesuslab135.com`.
+- Deploy: `docker compose -f docker-compose.yml -f docker-compose.prod.yml -p financego up -d --build`. Nothing is published on the host.
+- nginx reaches the stack only over the network `edge-financego` (172.30.0.0/24, alias `financego-edge`). The vhost is `deploy/nginx/financego.conf`, copied between the `financego` markers in `/opt/sga/nginx/app.conf`. The certificate renews with the existing `sga_certbot` container.
