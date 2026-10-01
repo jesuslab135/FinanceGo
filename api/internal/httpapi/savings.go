@@ -305,3 +305,100 @@ func (h *handlers) emergencySuggestion(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, out)
 }
+
+// listAccountMovements godoc
+// @Summary  An account's movements (both sides of transfers), newest first
+// @Tags     savings
+// @Produce  json
+// @Security BearerAuth
+// @Param    id   path  int    true  "account id"
+// @Param    from query string false "YYYY-MM-DD"
+// @Param    to   query string false "YYYY-MM-DD"
+// @Success  200 {object} object{items=[]service.AccountMovement}
+// @Router   /savings-accounts/{id}/movements [get]
+func (h *handlers) listAccountMovements(c *gin.Context) {
+	id, ok := pathID(c)
+	if !ok {
+		return
+	}
+	from, ok := queryDate(c, "from")
+	if !ok {
+		return
+	}
+	to, ok := queryDate(c, "to")
+	if !ok {
+		return
+	}
+	list, err := h.svc.ListAccountMovements(c.Request.Context(), actorOf(c), id, from, to)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, items(list))
+}
+
+// createAccountMovement godoc
+// @Summary  Record a deposit, withdrawal or transfer
+// @Tags     savings
+// @Accept   json
+// @Produce  json
+// @Security BearerAuth
+// @Param    body body     service.AccountMovementInput true "movement"
+// @Success  201  {object} service.AccountMovement
+// @Failure  422  {object} ErrorResponse
+// @Router   /account-movements [post]
+func (h *handlers) createAccountMovement(c *gin.Context) {
+	var in service.AccountMovementInput
+	if !bind(c, &in) {
+		return
+	}
+	out, err := h.svc.CreateAccountMovement(c.Request.Context(), actorOf(c), in)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusCreated, out)
+}
+
+// updateAccountMovement godoc
+// @Summary  Replace a movement
+// @Tags     savings
+// @Accept   json
+// @Produce  json
+// @Security BearerAuth
+// @Param    id   path     int                          true "movement id"
+// @Param    body body     service.AccountMovementInput true "movement"
+// @Success  200  {object} service.AccountMovement
+// @Router   /account-movements/{id} [put]
+func (h *handlers) updateAccountMovement(c *gin.Context) {
+	id, ok := pathID(c)
+	var in service.AccountMovementInput
+	if !ok || !bind(c, &in) {
+		return
+	}
+	out, err := h.svc.UpdateAccountMovement(c.Request.Context(), actorOf(c), id, in)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, out)
+}
+
+// deleteAccountMovement godoc
+// @Summary  Delete a movement
+// @Tags     savings
+// @Security BearerAuth
+// @Param    id path int true "movement id"
+// @Success  204
+// @Router   /account-movements/{id} [delete]
+func (h *handlers) deleteAccountMovement(c *gin.Context) {
+	id, ok := pathID(c)
+	if !ok {
+		return
+	}
+	if err := h.svc.DeleteAccountMovement(c.Request.Context(), actorOf(c), id); err != nil {
+		fail(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}

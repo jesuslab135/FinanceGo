@@ -3,6 +3,7 @@ package httpapi_test
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 type savingsAccount struct {
@@ -250,5 +251,137 @@ func TestSavingsEmergencySuggestion(t *testing.T) {
 	h.expense(fresh, "Comida", 12_345, "2026-03-02", "", nil)
 	if s := expect[M](t, h.do("GET", "/api/v1/savings-goals/emergency-suggestion?months=3", fresh, nil), 200); s["monthly_need"] != float64(12_345) || s["target"] != float64(40_000) {
 		t.Fatalf("fallback %v", s)
+	}
+}
+
+func (h *harness) move(tok string, body M) int64 {
+	h.t.Helper()
+	return int64(expect[M](h.t, h.do("POST", "/api/v1/account-movements", tok, body), 201)["id"].(float64))
+}
+
+func (h *harness) goalByID(tok string, id int64) savingsGoal {
+	h.t.Helper()
+	for _, g := range h.goals(tok, "?include_archived=true") {
+		if g.ID == id {
+			return g
+		}
+	}
+	h.t.Fatalf("goal %d not found", id)
+	return savingsGoal{}
+}
+
+func TestSavingsMovementsAndGoalProgress(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-move@example.com")
+	a := h.savingsAccount(tok, "Cajita", "bank", "Nu", 0, "2026-03-01")
+	b := h.savingsAccount(tok, "GBM", "broker", "GBM", 0, "2026-03-01")
+	g := h.savingsGoal(tok, M{"account_id": a, "name": "Japón", "target_amount": 100_000, "monthly_amount": 20_000}).ID
+	gb := h.savingsGoal(tok, M{"account_id": b, "name": "Retiro", "target_amount": 100_000}).ID
+
+	h.move(tok, M{"account_id": a, "kind": "deposit", "goal_id": g, "amount": 60_000, "occurred_on": "2026-03-05"})
+	if got := h.goalByID(tok, g); got.Progress != 60_000 || got.Pct != 60 || got.Status != "no_date" {
+		t.Fatalf("after deposit %+v", got)
+	}
+	r := h.do("POST", "/api/v1/account-movements", tok, M{"account_id": a, "kind": "withdrawal", "amount": 60_001, "occurred_on": "2026-03-06"})
+	if errCode(r) != "insufficient_balance" || errFields(r)["amount"] == "" {
+		t.Fatalf("overdraw %d %s", r.Code, r.Body)
+	}
+	h.move(tok, M{"account_id": a, "kind": "withdrawal", "goal_id": g, "amount": 10_000, "occurred_on": "2026-03-06"})
+	h.move(tok, M{"account_id": a, "kind": "transfer", "to_account_id": b, "amount": 20_000, "occurred_on": "2026-03-07"})
+	if acc := h.getAccount(tok, a); acc.Balance != 30_000 || acc.PutIn != 30_000 {
+		t.Fatalf("A %+v", acc)
+	}
+	if acc := h.getAccount(tok, b); acc.Balance != 20_000 || acc.PutIn != 20_000 {
+		t.Fatalf("B %+v", acc)
+	}
+
+	bad := []struct {
+		field, code string
+		body        M
+	}{
+		{"goal_id", "", M{"account_id": a, "kind": "transfer", "to_account_id": b, "goal_id": g, "amount": 1, "occurred_on": "2026-03-07"}},
+		{"to_account_id", "", M{"account_id": a, "kind": "transfer", "to_account_id": a, "amount": 1, "occurred_on": "2026-03-07"}},
+		{"to_account_id", "", M{"account_id": a, "kind": "deposit", "to_account_id": b, "amount": 1, "occurred_on": "2026-03-07"}},
+		{"to_account_id", "invalid_reference", M{"account_id": a, "kind": "transfer", "to_account_id": 999999, "amount": 1, "occurred_on": "2026-03-07"}},
+		{"goal_id", "", M{"account_id": a, "kind": "deposit", "goal_id": gb, "amount": 1, "occurred_on": "2026-03-07"}},
+		{"occurred_on", "", M{"account_id": a, "kind": "deposit", "amount": 1, "occurred_on": "2026-03-16"}},
+		{"occurred_on", "", M{"account_id": a, "kind": "deposit", "amount": 1, "occurred_on": "2026-02-28"}},
+		{"kind", "", M{"account_id": a, "kind": "interest", "amount": 1, "occurred_on": "2026-03-07"}},
+		{"amount", "", M{"account_id": a, "kind": "deposit", "amount": 0, "occurred_on": "2026-03-07"}},
+		{"account_id", "invalid_reference", M{"account_id": 999999, "kind": "deposit", "amount": 1, "occurred_on": "2026-03-07"}},
+	}
+	for i, c := range bad {
+		r := h.do("POST", "/api/v1/account-movements", tok, c.body)
+		if r.Code != 422 || errFields(r)[c.field] == "" || (c.code != "" && errCode(r) != c.code) {
+			t.Errorf("case %d (%s): %d %s", i, c.field, r.Code, r.Body)
+		}
+	}
+
+	// Reaching the target: progress 50000 + 70000 = 120000, capped by the balance (100000) = target → achieved today.
+	dep := h.move(tok, M{"account_id": a, "kind": "deposit", "goal_id": g, "amount": 70_000, "occurred_on": "2026-03-10"})
+	if got := h.goalByID(tok, g); got.Status != "achieved" || got.AchievedOn == nil || *got.AchievedOn != "2026-03-15" {
+		t.Fatalf("achieved %+v", got)
+	}
+	if r := h.do("DELETE", fmt.Sprintf("/api/v1/account-movements/%d", dep), tok, nil); r.Code != 204 {
+		t.Fatalf("delete movement %d", r.Code)
+	}
+	if got := h.goalByID(tok, g); got.AchievedOn != nil {
+		t.Fatalf("achieved_on must clear when the goal drops below: %+v", got)
+	}
+
+	list := expect[struct {
+		Items []M `json:"items"`
+	}](t, h.do("GET", fmt.Sprintf("/api/v1/savings-accounts/%d/movements", b), tok, nil), 200).Items
+	if len(list) != 1 || list[0]["kind"] != "transfer" {
+		t.Fatalf("B movements %v", list)
+	}
+	if l := expect[struct {
+		Items []M `json:"items"`
+	}](t, h.do("GET", fmt.Sprintf("/api/v1/savings-accounts/%d/movements?from=2026-03-06&to=2026-03-06", a), tok, nil), 200).Items; len(l) != 1 {
+		t.Fatalf("date filter %v", l)
+	}
+}
+
+func TestSavingsMovementEditBalanceAndResync(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-edit@example.com")
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 60_000, "2026-03-01")
+	b := h.savingsAccount(tok, "B", "bank", "Klar", 0, "2026-03-01")
+	ga := h.savingsGoal(tok, M{"account_id": a, "name": "GA", "target_amount": 50_000}).ID
+	gb := h.savingsGoal(tok, M{"account_id": b, "name": "GB", "target_amount": 10_000}).ID
+
+	w := h.move(tok, M{"account_id": a, "kind": "withdrawal", "amount": 50_000, "occurred_on": "2026-03-02"})
+	wurl := fmt.Sprintf("/api/v1/account-movements/%d", w)
+	// Checked without its own old amount: the balance before it is 60000.
+	expect[M](t, h.do("PUT", wurl, tok, M{"account_id": a, "kind": "withdrawal", "amount": 60_000, "occurred_on": "2026-03-02"}), 200)
+	if r := h.do("PUT", wurl, tok, M{"account_id": a, "kind": "withdrawal", "amount": 60_001, "occurred_on": "2026-03-02"}); errCode(r) != "insufficient_balance" {
+		t.Fatalf("edit overdraw %d %s", r.Code, r.Body)
+	}
+
+	d := h.move(tok, M{"account_id": a, "kind": "deposit", "goal_id": ga, "amount": 50_000, "occurred_on": "2026-03-03"})
+	if got := h.goalByID(tok, ga); got.AchievedOn == nil {
+		t.Fatalf("GA should be achieved: %+v", got)
+	}
+	// Move the deposit to B/GB: GA drops (cleared), GB reaches its target (set).
+	expect[M](t, h.do("PUT", fmt.Sprintf("/api/v1/account-movements/%d", d), tok,
+		M{"account_id": b, "kind": "deposit", "goal_id": gb, "amount": 50_000, "occurred_on": "2026-03-03"}), 200)
+	if got := h.goalByID(tok, ga); got.AchievedOn != nil || got.Progress != 0 {
+		t.Fatalf("GA after move %+v", got)
+	}
+	if got := h.goalByID(tok, gb); got.AchievedOn == nil {
+		t.Fatalf("GB after move %+v", got)
+	}
+}
+
+func TestSavingsMovementDatesUseUserTimezone(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-tz@example.com")
+	expect[M](t, h.do("PUT", "/api/v1/me", tok, M{"name": "Test User", "currency": "MXN", "locale": "es", "timezone": "America/Mexico_City"}), 200)
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 0, "2026-03-01")
+	h.setNow(time.Date(2026, 3, 16, 3, 0, 0, 0, time.UTC)) // 21:00 on Mar 15 in Mexico City
+	tok = h.login("sav-tz@example.com")
+	h.move(tok, M{"account_id": a, "kind": "deposit", "amount": 100, "occurred_on": "2026-03-15"})
+	if r := h.do("POST", "/api/v1/account-movements", tok, M{"account_id": a, "kind": "deposit", "amount": 100, "occurred_on": "2026-03-16"}); r.Code != 422 || errFields(r)["occurred_on"] == "" {
+		t.Fatalf("Mar 16 is still the future in Mexico City: %d %s", r.Code, r.Body)
 	}
 }
