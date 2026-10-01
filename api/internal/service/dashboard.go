@@ -19,10 +19,6 @@ type BudgetStatus struct {
 	Color      string `json:"color" validate:"required"`
 	Limit      int64  `json:"limit" validate:"required"`
 	Spent      int64  `json:"spent" validate:"required"`
-	Saved             int64          `json:"saved" validate:"required"`
-	SavedPlanned      int64          `json:"saved_planned" validate:"required"`
-	SavedDeposited    int64          `json:"saved_deposited" validate:"required"`
-	SavedWithdrawn    int64          `json:"saved_withdrawn" validate:"required"`
 	Pct        int32  `json:"pct" validate:"required"`
 }
 

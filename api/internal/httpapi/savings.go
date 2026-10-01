@@ -402,6 +402,7 @@ func (h *handlers) deleteAccountMovement(c *gin.Context) {
 	}
 	c.Status(http.StatusNoContent)
 }
+
 // savingsOverview godoc
 // @Summary  Net worth, this month's savings, allocation and insurance warnings
 // @Tags     savings
