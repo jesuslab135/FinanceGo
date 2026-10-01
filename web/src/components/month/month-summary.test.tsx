@@ -28,6 +28,12 @@ describe("MonthSummary", () => {
     expect(screen.getByText("Ingresos del mes")).toBeInTheDocument();
   });
 
+  it("shows the Saved line", () => {
+    renderWithProviders(<MonthSummary s={{ ...base, saved: 250_000, available: 5000 }} />);
+    expect(screen.getByText("Ahorro")).toBeInTheDocument();
+    expect(screen.getByText("$2,500.00")).toBeInTheDocument();
+  });
+
   describe("month closed under budget", () => {
     const good: Summary = { ...base, month: "2020-05", available: 5000 };
     beforeEach(() => { localStorage.clear(); celebrateMock.mockReset(); });

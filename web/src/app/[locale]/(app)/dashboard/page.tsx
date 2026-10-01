@@ -14,6 +14,7 @@ import { useFormatMoney } from "@/components/common/money";
 import { InsightsRow } from "@/components/dashboard/insights-row";
 import { HeroAvailable } from "@/components/dashboard/hero-available";
 import { KpiChips } from "@/components/dashboard/kpi-cards";
+import { SavingsCard } from "@/components/dashboard/savings-card";
 import { PeriodControls } from "@/components/dashboard/period-controls";
 import { SpendingChart } from "@/components/dashboard/spending-chart";
 import { UpcomingList } from "@/components/dashboard/upcoming-list";
@@ -23,7 +24,7 @@ import { parseISODate, periodRange, seriesRange, toISODate, toMonthKey, type Per
 import { useToday } from "@/hooks/use-today";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeInsights } from "@/lib/insights";
-import { useBreakdown, useCardsOverview, useCategories, useIncomeSources, useSeries, useSummary, useUpcoming } from "@/lib/query/hooks";
+import { useBreakdown, useCardsOverview, useCategories, useIncomeSources, useSavingsAccounts, useSavingsGoals, useSavingsOverview, useSeries, useSummary, useUpcoming } from "@/lib/query/hooks";
 import { isOnboardingSkipped } from "@/lib/onboarding";
 import { useErrorMessage } from "@/lib/api/error-messages";
 import { riseIn } from "@/lib/motion";
@@ -76,6 +77,9 @@ function Dashboard() {
   const incomeSources = useIncomeSources();
   const upcoming = useUpcoming(7);
   const cards = useCardsOverview();
+  const savingsOverview = useSavingsOverview();
+  const savingsGoals = useSavingsGoals();
+  const savingsAccounts = useSavingsAccounts();
   // Same rule as the layout's onboarding gate, so "Finish setup" never points at a /welcome that bounces back.
   const onboardingSkipped = useMemo(() => user != null && isOnboardingSkipped(user.id), [user]);
   // Each insight uses only the inputs it needs: a loading, failed or placeholder query leaves its input
@@ -84,8 +88,9 @@ function Dashboard() {
     () => computeInsights({
       today, summary: summaryNow.data, upcoming: upcoming.data, cards: cards.data, catNow: catNow.data, catPrev: catPrev.data,
       daily: daily.isPlaceholderData ? undefined : daily.data, hasIncome: incomeSources.data ? incomeSources.data.length > 0 : undefined, onboardingSkipped,
+      goals: savingsGoals.data, savingsAccounts: savingsAccounts.data, savingsOverview: savingsOverview.data,
     }, fmt),
-    [today, summaryNow.data, upcoming.data, cards.data, catNow.data, catPrev.data, daily.data, daily.isPlaceholderData, incomeSources.data, onboardingSkipped, fmt],
+    [today, summaryNow.data, upcoming.data, cards.data, catNow.data, catPrev.data, daily.data, daily.isPlaceholderData, incomeSources.data, onboardingSkipped, savingsGoals.data, savingsAccounts.data, savingsOverview.data, fmt],
   );
 
   const onChange = (p: Period, d: string) => router.replace({ pathname, query: { period: p, date: d } });
@@ -114,6 +119,11 @@ function Dashboard() {
         <Rise index={4}>{summary.error ? <QueryError error={summary.error} className="h-full rounded-2xl bg-card p-4 shadow-card" /> : <BudgetMeters budgets={summary.data ? (summary.data.budgets ?? []) : undefined} />}</Rise>
         <Rise index={5}><CardsDebt /></Rise>
       </div>
+      {savingsOverview.data && (savingsAccounts.data?.length ?? 0) > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
+          <Rise index={6}><SavingsCard overview={savingsOverview.data} goals={savingsGoals.data ?? []} /></Rise>
+        </div>
+      )}
     </div>
   );
 }

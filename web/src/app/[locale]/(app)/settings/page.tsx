@@ -100,8 +100,8 @@ export default function SettingsPage() {
     }
   };
 
-  const download = async (kind: "expenses" | "entries") => {
-    const path = kind === "expenses" ? "/export/expenses.csv" : "/export/entries.csv";
+  const download = async (kind: "expenses" | "entries" | "savings") => {
+    const path = ({ expenses: "/export/expenses.csv", entries: "/export/entries.csv", savings: "/export/savings.csv" } as const)[kind];
     setExporting(true);
     try {
       const { data, error, response } = await api.GET(path, { params: { query: { from, to } }, parseAs: "blob" });
@@ -185,6 +185,7 @@ export default function SettingsPage() {
           </div>
           <Button variant="outline" disabled={exporting} onClick={() => download("expenses")}>{t("settings.exportExpenses")}</Button>
           <Button variant="outline" disabled={exporting} onClick={() => download("entries")}>{t("settings.exportEntries")}</Button>
+          <Button variant="outline" disabled={exporting} onClick={() => download("savings")}>{t("settings.exportSavings")}</Button>
         </CardContent>
       </Card>
       <Card className="rounded-2xl shadow-card ring-1 ring-destructive/40">

@@ -1,10 +1,10 @@
 import { differenceInCalendarDays } from "date-fns";
-import type { BreakdownItem, CardSummary, SeriesPoint, Summary, UpcomingItem } from "@/lib/api/types";
+import type { BreakdownItem, CardSummary, SavingsAccount, SavingsGoal, SavingsOverview, SeriesPoint, Summary, UpcomingItem } from "@/lib/api/types";
 import { parseISODate, toISODate } from "@/lib/dates";
 
 export type Insight = {
   id: string;
-  kind: "overdue" | "card_due" | "budget" | "category_change" | "streak" | "setup";
+  kind: "overdue" | "card_due" | "budget" | "category_change" | "streak" | "setup" | "goal" | "insurance" | "stale_value";
   tone: "info" | "good" | "warn" | "critical";
   messageKey: string;
   values: Record<string, string | number>;
@@ -17,6 +17,7 @@ export type InsightInput = {
   today: Date; summary?: Summary; upcoming?: UpcomingItem[]; cards?: CardSummary[];
   catNow?: BreakdownItem[]; catPrev?: BreakdownItem[]; daily?: SeriesPoint[];
   hasIncome?: boolean; onboardingSkipped: boolean;
+  goals?: SavingsGoal[]; savingsAccounts?: SavingsAccount[]; savingsOverview?: SavingsOverview;
 };
 
 export function computeInsights(i: InsightInput, fmt: (cents: number) => string): Insight[] {
@@ -78,6 +79,25 @@ export function computeInsights(i: InsightInput, fmt: (cents: number) => string)
     // A streak of empty days is no-data, not thrift.
     if (streak >= 3 && spentAny) out.push({ id: `streak-${todayISO}`, kind: "streak", tone: "good", messageKey: "insights.streak", values: { days: streak }, priority: 30 });
   }
+
+  const behind = (i.goals ?? []).filter((g) => g.status === "behind" && (g.behind_by ?? 0) > 0)
+    .sort((a, b) => (b.behind_by ?? 0) - (a.behind_by ?? 0))[0];
+  if (behind) out.push({ id: `goal-behind-${behind.id}-${todayISO.slice(0, 7)}`, kind: "goal", tone: "warn", messageKey: "insights.goalBehind",
+    values: { name: behind.name, amount: fmt(behind.behind_by ?? 0) }, href: "/savings", priority: 65 });
+
+  const reached = (i.goals ?? []).find((g) => g.status === "achieved" && g.achieved_on &&
+    differenceInCalendarDays(i.today, parseISODate(g.achieved_on)) <= 7);
+  if (reached) out.push({ id: `goal-achieved-${reached.id}`, kind: "goal", tone: "good", messageKey: "insights.goalAchieved",
+    values: { name: reached.name }, href: "/savings", priority: 50 });
+
+  const warn = i.savingsOverview?.insurance_warnings[0];
+  if (warn) out.push({ id: `insurance-${warn.institution}-${warn.kind}`, kind: "insurance", tone: "warn", messageKey: "insights.insurance",
+    values: { institution: warn.institution }, href: "/savings", priority: 75 });
+
+  const stale = (i.savingsAccounts ?? []).filter((a) => a.stale && a.archived_on == null)
+    .sort((a, b) => (a.anchor_date < b.anchor_date ? -1 : 1))[0];
+  if (stale) out.push({ id: `stale-${stale.id}-${todayISO.slice(0, 7)}`, kind: "stale_value", tone: "info", messageKey: "insights.staleValue",
+    values: { name: stale.name, days: differenceInCalendarDays(i.today, parseISODate(stale.anchor_date)) }, href: `/savings/accounts/${stale.id}`, priority: 20 });
 
   return out.sort((a, b) => b.priority - a.priority).slice(0, 3);
 }

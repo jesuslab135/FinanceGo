@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownLeft, Receipt, Repeat, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, PiggyBank, Receipt, Repeat, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createElement, type ReactNode } from "react";
 import { useFormatMoney } from "@/components/common/money";
@@ -28,13 +28,16 @@ export function KpiChips({ summary: s, spent, period, spentStale = false }: { su
   const fmt = useFormatMoney();
   const committed = s.fixed_committed + s.installments;
   return (
-    <FadeInList as="div" className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-3 md:gap-3">
+    <FadeInList as="div" className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
       <Chip icon={ArrowDownLeft} label={t("income")} value={fmt(s.income)} />
       <Chip icon={Repeat} label={t("fixed")} value={fmt(committed)}>
         <p className="text-xs text-muted-foreground">{t("fixedDetail", { paid: fmt(s.fixed_paid), pending: fmt(s.fixed_committed - s.fixed_paid) })}</p>
         {s.installments > 0 && <p className="text-xs text-muted-foreground">{t("installments")}: {fmt(s.installments)}</p>}
       </Chip>
       <Chip icon={Receipt} label={t(`spent.${period}`)} value={fmt(spent)} busy={spentStale} />
+      <Chip icon={PiggyBank} label={t("saved")} value={fmt(s.saved)}>
+        {s.saved_planned > 0 && <p className="text-xs text-muted-foreground">{t("savedDetail", { planned: fmt(s.saved_planned), deposited: fmt(s.saved_deposited) })}</p>}
+      </Chip>
     </FadeInList>
   );
 }

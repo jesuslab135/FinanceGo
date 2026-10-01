@@ -36,12 +36,13 @@ export function MonthSummary({ s }: { s: Summary }) {
   return (
     <div className="space-y-3">
       <HeroAvailable summary={s} />
-      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3 [&>*]:min-w-0">
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-5 [&>*]:min-w-0">
         {([
           ["dashboard.income", s.income],
           ["dashboard.fixed", s.fixed_committed],
           ["dashboard.installments", s.installments],
           ["dashboard.spent.month", s.spent],
+          ["dashboard.saved", s.saved],
         ] as const).map(([k, v]) => (
           <div key={k} className="rounded-2xl bg-card p-3 shadow-card">
             <dt className="text-xs text-muted-foreground">{t(k)}</dt>

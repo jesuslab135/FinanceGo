@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Summary } from "@/lib/api/types";
+import type { SavingsAccount, SavingsGoal, SavingsOverview, Summary } from "@/lib/api/types";
 import { computeInsights, type InsightInput } from "./insights";
 
 const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
@@ -115,5 +115,29 @@ describe("computeInsights", () => {
     expect(r2.map((i) => i.kind)).toEqual(["budget"]);
     const r3 = computeInsights({ ...base, summary: undefined, hasIncome: undefined, onboardingSkipped: true, upcoming }, fmt);
     expect(r3.map((i) => i.kind)).toEqual(["overdue"]);
+  });
+});
+
+describe("savings insights", () => {
+  const today = new Date(2026, 2, 15);
+  const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const base = { today, onboardingSkipped: false };
+
+  it("flags a goal that is behind, an insurance excess and a stale value", () => {
+    const out = computeInsights({
+      ...base,
+      goals: [{ id: 1, name: "Japón", status: "behind", behind_by: 180_000 } as SavingsGoal],
+      savingsOverview: { insurance_warnings: [{ institution: "Klar", kind: "sofipo", total: 1, limit: 1, excess: 1 }] } as SavingsOverview,
+      savingsAccounts: [{ id: 3, name: "GBM", stale: true, anchor_date: "2026-01-01", archived_on: null } as unknown as SavingsAccount],
+    }, fmt);
+    expect(out.map((i) => i.messageKey)).toEqual(expect.arrayContaining(["insights.goalBehind", "insights.insurance", "insights.staleValue"]));
+    expect(out.find((i) => i.messageKey === "insights.goalBehind")?.values).toEqual({ name: "Japón", amount: "$1800.00" });
+    expect(out.find((i) => i.messageKey === "insights.staleValue")?.values).toEqual({ name: "GBM", days: 73 });
+  });
+
+  it("congratulates a goal reached in the last 7 days only", () => {
+    const g = (achieved_on: string) => ({ id: 2, name: "Auto", status: "achieved", achieved_on }) as SavingsGoal;
+    expect(computeInsights({ ...base, goals: [g("2026-03-10")] }, fmt).some((i) => i.messageKey === "insights.goalAchieved")).toBe(true);
+    expect(computeInsights({ ...base, goals: [g("2026-03-01")] }, fmt).some((i) => i.messageKey === "insights.goalAchieved")).toBe(false);
   });
 });
