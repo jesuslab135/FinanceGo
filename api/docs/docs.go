@@ -3786,6 +3786,7 @@ const docTemplate = `{
                 "progress",
                 "remaining",
                 "start_month",
+                "starting_amount",
                 "status",
                 "target_amount"
             ],
@@ -3841,6 +3842,9 @@ const docTemplate = `{
                 "start_month": {
                     "type": "string"
                 },
+                "starting_amount": {
+                    "type": "integer"
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -3890,6 +3894,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "starting_amount": {
+                    "type": "integer"
                 },
                 "target_amount": {
                     "type": "integer"

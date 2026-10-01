@@ -20,15 +20,15 @@ SELECT * FROM savings_accounts WHERE user_id = @user_id ORDER BY archived_on NUL
 DELETE FROM savings_accounts WHERE id = @id AND user_id = @user_id;
 
 -- name: CreateSavingsGoal :one
-INSERT INTO savings_goals (user_id, account_id, name, kind, emergency_months, target_amount, target_date,
+INSERT INTO savings_goals (user_id, account_id, name, kind, emergency_months, target_amount, starting_amount, target_date,
     monthly_amount, color, icon, start_month)
-VALUES (@user_id, @account_id, @name, @kind, sqlc.narg(emergency_months), @target_amount, sqlc.narg(target_date),
+VALUES (@user_id, @account_id, @name, @kind, sqlc.narg(emergency_months), @target_amount, @starting_amount, sqlc.narg(target_date),
     sqlc.narg(monthly_amount), @color, @icon, @start_month)
 RETURNING *;
 
 -- name: UpdateSavingsGoal :one
 UPDATE savings_goals SET name = @name, kind = @kind, emergency_months = sqlc.narg(emergency_months),
-    target_amount = @target_amount, target_date = sqlc.narg(target_date), monthly_amount = sqlc.narg(monthly_amount),
+    target_amount = @target_amount, starting_amount = @starting_amount, target_date = sqlc.narg(target_date), monthly_amount = sqlc.narg(monthly_amount),
     color = @color, icon = @icon, archived = @archived, updated_at = now()
 WHERE id = @id AND user_id = @user_id
 RETURNING *;

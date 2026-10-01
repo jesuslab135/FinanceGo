@@ -4,23 +4,23 @@ import "testing"
 
 func gid(id int64) *int64 { return &id }
 
-func TestProgressNetsTaggedMovementsAndFloorsAtZero(t *testing.T) {
+func TestGoalProgressNetsTaggedMovementsAndFloorsAtZero(t *testing.T) {
 	moves := []Movement{
 		{AccountID: 1, GoalID: gid(7), Kind: KindDeposit, Amount: 5_000, On: d("2026-02-01")},
 		{AccountID: 1, GoalID: gid(7), Kind: KindWithdrawal, Amount: 1_000, On: d("2026-03-02")},
 		{AccountID: 1, GoalID: gid(8), Kind: KindDeposit, Amount: 9_000, On: d("2026-02-01")},
 		{AccountID: 1, Kind: KindDeposit, Amount: 9_000, On: d("2026-02-01")},
 	}
-	if p := Progress(7, moves, nil); p != 4_000 {
-		t.Fatalf("Progress = %d, want 4000", p)
+	if p := GoalProgress(Goal{ID: 7}, moves, nil); p != 4_000 {
+		t.Fatalf("GoalProgress = %d, want 4000", p)
 	}
 	march := d("2026-03-01")
-	if p := Progress(7, moves, &march); p != 5_000 {
-		t.Fatalf("Progress before March = %d, want 5000", p)
+	if p := GoalProgress(Goal{ID: 7}, moves, &march); p != 5_000 {
+		t.Fatalf("GoalProgress before March = %d, want 5000", p)
 	}
 	over := append(moves, Movement{AccountID: 1, GoalID: gid(7), Kind: KindWithdrawal, Amount: 99_000, On: d("2026-03-03")})
-	if p := Progress(7, over, nil); p != 0 {
-		t.Fatalf("Progress = %d, want 0 (floored)", p)
+	if p := GoalProgress(Goal{ID: 7}, over, nil); p != 0 {
+		t.Fatalf("GoalProgress = %d, want 0 (floored)", p)
 	}
 }
 
@@ -130,5 +130,42 @@ func TestMonthSaved(t *testing.T) {
 	// A future month counts only the plan.
 	if s := MonthSaved(goals, moves, d("2026-05-01"), today); s != (MonthSaving{Planned: 350_000, Saved: 350_000}) {
 		t.Fatalf("future %+v", s)
+	}
+}
+
+func TestGoalProgressCountsStartingAmount(t *testing.T) {
+	g := Goal{ID: 7, Start: 30_000}
+	if p := GoalProgress(g, nil, nil); p != 30_000 {
+		t.Fatalf("start alone = %d, want 30000", p)
+	}
+	moves := []Movement{
+		{AccountID: 1, GoalID: gid(7), Kind: KindDeposit, Amount: 5_000, On: d("2026-02-01")},
+		{AccountID: 1, GoalID: gid(7), Kind: KindWithdrawal, Amount: 50_000, On: d("2026-03-02")},
+	}
+	if p := GoalProgress(g, moves[:1], nil); p != 35_000 {
+		t.Fatalf("start + deposit = %d, want 35000", p)
+	}
+	if p := GoalProgress(g, moves, nil); p != 0 {
+		t.Fatalf("start + withdrawals = %d, want 0 (floored)", p)
+	}
+}
+
+func TestPlannedForWithStartingAmount(t *testing.T) {
+	march := d("2026-03-01")
+	covered := Goal{ID: 1, Target: 100_000, Start: 100_000, Monthly: ptr[int64](2_000), StartMonth: d("2026-01-01")}
+	if got := PlannedFor(covered, nil, march); got != 0 {
+		t.Fatalf("covered goal plans %d, want 0", got)
+	}
+	partial := Goal{ID: 2, Target: 200_000, Start: 50_000, TargetDate: ptr(d("2026-12-31")), StartMonth: d("2026-01-01")}
+	if got := PlannedFor(partial, nil, march); got != 15_000 { // ceil(150000 / 10)
+		t.Fatalf("partial start plans %d, want 15000", got)
+	}
+}
+
+func TestMonthSavedIgnoresStartingAmount(t *testing.T) {
+	goals := []Goal{{ID: 1, Target: 1_000_000, Start: 400_000, StartMonth: d("2026-01-01")}}
+	s := MonthSaved(goals, nil, d("2026-03-01"), d("2026-03-15"))
+	if s != (MonthSaving{}) {
+		t.Fatalf("start leaked into Saved: %+v", s)
 	}
 }

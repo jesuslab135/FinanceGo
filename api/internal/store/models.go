@@ -200,6 +200,7 @@ type SavingsGoal struct {
 	Archived        bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+	StartingAmount  int64
 }
 
 type User struct {

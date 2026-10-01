@@ -141,6 +141,7 @@ type savingsGoal struct {
 	ID               int64   `json:"id"`
 	AccountID        int64   `json:"account_id"`
 	Status           string  `json:"status"`
+	StartingAmount   int64   `json:"starting_amount"`
 	Progress         int64   `json:"progress"`
 	Remaining        int64   `json:"remaining"`
 	Pct              int32   `json:"pct"`
@@ -731,5 +732,47 @@ func TestSavingsDeletesAndEditsCannotOverdraw(t *testing.T) {
 	}
 	if acc := h.getAccount(tok, v); acc.Balance != 0 || !acc.HasMoneyHistory {
 		t.Fatalf("valuation must still exist %+v", acc)
+	}
+}
+
+func TestSavingsGoalStartingAmount(t *testing.T) {
+	h := newHarness(t) // clock: 2026-03-15
+	tok := h.signup("sav-start@example.com")
+	acc := h.savingsAccount(tok, "Cajita", "bank", "Nu", 5_000_000, "2026-03-01")
+
+	covered := h.savingsGoal(tok, M{"account_id": acc, "name": "Emergencias", "target_amount": 3_000_000,
+		"starting_amount": 3_000_000, "target_date": "2026-12-31"})
+	if covered.Status != "achieved" || covered.AchievedOn == nil || covered.PlannedThisMonth != 0 ||
+		covered.StartingAmount != 3_000_000 || covered.Progress != 3_000_000 || covered.Pct != 100 {
+		t.Fatalf("covered goal %+v", covered)
+	}
+
+	partial := h.savingsGoal(tok, M{"account_id": acc, "name": "Moto", "target_amount": 2_000_000,
+		"starting_amount": 500_000, "target_date": "2026-12-31"})
+	if partial.RequiredMonthly == nil || *partial.RequiredMonthly != 150_000 || partial.PlannedThisMonth != 150_000 ||
+		partial.Progress != 500_000 {
+		t.Fatalf("partial goal %+v", partial)
+	}
+
+	s := expect[summarySaved](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200)
+	if s.SavedDeposited != 0 || s.SavedWithdrawn != 0 || s.SavedPlanned != 150_000 {
+		t.Fatalf("summary %+v", s)
+	}
+	if a := h.getAccount(tok, acc); a.Balance != 5_000_000 || a.PutIn != 5_000_000 {
+		t.Fatalf("account changed %+v", a)
+	}
+
+	// Editing the start moves progress and re-syncs achieved_on.
+	gurl := fmt.Sprintf("/api/v1/savings-goals/%d", covered.ID)
+	upd := M{"account_id": acc, "name": "Emergencias", "target_amount": 3_000_000, "target_date": "2026-12-31"}
+	if got := expect[savingsGoal](t, h.do("PUT", gurl, tok, upd), 200); got.StartingAmount != 0 || got.Status == "achieved" || got.AchievedOn != nil {
+		t.Fatalf("start cleared %+v", got)
+	}
+
+	for _, v := range []int64{-1, 1_000_000_000_000} {
+		r := h.do("POST", "/api/v1/savings-goals", tok, M{"account_id": acc, "name": "x", "target_amount": 100, "starting_amount": v})
+		if r.Code != 422 || errFields(r)["starting_amount"] == "" {
+			t.Errorf("starting_amount %d: %d %s", v, r.Code, r.Body)
+		}
 	}
 }

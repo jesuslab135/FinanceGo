@@ -117,11 +117,11 @@ func (q *Queries) CreateSavingsAccount(ctx context.Context, arg CreateSavingsAcc
 }
 
 const createSavingsGoal = `-- name: CreateSavingsGoal :one
-INSERT INTO savings_goals (user_id, account_id, name, kind, emergency_months, target_amount, target_date,
+INSERT INTO savings_goals (user_id, account_id, name, kind, emergency_months, target_amount, starting_amount, target_date,
     monthly_amount, color, icon, start_month)
-VALUES ($1, $2, $3, $4, $5, $6, $7,
-    $8, $9, $10, $11)
-RETURNING id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+    $9, $10, $11, $12)
+RETURNING id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at, starting_amount
 `
 
 type CreateSavingsGoalParams struct {
@@ -131,6 +131,7 @@ type CreateSavingsGoalParams struct {
 	Kind            string
 	EmergencyMonths *int32
 	TargetAmount    int64
+	StartingAmount  int64
 	TargetDate      *time.Time
 	MonthlyAmount   *int64
 	Color           string
@@ -146,6 +147,7 @@ func (q *Queries) CreateSavingsGoal(ctx context.Context, arg CreateSavingsGoalPa
 		arg.Kind,
 		arg.EmergencyMonths,
 		arg.TargetAmount,
+		arg.StartingAmount,
 		arg.TargetDate,
 		arg.MonthlyAmount,
 		arg.Color,
@@ -170,6 +172,7 @@ func (q *Queries) CreateSavingsGoal(ctx context.Context, arg CreateSavingsGoalPa
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartingAmount,
 	)
 	return i, err
 }
@@ -301,7 +304,7 @@ func (q *Queries) GetSavingsAccount(ctx context.Context, arg GetSavingsAccountPa
 }
 
 const getSavingsGoal = `-- name: GetSavingsGoal :one
-SELECT id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at FROM savings_goals WHERE id = $1 AND user_id = $2
+SELECT id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at, starting_amount FROM savings_goals WHERE id = $1 AND user_id = $2
 `
 
 type GetSavingsGoalParams struct {
@@ -329,6 +332,7 @@ func (q *Queries) GetSavingsGoal(ctx context.Context, arg GetSavingsGoalParams) 
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartingAmount,
 	)
 	return i, err
 }
@@ -528,7 +532,7 @@ func (q *Queries) ListSavingsAccounts(ctx context.Context, userID int64) ([]Savi
 }
 
 const listSavingsGoals = `-- name: ListSavingsGoals :many
-SELECT id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at FROM savings_goals WHERE user_id = $1 ORDER BY archived, target_date NULLS LAST, id
+SELECT id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at, starting_amount FROM savings_goals WHERE user_id = $1 ORDER BY archived, target_date NULLS LAST, id
 `
 
 func (q *Queries) ListSavingsGoals(ctx context.Context, userID int64) ([]SavingsGoal, error) {
@@ -557,6 +561,7 @@ func (q *Queries) ListSavingsGoals(ctx context.Context, userID int64) ([]Savings
 			&i.Archived,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.StartingAmount,
 		); err != nil {
 			return nil, err
 		}
@@ -685,10 +690,10 @@ func (q *Queries) UpdateSavingsAccount(ctx context.Context, arg UpdateSavingsAcc
 
 const updateSavingsGoal = `-- name: UpdateSavingsGoal :one
 UPDATE savings_goals SET name = $1, kind = $2, emergency_months = $3,
-    target_amount = $4, target_date = $5, monthly_amount = $6,
-    color = $7, icon = $8, archived = $9, updated_at = now()
-WHERE id = $10 AND user_id = $11
-RETURNING id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at
+    target_amount = $4, starting_amount = $5, target_date = $6, monthly_amount = $7,
+    color = $8, icon = $9, archived = $10, updated_at = now()
+WHERE id = $11 AND user_id = $12
+RETURNING id, user_id, account_id, name, kind, emergency_months, target_amount, target_date, monthly_amount, color, icon, start_month, achieved_on, archived, created_at, updated_at, starting_amount
 `
 
 type UpdateSavingsGoalParams struct {
@@ -696,6 +701,7 @@ type UpdateSavingsGoalParams struct {
 	Kind            string
 	EmergencyMonths *int32
 	TargetAmount    int64
+	StartingAmount  int64
 	TargetDate      *time.Time
 	MonthlyAmount   *int64
 	Color           string
@@ -711,6 +717,7 @@ func (q *Queries) UpdateSavingsGoal(ctx context.Context, arg UpdateSavingsGoalPa
 		arg.Kind,
 		arg.EmergencyMonths,
 		arg.TargetAmount,
+		arg.StartingAmount,
 		arg.TargetDate,
 		arg.MonthlyAmount,
 		arg.Color,
@@ -737,6 +744,7 @@ func (q *Queries) UpdateSavingsGoal(ctx context.Context, arg UpdateSavingsGoalPa
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartingAmount,
 	)
 	return i, err
 }

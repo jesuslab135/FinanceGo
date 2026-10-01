@@ -18,6 +18,7 @@ type Goal struct {
 	ID         int64
 	AccountID  int64
 	Target     int64
+	Start      int64 // starting amount: already saved toward the goal before tracking began
 	TargetDate *time.Time
 	Monthly    *int64
 	StartMonth time.Time
@@ -25,12 +26,12 @@ type Goal struct {
 	Archived   bool
 }
 
-// Progress is the net amount tagged to goalID (deposits − withdrawals), counting only movements
+// GoalProgress is g.Start plus the net amount tagged to g (deposits − withdrawals), counting only movements
 // dated before `before` when it is set. It never goes below zero.
-func Progress(goalID int64, moves []Movement, before *time.Time) int64 {
-	var p int64
+func GoalProgress(g Goal, moves []Movement, before *time.Time) int64 {
+	p := g.Start
 	for _, m := range moves {
-		if m.GoalID == nil || *m.GoalID != goalID || (before != nil && !m.On.Before(*before)) {
+		if m.GoalID == nil || *m.GoalID != g.ID || (before != nil && !m.On.Before(*before)) {
 			continue
 		}
 		switch m.Kind {
@@ -59,7 +60,7 @@ type GoalStats struct {
 	BehindBy        *int64
 }
 
-// GoalStatsFor evaluates g on `today`. `progress` is Progress(g.ID, moves, nil); the account balance
+// GoalStatsFor evaluates g on `today`. `progress` is GoalProgress(g, moves, nil); the account balance
 // caps it so a loss in the account shows on its goals.
 func GoalStatsFor(g Goal, progress, accountBalance int64, today time.Time) GoalStats {
 	shown := min(progress, max(accountBalance, 0))
@@ -97,7 +98,7 @@ func PlannedFor(g Goal, moves []Movement, month time.Time) int64 {
 	if g.Archived || g.StartMonth.After(month) || (g.AchievedOn != nil && g.AchievedOn.Before(month)) {
 		return 0
 	}
-	remaining := max(g.Target-Progress(g.ID, moves, &month), 0)
+	remaining := max(g.Target-GoalProgress(g, moves, &month), 0)
 	var plan int64
 	switch {
 	case g.Monthly != nil:

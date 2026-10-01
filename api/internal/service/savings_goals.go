@@ -23,6 +23,7 @@ type SavingsGoal struct {
 	Kind             string      `json:"kind" validate:"required"`
 	EmergencyMonths  *int32      `json:"emergency_months"`
 	TargetAmount     int64       `json:"target_amount" validate:"required"`
+	StartingAmount   int64       `json:"starting_amount" validate:"required"`
 	TargetDate       *datex.Date `json:"target_date"`
 	MonthlyAmount    *int64      `json:"monthly_amount"`
 	Color            string      `json:"color" validate:"required"`
@@ -41,10 +42,10 @@ type SavingsGoal struct {
 
 func (d savingsData) goalView(g store.SavingsGoal, today time.Time) SavingsGoal {
 	mg := mathGoal(g)
-	st := savings.GoalStatsFor(mg, savings.Progress(g.ID, d.moves, nil), d.balance(g.AccountID, today), today)
+	st := savings.GoalStatsFor(mg, savings.GoalProgress(mg, d.moves, nil), d.balance(g.AccountID, today), today)
 	return SavingsGoal{
 		ID: g.ID, AccountID: g.AccountID, Name: g.Name, Kind: g.Kind, EmergencyMonths: g.EmergencyMonths,
-		TargetAmount: g.TargetAmount, TargetDate: datex.DatePtr(g.TargetDate), MonthlyAmount: g.MonthlyAmount,
+		TargetAmount: g.TargetAmount, StartingAmount: g.StartingAmount, TargetDate: datex.DatePtr(g.TargetDate), MonthlyAmount: g.MonthlyAmount,
 		Color: g.Color, Icon: g.Icon, StartMonth: datex.NewMonth(g.StartMonth), AchievedOn: datex.DatePtr(g.AchievedOn),
 		Archived: g.Archived, Progress: st.Progress, Remaining: st.Remaining, Pct: st.Pct,
 		RequiredMonthly: st.RequiredMonthly, Status: st.Status, BehindBy: st.BehindBy,
@@ -60,6 +61,7 @@ type SavingsGoalInput struct {
 	Kind            string      `json:"kind"`
 	EmergencyMonths *int32      `json:"emergency_months"`
 	TargetAmount    int64       `json:"target_amount" validate:"required"`
+	StartingAmount  int64       `json:"starting_amount"`
 	TargetDate      *datex.Date `json:"target_date"`
 	MonthlyAmount   *int64      `json:"monthly_amount"`
 	Color           string      `json:"color"`
@@ -93,6 +95,7 @@ func validateGoal(in *SavingsGoalInput, today time.Time, checkDate bool) error {
 	v.Check(in.Kind != "emergency" || (in.EmergencyMonths != nil && (*in.EmergencyMonths == 3 || *in.EmergencyMonths == 6)), "emergency_months", "must be 3 or 6")
 	v.Check(in.Kind == "emergency" || in.EmergencyMonths == nil, "emergency_months", "is only for emergency goals")
 	checkAmount(&v, "target_amount", in.TargetAmount)
+	v.Check(in.StartingAmount >= 0 && in.StartingAmount < maxAmount, "starting_amount", "must be between 0 and 999999999999 cents")
 	if in.MonthlyAmount != nil {
 		checkAmount(&v, "monthly_amount", *in.MonthlyAmount)
 	}
@@ -164,7 +167,7 @@ func (s *Service) CreateSavingsGoal(ctx context.Context, a Actor, in SavingsGoal
 			return err
 		}
 		g, err := q.CreateSavingsGoal(ctx, store.CreateSavingsGoalParams{UserID: a.UserID, AccountID: in.AccountID,
-			Name: in.Name, Kind: in.Kind, EmergencyMonths: in.EmergencyMonths, TargetAmount: in.TargetAmount,
+			Name: in.Name, Kind: in.Kind, EmergencyMonths: in.EmergencyMonths, TargetAmount: in.TargetAmount, StartingAmount: in.StartingAmount,
 			TargetDate: datePtrTime(in.TargetDate), MonthlyAmount: in.MonthlyAmount, Color: in.Color, Icon: in.Icon,
 			StartMonth: datex.MonthStart(today)})
 		if err != nil {
@@ -200,7 +203,7 @@ func (s *Service) UpdateSavingsGoal(ctx context.Context, a Actor, id int64, in S
 			}
 		}
 		if _, err := q.UpdateSavingsGoal(ctx, store.UpdateSavingsGoalParams{Name: in.Name, Kind: in.Kind,
-			EmergencyMonths: in.EmergencyMonths, TargetAmount: in.TargetAmount, TargetDate: datePtrTime(in.TargetDate),
+			EmergencyMonths: in.EmergencyMonths, TargetAmount: in.TargetAmount, StartingAmount: in.StartingAmount, TargetDate: datePtrTime(in.TargetDate),
 			MonthlyAmount: in.MonthlyAmount, Color: in.Color, Icon: in.Icon, Archived: in.Archived, ID: id, UserID: a.UserID}); err != nil {
 			return err
 		}

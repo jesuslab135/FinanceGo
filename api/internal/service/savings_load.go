@@ -59,7 +59,8 @@ func mathAccount(a store.SavingsAccount) savings.Account {
 
 func mathGoal(g store.SavingsGoal) savings.Goal {
 	return savings.Goal{ID: g.ID, AccountID: g.AccountID, Target: g.TargetAmount, TargetDate: g.TargetDate,
-		Monthly: g.MonthlyAmount, StartMonth: g.StartMonth, AchievedOn: g.AchievedOn, Archived: g.Archived}
+		Monthly: g.MonthlyAmount, StartMonth: g.StartMonth, AchievedOn: g.AchievedOn, Archived: g.Archived,
+		Start: g.StartingAmount}
 }
 
 func (d savingsData) account(id int64) (store.SavingsAccount, bool) {
@@ -144,7 +145,8 @@ func (s *Service) syncLoaded(ctx context.Context, q *store.Queries, a Actor, d s
 		if !slices.Contains(accountIDs, g.AccountID) {
 			continue
 		}
-		st := savings.GoalStatsFor(mathGoal(g), savings.Progress(g.ID, d.moves, nil), d.balance(g.AccountID, today), today)
+		mg := mathGoal(g)
+		st := savings.GoalStatsFor(mg, savings.GoalProgress(mg, d.moves, nil), d.balance(g.AccountID, today), today)
 		var set *time.Time
 		switch reached := st.Status == savings.StatusAchieved; {
 		case reached && g.AchievedOn == nil:
