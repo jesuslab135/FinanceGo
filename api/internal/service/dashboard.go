@@ -9,6 +9,7 @@ import (
 	"financego/internal/apperr"
 	"financego/internal/cards"
 	"financego/internal/datex"
+	"financego/internal/savings"
 	"financego/internal/store"
 )
 
@@ -18,6 +19,10 @@ type BudgetStatus struct {
 	Color      string `json:"color" validate:"required"`
 	Limit      int64  `json:"limit" validate:"required"`
 	Spent      int64  `json:"spent" validate:"required"`
+	Saved             int64          `json:"saved" validate:"required"`
+	SavedPlanned      int64          `json:"saved_planned" validate:"required"`
+	SavedDeposited    int64          `json:"saved_deposited" validate:"required"`
+	SavedWithdrawn    int64          `json:"saved_withdrawn" validate:"required"`
 	Pct        int32  `json:"pct" validate:"required"`
 }
 
@@ -29,6 +34,10 @@ type Summary struct {
 	FixedPaid         int64          `json:"fixed_paid" validate:"required"`
 	Installments      int64          `json:"installments" validate:"required"`
 	Spent             int64          `json:"spent" validate:"required"`
+	Saved             int64          `json:"saved" validate:"required"`
+	SavedPlanned      int64          `json:"saved_planned" validate:"required"`
+	SavedDeposited    int64          `json:"saved_deposited" validate:"required"`
+	SavedWithdrawn    int64          `json:"saved_withdrawn" validate:"required"`
 	Available         int64          `json:"available" validate:"required"`
 	SafeToSpendPerDay *int64         `json:"safe_to_spend_per_day"`
 	DaysRemaining     *int32         `json:"days_remaining"`
@@ -71,7 +80,13 @@ func (s *Service) Summary(ctx context.Context, a Actor, month *time.Time) (Summa
 		Month: datex.NewMonth(m), Currency: u.Currency, Income: t.Income, FixedCommitted: t.FixedCommitted,
 		FixedPaid: t.FixedPaid, Installments: t.Installments, Spent: spent, Budgets: []BudgetStatus{},
 	}
-	out.Available = out.Income - out.FixedCommitted - out.Installments - out.Spent
+	sd, err := s.loadSavings(ctx, s.q, a.UserID)
+	if err != nil {
+		return Summary{}, err
+	}
+	ms := savings.MonthSaved(sd.mathGoals(), sd.moves, m, today)
+	out.Saved, out.SavedPlanned, out.SavedDeposited, out.SavedWithdrawn = ms.Saved, ms.Planned, ms.Deposited, ms.Withdrawn
+	out.Available = out.Income - out.FixedCommitted - out.Installments - out.Spent - out.Saved
 	if per, days, ok := SafeToSpend(out.Available, today, m); ok {
 		d := int32(days)
 		out.SafeToSpendPerDay, out.DaysRemaining = &per, &d

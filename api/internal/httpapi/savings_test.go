@@ -385,3 +385,155 @@ func TestSavingsMovementDatesUseUserTimezone(t *testing.T) {
 		t.Fatalf("Mar 16 is still the future in Mexico City: %d %s", r.Code, r.Body)
 	}
 }
+
+type overview struct {
+	NetWorth int64   `json:"net_worth"`
+	Assets   int64   `json:"assets"`
+	CardDebt int64   `json:"card_debt"`
+	UDIValue float64 `json:"udi_value"`
+	Month    struct {
+		Planned int64 `json:"planned"`
+		Saved   int64 `json:"saved"`
+	} `json:"month"`
+	Allocation []struct {
+		Kind   string `json:"kind"`
+		Amount int64  `json:"amount"`
+		Pct    int32  `json:"pct"`
+	} `json:"allocation"`
+	InsuranceWarnings []struct {
+		Institution string `json:"institution"`
+		Total       int64  `json:"total"`
+		Limit       int64  `json:"limit"`
+		Excess      int64  `json:"excess"`
+	} `json:"insurance_warnings"`
+}
+
+func TestSavingsOverviewAndNetWorth(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-overview@example.com")
+	h.savingsAccount(tok, "Klar 1", "sofipo", "Klar", 15_000_000, "2026-01-01")
+	h.savingsAccount(tok, "Klar 2", "sofipo", " klar", 10_000_000, "2026-01-01")
+	nu := h.savingsAccount(tok, "Nu", "bank", "Nu", 1_000_000, "2026-01-01")
+	cetes := h.savingsAccount(tok, "CETES", "government", "CETES Directo", 500_000, "2026-01-01")
+	expect[valuation](t, h.do("PUT", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-03-01", cetes), tok, M{"value": 520_000}), 200)
+	card := h.creditCard(tok)
+	h.expense(tok, "Comida", 300_000, "2026-03-02", "", &card)
+	h.savingsGoal(tok, M{"account_id": nu, "name": "Meta", "target_amount": 10_000_000, "monthly_amount": 100_000})
+
+	var cardDebt int64
+	for _, c := range expect[struct {
+		Items []struct {
+			CurrentBalance int64 `json:"current_balance"`
+		} `json:"items"`
+	}](t, h.do("GET", "/api/v1/dashboard/cards", tok, nil), 200).Items {
+		cardDebt += c.CurrentBalance
+	}
+
+	o := expect[overview](t, h.do("GET", "/api/v1/savings/overview", tok, nil), 200)
+
+	if o.Assets != 26_520_000 || o.CardDebt != cardDebt || cardDebt <= 0 || o.NetWorth != o.Assets-cardDebt || o.UDIValue != 8.70 {
+		t.Fatalf("overview totals %+v (card debt %d)", o, cardDebt)
+	}
+	if o.Month.Planned != 100_000 || o.Month.Saved != 100_000 {
+		t.Fatalf("month %+v", o.Month)
+	}
+	if len(o.InsuranceWarnings) != 1 || o.InsuranceWarnings[0].Institution != "Klar" || o.InsuranceWarnings[0].Excess != 3_250_000 {
+		t.Fatalf("warnings %+v", o.InsuranceWarnings)
+	}
+	if len(o.Allocation) != 3 || o.Allocation[0].Kind != "sofipo" {
+		t.Fatalf("allocation %+v", o.Allocation)
+	}
+}
+
+func TestSavingsSeries(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-series@example.com")
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 100_000, "2026-01-10")
+	h.move(tok, M{"account_id": a, "kind": "deposit", "amount": 20_000, "occurred_on": "2026-02-05"})
+	expect[valuation](t, h.do("PUT", fmt.Sprintf("/api/v1/savings-accounts/%d/valuations/2026-02-28", a), tok, M{"value": 130_000}), 200)
+	h.savingsAccount(tok, "Later", "bank", "BBVA", 50_000, "2026-03-01") // opened in March: not in Jan/Feb
+
+	pts := expect[struct {
+		Items []struct {
+			Month string `json:"month"`
+			Value int64  `json:"value"`
+			PutIn int64  `json:"put_in"`
+		} `json:"items"`
+	}](t, h.do("GET", "/api/v1/savings/series?from=2026-01&to=2026-03", tok, nil), 200).Items
+	want := []struct {
+		m        string
+		value, p int64
+	}{{"2026-01", 100_000, 100_000}, {"2026-02", 130_000, 120_000}, {"2026-03", 180_000, 170_000}}
+	if len(pts) != 3 {
+		t.Fatalf("points %+v", pts)
+	}
+	for i, w := range want {
+		if pts[i].Month != w.m || pts[i].Value != w.value || pts[i].PutIn != w.p {
+			t.Errorf("point %d = %+v, want %+v", i, pts[i], w)
+		}
+	}
+	for _, q := range []string{"from=2023-01&to=2026-03", "from=2026-01&to=2026-04", "from=2026-03&to=2026-01", "from=2026-01"} {
+		if r := h.do("GET", "/api/v1/savings/series?"+q, tok, nil); r.Code != 422 && r.Code != 400 {
+			t.Errorf("%s: %d", q, r.Code)
+		}
+	}
+}
+
+type summarySaved struct {
+	Available      int64 `json:"available"`
+	Saved          int64 `json:"saved"`
+	SavedPlanned   int64 `json:"saved_planned"`
+	SavedDeposited int64 `json:"saved_deposited"`
+	SavedWithdrawn int64 `json:"saved_withdrawn"`
+}
+
+func TestDashboardAvailableIncludesSaved(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-dash@example.com")
+	h.income(tok, 1_000_000, 1, "2026-03")
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 0, "2026-03-01")
+	h.savingsGoal(tok, M{"account_id": a, "name": "G", "target_amount": 10_000_000, "monthly_amount": 200_000})
+	sum := func(month string) summarySaved {
+		return expect[summarySaved](t, h.do("GET", "/api/v1/dashboard/summary?month="+month, tok, nil), 200)
+	}
+	if s := sum("2026-03"); s.Saved != 200_000 || s.SavedPlanned != 200_000 || s.Available != 800_000 {
+		t.Fatalf("planned only %+v", s)
+	}
+	h.move(tok, M{"account_id": a, "kind": "deposit", "amount": 250_000, "occurred_on": "2026-03-05"})
+	if s := sum("2026-03"); s.Saved != 250_000 || s.SavedDeposited != 250_000 || s.Available != 750_000 {
+		t.Fatalf("over plan %+v", s)
+	}
+	h.move(tok, M{"account_id": a, "kind": "withdrawal", "amount": 100_000, "occurred_on": "2026-03-06"})
+	if s := sum("2026-03"); s.Saved != 150_000 || s.SavedWithdrawn != 100_000 || s.Available != 850_000 {
+		t.Fatalf("after withdrawal %+v", s)
+	}
+	if s := sum("2026-04"); s.Saved != 200_000 || s.SavedDeposited != 0 {
+		t.Fatalf("future month %+v", s)
+	}
+	if s := sum("2026-02"); s.Saved != 0 { // before the goal existed
+		t.Fatalf("past month %+v", s)
+	}
+}
+
+func TestSavingsGoalDeleteKeepsMovements(t *testing.T) {
+	h := newHarness(t)
+	tok := h.signup("sav-goal-del@example.com")
+	a := h.savingsAccount(tok, "A", "bank", "Nu", 0, "2026-03-01")
+	g := h.savingsGoal(tok, M{"account_id": a, "name": "G", "target_amount": 100_000, "monthly_amount": 20_000}).ID
+	h.move(tok, M{"account_id": a, "kind": "deposit", "goal_id": g, "amount": 5_000, "occurred_on": "2026-03-02"})
+	if r := h.do("DELETE", fmt.Sprintf("/api/v1/savings-goals/%d", g), tok, nil); r.Code != 204 {
+		t.Fatalf("delete goal %d", r.Code)
+	}
+	moves := expect[struct {
+		Items []M `json:"items"`
+	}](t, h.do("GET", fmt.Sprintf("/api/v1/savings-accounts/%d/movements", a), tok, nil), 200).Items
+	if len(moves) != 1 || moves[0]["goal_id"] != nil {
+		t.Fatalf("movement must stay, untagged: %v", moves)
+	}
+	if acc := h.getAccount(tok, a); acc.Balance != 5_000 {
+		t.Fatalf("balance %+v", acc)
+	}
+	if s := expect[summarySaved](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200); s.SavedPlanned != 0 || s.Saved != 5_000 {
+		t.Fatalf("summary after delete %+v", s)
+	}
+}

@@ -402,3 +402,48 @@ func (h *handlers) deleteAccountMovement(c *gin.Context) {
 	}
 	c.Status(http.StatusNoContent)
 }
+// savingsOverview godoc
+// @Summary  Net worth, this month's savings, allocation and insurance warnings
+// @Tags     savings
+// @Produce  json
+// @Security BearerAuth
+// @Success  200 {object} service.SavingsOverview
+// @Router   /savings/overview [get]
+func (h *handlers) savingsOverview(c *gin.Context) {
+	out, err := h.svc.SavingsOverview(c.Request.Context(), actorOf(c))
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, out)
+}
+
+// savingsSeries godoc
+// @Summary  Month-end value and money put in, per month (at most 24 months)
+// @Tags     savings
+// @Produce  json
+// @Security BearerAuth
+// @Param    from query string true "YYYY-MM"
+// @Param    to   query string true "YYYY-MM"
+// @Success  200 {object} object{items=[]service.SavingsPoint}
+// @Router   /savings/series [get]
+func (h *handlers) savingsSeries(c *gin.Context) {
+	from, ok := queryMonth(c, "from")
+	if !ok {
+		return
+	}
+	to, ok := queryMonth(c, "to")
+	if !ok {
+		return
+	}
+	if from == nil || to == nil {
+		fail(c, apperr.BadRequest("from and to are required (YYYY-MM)"))
+		return
+	}
+	list, err := h.svc.SavingsSeries(c.Request.Context(), actorOf(c), *from, *to)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, items(list))
+}

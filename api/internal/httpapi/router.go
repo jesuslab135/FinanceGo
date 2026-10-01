@@ -124,6 +124,8 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.GET("/savings-goals/emergency-suggestion", h.emergencySuggestion)
 	p.PUT("/savings-goals/:id", h.updateSavingsGoal)
 	p.DELETE("/savings-goals/:id", h.deleteSavingsGoal)
+	p.GET("/savings/overview", h.savingsOverview)
+	p.GET("/savings/series", h.savingsSeries)
 	p.GET("/savings-accounts/:id/movements", h.listAccountMovements)
 	p.POST("/account-movements", h.createAccountMovement)
 	p.PUT("/account-movements/:id", h.updateAccountMovement)
