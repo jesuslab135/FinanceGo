@@ -2812,6 +2812,7 @@ export interface components {
             remaining: number;
             required_monthly?: number;
             start_month: string;
+            starting_amount: number;
             /** @enum {string} */
             status: "achieved" | "no_date" | "ahead" | "on_track" | "behind";
             target_amount: number;
@@ -2826,6 +2827,7 @@ export interface components {
             kind?: string;
             monthly_amount?: number;
             name: string;
+            starting_amount?: number;
             target_amount: number;
             target_date?: string;
         };

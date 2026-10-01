@@ -33,6 +33,7 @@ export function GoalForm({ accounts, goal, emergency = goal?.kind === "emergency
   const [accountId, setAccountId] = useState<number>(goal?.account_id ?? defaultAccountId ?? open[0]?.id ?? 0);
   // null until the user types their own; until then the emergency suggestion (if any) fills the target.
   const [typedTarget, setTypedTarget] = useState<string | null>(goal ? centsToInput(goal.target_amount) : null);
+  const [start, setStart] = useState(goal?.starting_amount ? centsToInput(goal.starting_amount) : "");
   const [targetDate, setTargetDate] = useState(goal?.target_date ?? "");
   const [monthly, setMonthly] = useState(goal?.monthly_amount ? centsToInput(goal.monthly_amount) : "");
   const [color, setColor] = useState(goal?.color ?? "#64748b");
@@ -41,7 +42,10 @@ export function GoalForm({ accounts, goal, emergency = goal?.kind === "emergency
 
   const target = typedTarget ?? (suggestion.data ? centsToInput(suggestion.data.target) : "");
   const targetCents = parseMoney(target);
-  const remaining = Math.max((targetCents ?? 0) - (goal?.progress ?? 0), 0);
+  const startCents = start.trim() ? parseMoney(start) : 0;
+  // goal.progress already includes the saved starting amount: keep only what was tagged, add the typed start.
+  const tagged = goal ? goal.progress - goal.starting_amount : 0;
+  const remaining = Math.max((targetCents ?? 0) - ((startCents ?? 0) + tagged), 0);
   const required = targetDate && remaining > 0 ? requiredMonthly(remaining, new Date(), targetDate) : 0;
 
   const save = async (e: React.FormEvent) => {
@@ -49,11 +53,12 @@ export function GoalForm({ accounts, goal, emergency = goal?.kind === "emergency
     const monthlyCents = monthly.trim() ? parseMoney(monthly) : null;
     const next: Record<string, string> = {};
     if (targetCents === null || targetCents <= 0) next.target_amount = t("validation.amount");
+    if (startCents === null || startCents < 0) next.starting_amount = t("validation.amount");
     if (monthly.trim() && (monthlyCents === null || monthlyCents <= 0)) next.monthly_amount = t("validation.amount");
     if (Object.keys(next).length) return setErrors(next);
     const body = {
       account_id: accountId, name: name.trim(), kind: emergency ? "emergency" : "standard",
-      emergency_months: emergency ? months : undefined, target_amount: targetCents!, target_date: targetDate || undefined,
+      emergency_months: emergency ? months : undefined, target_amount: targetCents!, starting_amount: startCents!, target_date: targetDate || undefined,
       monthly_amount: monthlyCents ?? undefined, color, archived: goal?.archived ?? false,
     };
     try {
@@ -71,7 +76,7 @@ export function GoalForm({ accounts, goal, emergency = goal?.kind === "emergency
     if (!goal) return;
     try {
       await update.mutateAsync({ id: goal.id, account_id: goal.account_id, name: goal.name, kind: goal.kind,
-        emergency_months: goal.emergency_months ?? undefined, target_amount: goal.target_amount, target_date: goal.target_date ?? undefined,
+        emergency_months: goal.emergency_months ?? undefined, target_amount: goal.target_amount, starting_amount: goal.starting_amount, target_date: goal.target_date ?? undefined,
         monthly_amount: goal.monthly_amount ?? undefined, color: goal.color, icon: goal.icon, archived: !goal.archived });
       onDone();
     } catch (err) { toast.error(errMsg(err)); }
@@ -116,6 +121,15 @@ export function GoalForm({ accounts, goal, emergency = goal?.kind === "emergency
           <Label htmlFor="goal-target">{t("savings.form.target")}</Label>
           <MoneyInput id="goal-target" value={target} onChange={(e) => setTypedTarget(e.target.value)} aria-invalid={!!errors.target_amount} />
           <FieldError message={errors.target_amount} />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-baseline gap-1">
+            <Label htmlFor="goal-start">{t("savings.form.startingAmount")}</Label>
+            <span className="text-xs text-muted-foreground">({t("common.optional")})</span>
+          </div>
+          <MoneyInput id="goal-start" value={start} onChange={(e) => setStart(e.target.value)} aria-invalid={!!errors.starting_amount} aria-describedby="goal-start-hint" />
+          <p id="goal-start-hint" className="text-xs text-muted-foreground">{t("savings.form.startingAmountHint")}</p>
+          <FieldError message={errors.starting_amount} />
         </div>
         <div className="space-y-2">
           <div className="flex items-baseline gap-1">

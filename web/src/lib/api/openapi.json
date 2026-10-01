@@ -3969,6 +3969,7 @@
                     "progress",
                     "remaining",
                     "start_month",
+                    "starting_amount",
                     "status",
                     "target_amount"
                 ],
@@ -4024,6 +4025,9 @@
                     "start_month": {
                         "type": "string"
                     },
+                    "starting_amount": {
+                        "type": "integer"
+                    },
                     "status": {
                         "type": "string",
                         "enum": [
@@ -4073,6 +4077,9 @@
                     },
                     "name": {
                         "type": "string"
+                    },
+                    "starting_amount": {
+                        "type": "integer"
                     },
                     "target_amount": {
                         "type": "integer"

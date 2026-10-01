@@ -202,7 +202,8 @@
     "color": "Color", "account": "Cuenta", "goal": "Meta", "noGoal": "Sin meta", "toAccount": "A la cuenta",
     "amount": "Monto", "date": "Fecha", "note": "Nota", "kindLegend": "Tipo de movimiento",
     "deposit": "Depositar", "withdrawal": "Retirar", "transfer": "Transferir",
-    "target": "¿Cuánto quieres juntar?", "targetDate": "Fecha objetivo", "monthly": "Apartar al mes", "useRequired": "Usar {amount} al mes",
+    "target": "¿Cuánto quieres juntar?", "targetDate": "Fecha objetivo", "startingAmount": "Ya tengo ahorrado", "startingAmountHint": "Lo que ya tenías juntado para esta meta. No cuenta como ahorro de este mes.",
+    "monthly": "Apartar al mes", "useRequired": "Usar {amount} al mes",
     "emergency": "Fondo de emergencia", "emergencyMonths": "{months} meses", "emergencyHow": "Tus pagos fijos, MSI y gastos promedian {need} al mes.",
     "value": "Valor actual", "overBalanceHint": "¿El saldo real es mayor? Actualiza el valor primero."
   }

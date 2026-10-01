@@ -202,7 +202,8 @@
     "color": "Color", "account": "Account", "goal": "Goal", "noGoal": "No goal", "toAccount": "To account",
     "amount": "Amount", "date": "Date", "note": "Note", "kindLegend": "Movement type",
     "deposit": "Deposit", "withdrawal": "Withdraw", "transfer": "Transfer",
-    "target": "How much do you want to save?", "targetDate": "Target date", "monthly": "Set aside per month", "useRequired": "Use {amount} a month",
+    "target": "How much do you want to save?", "targetDate": "Target date", "startingAmount": "Already saved", "startingAmountHint": "What you had already put aside for this goal. It doesn't count as this month's saving.",
+    "monthly": "Set aside per month", "useRequired": "Use {amount} a month",
     "emergency": "Emergency fund", "emergencyMonths": "{months} months", "emergencyHow": "Your fixed payments, installments and spending average {need} a month.",
     "value": "Current value", "overBalanceHint": "Is the real balance higher? Update the value first."
   }
