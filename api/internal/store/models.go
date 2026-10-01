@@ -8,6 +8,30 @@ import (
 	"time"
 )
 
+type AccountMovement struct {
+	ID          int64
+	UserID      int64
+	AccountID   int64
+	Kind        string
+	ToAccountID *int64
+	GoalID      *int64
+	Amount      int64
+	OccurredOn  time.Time
+	Note        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type AccountValuation struct {
+	ID        int64
+	UserID    int64
+	AccountID int64
+	Value     int64
+	ValuedOn  time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type CardPayment struct {
 	ID              int64
 	UserID          int64
@@ -142,6 +166,40 @@ type RefreshToken struct {
 	ExpiresAt time.Time
 	RevokedAt *time.Time
 	CreatedAt time.Time
+}
+
+type SavingsAccount struct {
+	ID             int64
+	UserID         int64
+	Name           string
+	Institution    string
+	Kind           string
+	Color          string
+	AnnualRateBp   *int32
+	OpeningBalance int64
+	OpeningDate    time.Time
+	ArchivedOn     *time.Time
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+type SavingsGoal struct {
+	ID              int64
+	UserID          int64
+	AccountID       int64
+	Name            string
+	Kind            string
+	EmergencyMonths *int32
+	TargetAmount    int64
+	TargetDate      *time.Time
+	MonthlyAmount   *int64
+	Color           string
+	Icon            string
+	StartMonth      time.Time
+	AchievedOn      *time.Time
+	Archived        bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type User struct {
