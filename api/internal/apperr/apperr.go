@@ -37,6 +37,12 @@ func Conflict(code, msg string) *Error {
 	return &Error{Status: http.StatusConflict, Code: code, Message: msg}
 }
 
+// InsufficientBalance: a withdrawal or transfer is larger than what the savings account holds.
+func InsufficientBalance() *Error {
+	return &Error{Status: http.StatusUnprocessableEntity, Code: "insufficient_balance", Message: "the amount is larger than the account balance",
+		Fields: map[string]string{"amount": "exceeds the account balance"}}
+}
+
 func RateLimited() *Error {
 	return &Error{Status: http.StatusTooManyRequests, Code: "rate_limited", Message: "too many requests"}
 }

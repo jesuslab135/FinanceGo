@@ -22,13 +22,14 @@ type Service struct {
 	tokens     *auth.Tokens
 	refreshTTL time.Duration
 	now        func() time.Time
+	udiValue   float64
 }
 
 func New(pool *pgxpool.Pool, tokens *auth.Tokens, refreshTTL time.Duration, now func() time.Time) *Service {
 	if now == nil {
 		now = time.Now
 	}
-	return &Service{pool: pool, q: store.New(pool), tokens: tokens, refreshTTL: refreshTTL, now: now}
+	return &Service{pool: pool, q: store.New(pool), tokens: tokens, refreshTTL: refreshTTL, now: now, udiValue: 8.70}
 }
 
 func (s *Service) Ping(ctx context.Context) error { return s.pool.Ping(ctx) }
@@ -47,6 +48,9 @@ type Actor struct {
 func (a Actor) Today(now time.Time) time.Time { return datex.Today(now, a.Loc) }
 
 func (s *Service) today(a Actor) time.Time { return a.Today(s.now()) }
+
+// SetUDIValue sets pesos per UDI for the deposit-insurance limits (config UDI_VALUE).
+func (s *Service) SetUDIValue(v float64) { s.udiValue = v }
 
 func (s *Service) Authenticate(ctx context.Context, token string) (Actor, error) {
 	id, err := s.tokens.Parse(token)

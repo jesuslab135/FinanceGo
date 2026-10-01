@@ -85,3 +85,27 @@ func TestLoadFromTrustedProxies(t *testing.T) {
 		t.Fatal("expected invalid TRUSTED_PROXIES to be rejected")
 	}
 }
+
+func TestUDIValue(t *testing.T) {
+	base := map[string]string{"DATABASE_URL": "postgres://x", "JWT_SECRET": strings.Repeat("s", 32), "WEB_ORIGIN": "http://localhost:3000"}
+	with := func(v string) map[string]string {
+		m := map[string]string{"UDI_VALUE": v}
+		for k, x := range base {
+			m[k] = x
+		}
+		return m
+	}
+	cfg, err := LoadFrom(env(base))
+	if err != nil || cfg.UDIValue != 8.70 {
+		t.Fatalf("default UDIValue = %v (err %v), want 8.70", cfg.UDIValue, err)
+	}
+	cfg, err = LoadFrom(env(with("8.71234")))
+	if err != nil || cfg.UDIValue != 8.71234 {
+		t.Fatalf("UDIValue = %v (err %v), want 8.71234", cfg.UDIValue, err)
+	}
+	for _, bad := range []string{"0", "-1", "abc", "NaN", "Inf"} {
+		if _, err := LoadFrom(env(with(bad))); err == nil {
+			t.Errorf("UDI_VALUE=%q must be rejected", bad)
+		}
+	}
+}

@@ -30,3 +30,10 @@ func TestConstructors(t *testing.T) {
 		t.Fatal("constructor mismatch")
 	}
 }
+
+func TestInsufficientBalance(t *testing.T) {
+	e := InsufficientBalance()
+	if e.Status != 422 || e.Code != "insufficient_balance" || e.Fields["amount"] != "exceeds the account balance" {
+		t.Fatalf("%+v", e)
+	}
+}

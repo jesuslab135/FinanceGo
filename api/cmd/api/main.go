@@ -55,6 +55,7 @@ func run(log *slog.Logger) error {
 	gin.SetMode(gin.ReleaseMode)
 	tokens := auth.NewTokens(cfg.JWTSecret, cfg.AccessTTL, time.Now)
 	svc := service.New(pool, tokens, cfg.RefreshTTL, time.Now)
+	svc.SetUDIValue(cfg.UDIValue)
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           httpapi.NewRouter(cfg, svc, log),

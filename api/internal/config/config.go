@@ -4,6 +4,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/netip"
 	"os"
 	"strconv"
@@ -22,6 +23,8 @@ type Config struct {
 	AuthRatePerMin int
 	// TrustedProxies lists proxy IPs/CIDRs whose X-Forwarded-For is honored (empty = trust none).
 	TrustedProxies []string
+	// UDIValue is pesos per UDI, used to turn deposit-insurance covers (in UDIs) into money.
+	UDIValue float64
 }
 
 func Load() (Config, error) { return LoadFrom(os.Getenv) }
@@ -36,6 +39,7 @@ func LoadFrom(get func(string) string) (Config, error) {
 		AccessTTL:      15 * time.Minute,
 		RefreshTTL:     30 * 24 * time.Hour,
 		AuthRatePerMin: 10,
+		UDIValue:       8.70,
 	}
 	if cfg.DatabaseURL == "" {
 		return cfg, errors.New("DATABASE_URL is required")
@@ -77,6 +81,13 @@ func LoadFrom(get func(string) string) (Config, error) {
 			}
 		}
 		cfg.TrustedProxies = append(cfg.TrustedProxies, p)
+	}
+	if v := get("UDI_VALUE"); v != "" {
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil || !(f > 0) || math.IsInf(f, 0) {
+			return cfg, errors.New("UDI_VALUE must be a positive number such as 8.70")
+		}
+		cfg.UDIValue = f
 	}
 	return cfg, nil
 }
