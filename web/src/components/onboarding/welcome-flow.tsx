@@ -14,6 +14,7 @@ import { userKey, writeJSON } from "@/lib/storage";
 import { Progress } from "./progress";
 import { EMPTY_CARD_DRAFT, StepCards, type AddedCard, type CardDraft } from "./step-cards";
 import { StepFixed, type FixedDraft } from "./step-fixed";
+import { DEFAULT_SCHEDULE } from "@/components/recurring/pay-schedule-field";
 import { StepIncome, type IncomeDraft } from "./step-income";
 
 export function WelcomeFlow() {
@@ -25,7 +26,7 @@ export function WelcomeFlow() {
   const [step, setStep] = useState(1);
   const [dir, setDir] = useState(1);
   // Drafts live here (not in the steps) so going back keeps what was typed and what was already saved.
-  const [income, setIncome] = useState<IncomeDraft>({ name: t("welcome.salary"), cents: 0, day: 15 });
+  const [income, setIncome] = useState<IncomeDraft>({ name: t("welcome.salary"), cents: 0, schedule: DEFAULT_SCHEDULE });
   const [fixed, setFixed] = useState<FixedDraft>({ rows: [], removedIds: [], customCount: 0 });
   const [cards, setCards] = useState<AddedCard[]>([]);
   const [cardDraft, setCardDraft] = useState<CardDraft>(EMPTY_CARD_DRAFT);

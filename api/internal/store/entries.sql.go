@@ -30,6 +30,20 @@ func (q *Queries) DeleteCardPendingInstallments(ctx context.Context, arg DeleteC
 	return err
 }
 
+const deleteEntry = `-- name: DeleteEntry :exec
+DELETE FROM monthly_entries WHERE id = $1 AND user_id = $2
+`
+
+type DeleteEntryParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) DeleteEntry(ctx context.Context, arg DeleteEntryParams) error {
+	_, err := q.db.Exec(ctx, deleteEntry, arg.ID, arg.UserID)
+	return err
+}
+
 const deleteInstallmentEntries = `-- name: DeleteInstallmentEntries :exec
 DELETE FROM monthly_entries
 WHERE user_id = $1 AND installment_plan_id = $2::bigint AND installment_no >= $3::int
@@ -66,30 +80,8 @@ func (q *Queries) EnsureFixedEntries(ctx context.Context, arg EnsureFixedEntries
 	return err
 }
 
-const ensureIncomeEntries = `-- name: EnsureIncomeEntries :exec
-INSERT INTO monthly_entries (user_id, month, kind, income_source_id, name, category_id, amount, due_date)
-SELECT s.user_id, $1::date, 'income', s.id, s.name, s.category_id, s.amount,
-       $1::date + (LEAST(s.day_of_month, EXTRACT(DAY FROM ($1::date + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1)
-FROM income_sources s
-WHERE s.user_id = $2 AND (s.active OR s.end_month IS NOT NULL)
-  AND s.start_month <= $1::date AND (s.end_month IS NULL OR s.end_month >= $1::date)
-ON CONFLICT DO NOTHING
-`
-
-type EnsureIncomeEntriesParams struct {
-	Month  time.Time
-	UserID int64
-}
-
-// Inactive templates keep generating up to their (clamped) end_month; an inactive
-// template without one never started (see DeactivateIncomeSource).
-func (q *Queries) EnsureIncomeEntries(ctx context.Context, arg EnsureIncomeEntriesParams) error {
-	_, err := q.db.Exec(ctx, ensureIncomeEntries, arg.Month, arg.UserID)
-	return err
-}
-
 const getEntry = `-- name: GetEntry :one
-SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at FROM monthly_entries WHERE id = $1 AND user_id = $2
+SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at, occurrence FROM monthly_entries WHERE id = $1 AND user_id = $2
 `
 
 type GetEntryParams struct {
@@ -119,8 +111,41 @@ func (q *Queries) GetEntry(ctx context.Context, arg GetEntryParams) (MonthlyEntr
 		&i.Edited,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Occurrence,
 	)
 	return i, err
+}
+
+const insertIncomeEntry = `-- name: InsertIncomeEntry :exec
+INSERT INTO monthly_entries (user_id, month, kind, income_source_id, occurrence, name, category_id, amount, due_date)
+VALUES ($1, $2::date, 'income', $3::bigint, $4::int, $5,
+    $6, $7, $8::date)
+ON CONFLICT DO NOTHING
+`
+
+type InsertIncomeEntryParams struct {
+	UserID     int64
+	Month      time.Time
+	SourceID   int64
+	Occurrence int32
+	Name       string
+	CategoryID *int64
+	Amount     int64
+	DueDate    time.Time
+}
+
+func (q *Queries) InsertIncomeEntry(ctx context.Context, arg InsertIncomeEntryParams) error {
+	_, err := q.db.Exec(ctx, insertIncomeEntry,
+		arg.UserID,
+		arg.Month,
+		arg.SourceID,
+		arg.Occurrence,
+		arg.Name,
+		arg.CategoryID,
+		arg.Amount,
+		arg.DueDate,
+	)
+	return err
 }
 
 const insertInstallmentEntry = `-- name: InsertInstallmentEntry :exec
@@ -158,8 +183,92 @@ func (q *Queries) InsertInstallmentEntry(ctx context.Context, arg InsertInstallm
 	return err
 }
 
+const listIncomeOccurrences = `-- name: ListIncomeOccurrences :many
+SELECT income_source_id, occurrence FROM monthly_entries
+WHERE user_id = $1 AND month = $2::date AND kind = 'income'
+`
+
+type ListIncomeOccurrencesParams struct {
+	UserID int64
+	Month  time.Time
+}
+
+type ListIncomeOccurrencesRow struct {
+	IncomeSourceID *int64
+	Occurrence     int32
+}
+
+func (q *Queries) ListIncomeOccurrences(ctx context.Context, arg ListIncomeOccurrencesParams) ([]ListIncomeOccurrencesRow, error) {
+	rows, err := q.db.Query(ctx, listIncomeOccurrences, arg.UserID, arg.Month)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListIncomeOccurrencesRow
+	for rows.Next() {
+		var i ListIncomeOccurrencesRow
+		if err := rows.Scan(&i.IncomeSourceID, &i.Occurrence); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listIncomeSourcesForMonth = `-- name: ListIncomeSourcesForMonth :many
+SELECT id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at, frequency, second_day, anchor_date FROM income_sources s
+WHERE s.user_id = $1 AND (s.active OR s.end_month IS NOT NULL)
+  AND s.start_month <= $2::date AND (s.end_month IS NULL OR s.end_month >= $2::date)
+ORDER BY s.id
+`
+
+type ListIncomeSourcesForMonthParams struct {
+	UserID int64
+	Month  time.Time
+}
+
+// Inactive templates keep generating up to their (clamped) end_month; an inactive
+// template without one never started (see DeactivateIncomeSource).
+func (q *Queries) ListIncomeSourcesForMonth(ctx context.Context, arg ListIncomeSourcesForMonthParams) ([]IncomeSource, error) {
+	rows, err := q.db.Query(ctx, listIncomeSourcesForMonth, arg.UserID, arg.Month)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []IncomeSource
+	for rows.Next() {
+		var i IncomeSource
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.CategoryID,
+			&i.Name,
+			&i.Amount,
+			&i.DayOfMonth,
+			&i.StartMonth,
+			&i.EndMonth,
+			&i.Active,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Frequency,
+			&i.SecondDay,
+			&i.AnchorDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMonthEntries = `-- name: ListMonthEntries :many
-SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at FROM monthly_entries
+SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at, occurrence FROM monthly_entries
 WHERE user_id = $1 AND month = $2
 ORDER BY CASE kind WHEN 'income' THEN 0 WHEN 'fixed' THEN 1 ELSE 2 END, due_date, id
 `
@@ -197,7 +306,48 @@ func (q *Queries) ListMonthEntries(ctx context.Context, arg ListMonthEntriesPara
 			&i.Edited,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Occurrence,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPendingIncomeEntries = `-- name: ListPendingIncomeEntries :many
+SELECT id, month, occurrence FROM monthly_entries
+WHERE user_id = $1 AND income_source_id = $2::bigint
+  AND month >= $3::date AND status = 'pending' AND NOT edited
+ORDER BY month, occurrence
+`
+
+type ListPendingIncomeEntriesParams struct {
+	UserID    int64
+	SourceID  int64
+	FromMonth time.Time
+}
+
+type ListPendingIncomeEntriesRow struct {
+	ID         int64
+	Month      time.Time
+	Occurrence int32
+}
+
+// The rows a template edit may still rewrite: pending, never edited by hand.
+func (q *Queries) ListPendingIncomeEntries(ctx context.Context, arg ListPendingIncomeEntriesParams) ([]ListPendingIncomeEntriesRow, error) {
+	rows, err := q.db.Query(ctx, listPendingIncomeEntries, arg.UserID, arg.SourceID, arg.FromMonth)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPendingIncomeEntriesRow
+	for rows.Next() {
+		var i ListPendingIncomeEntriesRow
+		if err := rows.Scan(&i.ID, &i.Month, &i.Occurrence); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -281,26 +431,6 @@ func (q *Queries) PropagateFixedPayment(ctx context.Context, arg PropagateFixedP
 	return err
 }
 
-const propagateIncomeSource = `-- name: PropagateIncomeSource :exec
-UPDATE monthly_entries m SET name = s.name, amount = s.amount, category_id = s.category_id,
-    due_date = m.month + (LEAST(s.day_of_month, EXTRACT(DAY FROM (m.month + INTERVAL '1 month' - INTERVAL '1 day'))::int) - 1),
-    updated_at = now()
-FROM income_sources s
-WHERE s.id = $1 AND s.user_id = $2 AND m.user_id = $2 AND m.income_source_id = s.id
-  AND m.month >= $3::date AND m.status = 'pending' AND NOT m.edited
-`
-
-type PropagateIncomeSourceParams struct {
-	SourceID  int64
-	UserID    int64
-	FromMonth time.Time
-}
-
-func (q *Queries) PropagateIncomeSource(ctx context.Context, arg PropagateIncomeSourceParams) error {
-	_, err := q.db.Exec(ctx, propagateIncomeSource, arg.SourceID, arg.UserID, arg.FromMonth)
-	return err
-}
-
 const pruneFixedEntries = `-- name: PruneFixedEntries :exec
 DELETE FROM monthly_entries m
 USING fixed_payments f
@@ -369,11 +499,38 @@ func (q *Queries) RelabelInstallmentEntries(ctx context.Context, arg RelabelInst
 	return err
 }
 
+const syncIncomeEntry = `-- name: SyncIncomeEntry :exec
+UPDATE monthly_entries SET name = $1, amount = $2, category_id = $3,
+    due_date = $4::date, updated_at = now()
+WHERE id = $5 AND user_id = $6
+`
+
+type SyncIncomeEntryParams struct {
+	Name       string
+	Amount     int64
+	CategoryID *int64
+	DueDate    time.Time
+	ID         int64
+	UserID     int64
+}
+
+func (q *Queries) SyncIncomeEntry(ctx context.Context, arg SyncIncomeEntryParams) error {
+	_, err := q.db.Exec(ctx, syncIncomeEntry,
+		arg.Name,
+		arg.Amount,
+		arg.CategoryID,
+		arg.DueDate,
+		arg.ID,
+		arg.UserID,
+	)
+	return err
+}
+
 const updateEntry = `-- name: UpdateEntry :one
 UPDATE monthly_entries SET amount = $1, status = $2, settled_on = $3,
     payment_method_id = $4, edited = $5, updated_at = now()
 WHERE id = $6 AND user_id = $7
-RETURNING id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at
+RETURNING id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at, occurrence
 `
 
 type UpdateEntryParams struct {
@@ -416,6 +573,7 @@ func (q *Queries) UpdateEntry(ctx context.Context, arg UpdateEntryParams) (Month
 		&i.Edited,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Occurrence,
 	)
 	return i, err
 }

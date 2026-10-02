@@ -102,6 +102,9 @@ type IncomeSource struct {
 	Active     bool
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+	Frequency  string
+	SecondDay  *int32
+	AnchorDate *time.Time
 }
 
 type InstallmentPlan struct {
@@ -137,6 +140,7 @@ type MonthlyEntry struct {
 	Edited            bool
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	Occurrence        int32
 }
 
 type PaymentMethod struct {

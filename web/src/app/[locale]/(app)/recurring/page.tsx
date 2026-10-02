@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FixedPayment, FixedPaymentInput, IncomeSource, IncomeSourceInput } from "@/lib/api/types";
 import { useToday } from "@/hooks/use-today";
 import { parseISODate } from "@/lib/dates";
-import { nextOccurrence } from "@/lib/recurring";
+import { nextOccurrence, type Frequency } from "@/lib/recurring";
 import {
   useCategories, useCreateFixedPayment, useCreateIncomeSource, useDeactivateFixedPayment, useDeactivateIncomeSource,
   useFixedPayments, useIncomeSources, useUpdateFixedPayment, useUpdateIncomeSource,
@@ -46,8 +46,16 @@ function TemplateList({ rows, error, onEdit, onToggle, onAdd, addLabel }: {
       {rows.map((r) => {
         const cat = categories.find((c) => c.id === r.category_id);
         const next = nextOccurrence(r, today);
+        const inc = r as IncomeSource;
+        const anchor = inc.anchor_date ? format(parseISODate(inc.anchor_date), "EEEE", { locale: locale === "en" ? enUS : es }) : "";
+        const every: Record<Frequency, string> = {
+          monthly: t("recurring.everyMonth", { day: r.day_of_month }),
+          semimonthly: t("schedule.everySemimonth", { a: r.day_of_month, b: inc.second_day ?? 0 }),
+          biweekly: t("schedule.everyTwoWeeks", { weekday: anchor }),
+          weekly: t("schedule.everyWeek", { weekday: anchor }),
+        };
         const meta = [
-          t("recurring.everyMonth", { day: r.day_of_month }),
+          every[inc.frequency ?? "monthly"],
           next && t("recurring.next", { date: format(parseISODate(next), "d MMM", { locale: locale === "en" ? enUS : es }) }),
           !r.active && t("common.inactive"),
         ].filter(Boolean).join(" · ");
@@ -97,8 +105,9 @@ export default function RecurringPage() {
       end_month: null as unknown as string | undefined, // generated type omits null; the API accepts it
       active: true,
     };
+    const inc = r as IncomeSource;
     return kind === "income"
-      ? updateIncome.mutate({ id: r.id, ...input, category_id: (r as IncomeSource).category_id }, done)
+      ? updateIncome.mutate({ id: r.id, ...input, frequency: inc.frequency, second_day: inc.second_day, anchor_date: inc.anchor_date, category_id: inc.category_id }, done)
       : updateFixed.mutate({ id: r.id, ...input, category_id: (r as FixedPayment).category_id, payment_method_id: (r as FixedPayment).payment_method_id }, done);
   };
 

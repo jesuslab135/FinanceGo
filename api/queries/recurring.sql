@@ -1,6 +1,7 @@
 -- name: CreateIncomeSource :one
-INSERT INTO income_sources (user_id, category_id, name, amount, day_of_month, start_month, end_month, active)
-VALUES (@user_id, sqlc.narg(category_id), @name, @amount, @day_of_month, @start_month, sqlc.narg(end_month), @active)
+INSERT INTO income_sources (user_id, category_id, name, amount, frequency, day_of_month, second_day, anchor_date, start_month, end_month, active)
+VALUES (@user_id, sqlc.narg(category_id), @name, @amount, @frequency, @day_of_month, sqlc.narg(second_day), sqlc.narg(anchor_date),
+    @start_month, sqlc.narg(end_month), @active)
 RETURNING *;
 
 -- name: ListIncomeSources :many
@@ -8,7 +9,8 @@ SELECT * FROM income_sources WHERE user_id = @user_id ORDER BY active DESC, name
 
 -- name: UpdateIncomeSource :one
 UPDATE income_sources SET category_id = sqlc.narg(category_id), name = @name, amount = @amount,
-    day_of_month = @day_of_month, start_month = @start_month, end_month = sqlc.narg(end_month),
+    frequency = @frequency, day_of_month = @day_of_month, second_day = sqlc.narg(second_day),
+    anchor_date = sqlc.narg(anchor_date), start_month = @start_month, end_month = sqlc.narg(end_month),
     active = @active, updated_at = now()
 WHERE id = @id AND user_id = @user_id
 RETURNING *;

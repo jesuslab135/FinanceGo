@@ -3311,6 +3311,7 @@ const docTemplate = `{
                 "active",
                 "amount",
                 "day_of_month",
+                "frequency",
                 "id",
                 "name",
                 "start_month"
@@ -3322,6 +3323,9 @@ const docTemplate = `{
                 "amount": {
                     "type": "integer"
                 },
+                "anchor_date": {
+                    "type": "string"
+                },
                 "category_id": {
                     "type": "integer"
                 },
@@ -3331,11 +3335,23 @@ const docTemplate = `{
                 "end_month": {
                     "type": "string"
                 },
+                "frequency": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "semimonthly",
+                        "biweekly",
+                        "weekly"
+                    ]
+                },
                 "id": {
                     "type": "integer"
                 },
                 "name": {
                     "type": "string"
+                },
+                "second_day": {
+                    "type": "integer"
                 },
                 "start_month": {
                     "type": "string"
@@ -3346,7 +3362,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "amount",
-                "day_of_month",
                 "name",
                 "start_month"
             ],
@@ -3357,6 +3372,9 @@ const docTemplate = `{
                 "amount": {
                     "type": "integer"
                 },
+                "anchor_date": {
+                    "type": "string"
+                },
                 "category_id": {
                     "type": "integer"
                 },
@@ -3366,8 +3384,20 @@ const docTemplate = `{
                 "end_month": {
                     "type": "string"
                 },
+                "frequency": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "semimonthly",
+                        "biweekly",
+                        "weekly"
+                    ]
+                },
                 "name": {
                     "type": "string"
+                },
+                "second_day": {
+                    "type": "integer"
                 },
                 "start_month": {
                     "type": "string"

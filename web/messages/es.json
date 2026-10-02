@@ -17,7 +17,7 @@
     "language": "Idioma", "mainNav": "Navegación principal"
   },
   "auth": {
-    "loginTitle": "Bienvenido de vuelta", "registerTitle": "Crea tu cuenta", "email": "Correo", "password": "Contraseña",
+    "loginTitle": "Bienvenido de vuelta", "registerTitle": "Crea tu cuenta", "email": "Correo", "password": "Contraseña", "showPassword": "Mostrar contraseña", "hidePassword": "Ocultar contraseña",
     "name": "Nombre", "currency": "Moneda", "timezone": "Zona horaria", "login": "Entrar", "register": "Crear cuenta",
     "noAccount": "¿No tienes cuenta?", "haveAccount": "¿Ya tienes cuenta?",
     "emailTaken": "Ya existe una cuenta con este correo", "invalidCredentials": "Correo o contraseña incorrectos", "passwordHint": "Mínimo 8 caracteres",
@@ -29,7 +29,7 @@
   "validation": {
     "len60": "Escribe entre 1 y 60 caracteres.", "notFuture": "La fecha no puede ser futura.", "beforeOpening": "La fecha es anterior a la apertura de la cuenta.", "archived": "Está archivada.", "goalOtherAccount": "Esa meta es de otra cuenta.", "sameAccount": "Elige una cuenta distinta.", "overBalance": "Es más que el saldo de la cuenta.", "pastMonth": "Elige una fecha de este mes en adelante.", "rate": "Escribe una tasa entre 0 y 100.", "locked": "Ya no se puede cambiar.", "months36": "Elige 3 o 6 meses.",
     "required": "Requerido", "amount": "Escribe un monto válido, p. ej. 1,234.50", "email": "Correo inválido",
-    "min8": "Mínimo 8 caracteres", "last4": "Exactamente 4 dígitos", "day": "Día entre 1 y 31",
+    "min8": "Mínimo 8 caracteres", "last4": "Exactamente 4 dígitos", "day": "Día entre 1 y 31", "twoDays": "Elige dos días de pago", "payDate": "Elige una fecha de pago en el calendario",
     "installments": "Entre 2 y 48 mensualidades", "max200": "Máximo 200 caracteres",
     "endBeforeStart": "El mes final no puede ser anterior al de inicio"
   },
@@ -79,6 +79,14 @@
     "status": { "pending": "Pendiente", "paid": "Pagado", "received": "Recibido", "skipped": "Omitido" },
     "markPaid": "Marcar pagado", "markReceived": "Marcar recibido", "skip": "Omitir", "undo": "Deshacer",
     "due": "Vence {date}", "edited": "Editado", "editEntry": "Editar movimiento", "empty": "Sin movimientos este mes"
+  },
+  "schedule": {
+    "frequency": "¿Cada cuándo te pagan?", "monthly": "Cada mes", "semimonthly": "Dos veces al mes", "biweekly": "Cada 2 semanas", "weekly": "Cada semana",
+    "paydays": "Días de pago", "twoDaysHint": "Toca los dos días del mes en que te pagan. Si el mes es más corto se usa el último día.",
+    "pickPayDate": "Toca un día de pago en el calendario", "weeklyHint": "Te pagan ese día cada semana.", "biweeklyHint": "Contamos cada 14 días a partir de esa fecha.",
+    "prevMonth": "Mes anterior", "nextMonth": "Mes siguiente",
+    "upcoming": "Próximos pagos: {dates}", "perPayment": "Escribe lo que recibes en cada pago.", "amountPerPayment": "Monto por pago",
+    "everySemimonth": "Los días {a} y {b} de cada mes", "everyTwoWeeks": "Cada 2 semanas, en {weekday}", "everyWeek": "Cada {weekday}"
   },
   "recurring": {
     "next": "Próximo: {date}",
@@ -161,7 +169,7 @@
     "tone": { "info": "Aviso", "good": "Buena noticia", "warn": "Atención", "critical": "Urgente" }
   },
   "welcome": {
-    "title1": "¿Cuánto ganas al mes?", "title2": "Tus pagos fijos", "title3": "Tus tarjetas (opcional)",
+    "title1": "¿Cuánto ganas?", "title2": "Tus pagos fijos", "title3": "Tus tarjetas (opcional)",
     "subtitle1": "Con esto calculamos cuánto te queda cada mes.", "subtitle2": "Renta, luz, suscripciones… lo que pagas cada mes.",
     "subtitle3": "Solo alias y últimos 4 dígitos. Nunca el número completo.",
     "salary": "Salario", "payday": "Día de pago", "other": "Otro", "skip": "Saltar", "continue": "Continuar", "back": "Atrás",

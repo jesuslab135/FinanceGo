@@ -2671,20 +2671,28 @@ export interface components {
         "service.IncomeSource": {
             active: boolean;
             amount: number;
+            anchor_date?: string;
             category_id?: number;
             day_of_month: number;
             end_month?: string;
+            /** @enum {string} */
+            frequency: "monthly" | "semimonthly" | "biweekly" | "weekly";
             id: number;
             name: string;
+            second_day?: number;
             start_month: string;
         };
         "service.IncomeSourceInput": {
             active?: boolean;
             amount: number;
+            anchor_date?: string;
             category_id?: number;
-            day_of_month: number;
+            day_of_month?: number;
             end_month?: string;
+            /** @enum {string} */
+            frequency?: "monthly" | "semimonthly" | "biweekly" | "weekly";
             name: string;
+            second_day?: number;
             start_month: string;
         };
         "service.InstallmentPlan": {

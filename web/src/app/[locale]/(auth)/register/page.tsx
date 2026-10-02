@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordInput } from "@/components/common/password-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -54,7 +55,9 @@ export default function RegisterPage() {
   const field = (name: "name" | "email" | "password", label: string, type = "text", auto?: string) => (
     <div className="space-y-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input className="h-11" id={name} type={type} autoComplete={auto} aria-invalid={!!errors[name]} {...form.register(name)} />
+      {type === "password"
+        ? <PasswordInput className="h-11" id={name} autoComplete={auto} aria-invalid={!!errors[name]} {...form.register(name)} />
+        : <Input className="h-11" id={name} type={type} autoComplete={auto} aria-invalid={!!errors[name]} {...form.register(name)} />}
       {errors[name] && <p className="text-sm text-destructive">{errors[name]?.message}</p>}
     </div>
   );

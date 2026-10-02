@@ -59,9 +59,10 @@ func (q *Queries) CreateFixedPayment(ctx context.Context, arg CreateFixedPayment
 }
 
 const createIncomeSource = `-- name: CreateIncomeSource :one
-INSERT INTO income_sources (user_id, category_id, name, amount, day_of_month, start_month, end_month, active)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at
+INSERT INTO income_sources (user_id, category_id, name, amount, frequency, day_of_month, second_day, anchor_date, start_month, end_month, active)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+    $9, $10, $11)
+RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at, frequency, second_day, anchor_date
 `
 
 type CreateIncomeSourceParams struct {
@@ -69,7 +70,10 @@ type CreateIncomeSourceParams struct {
 	CategoryID *int64
 	Name       string
 	Amount     int64
+	Frequency  string
 	DayOfMonth int32
+	SecondDay  *int32
+	AnchorDate *time.Time
 	StartMonth time.Time
 	EndMonth   *time.Time
 	Active     bool
@@ -81,7 +85,10 @@ func (q *Queries) CreateIncomeSource(ctx context.Context, arg CreateIncomeSource
 		arg.CategoryID,
 		arg.Name,
 		arg.Amount,
+		arg.Frequency,
 		arg.DayOfMonth,
+		arg.SecondDay,
+		arg.AnchorDate,
 		arg.StartMonth,
 		arg.EndMonth,
 		arg.Active,
@@ -99,6 +106,9 @@ func (q *Queries) CreateIncomeSource(ctx context.Context, arg CreateIncomeSource
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Frequency,
+		&i.SecondDay,
+		&i.AnchorDate,
 	)
 	return i, err
 }
@@ -143,7 +153,7 @@ UPDATE income_sources SET active = false,
     end_month = CASE WHEN start_month <= $1::date THEN LEAST(end_month, $1::date) END,
     updated_at = now()
 WHERE id = $2 AND user_id = $3
-RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at
+RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at, frequency, second_day, anchor_date
 `
 
 type DeactivateIncomeSourceParams struct {
@@ -168,6 +178,9 @@ func (q *Queries) DeactivateIncomeSource(ctx context.Context, arg DeactivateInco
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Frequency,
+		&i.SecondDay,
+		&i.AnchorDate,
 	)
 	return i, err
 }
@@ -210,7 +223,7 @@ func (q *Queries) ListFixedPayments(ctx context.Context, userID int64) ([]FixedP
 }
 
 const listIncomeSources = `-- name: ListIncomeSources :many
-SELECT id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at FROM income_sources WHERE user_id = $1 ORDER BY active DESC, name, id
+SELECT id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at, frequency, second_day, anchor_date FROM income_sources WHERE user_id = $1 ORDER BY active DESC, name, id
 `
 
 func (q *Queries) ListIncomeSources(ctx context.Context, userID int64) ([]IncomeSource, error) {
@@ -234,6 +247,9 @@ func (q *Queries) ListIncomeSources(ctx context.Context, userID int64) ([]Income
 			&i.Active,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Frequency,
+			&i.SecondDay,
+			&i.AnchorDate,
 		); err != nil {
 			return nil, err
 		}
@@ -299,17 +315,21 @@ func (q *Queries) UpdateFixedPayment(ctx context.Context, arg UpdateFixedPayment
 
 const updateIncomeSource = `-- name: UpdateIncomeSource :one
 UPDATE income_sources SET category_id = $1, name = $2, amount = $3,
-    day_of_month = $4, start_month = $5, end_month = $6,
-    active = $7, updated_at = now()
-WHERE id = $8 AND user_id = $9
-RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at
+    frequency = $4, day_of_month = $5, second_day = $6,
+    anchor_date = $7, start_month = $8, end_month = $9,
+    active = $10, updated_at = now()
+WHERE id = $11 AND user_id = $12
+RETURNING id, user_id, category_id, name, amount, day_of_month, start_month, end_month, active, created_at, updated_at, frequency, second_day, anchor_date
 `
 
 type UpdateIncomeSourceParams struct {
 	CategoryID *int64
 	Name       string
 	Amount     int64
+	Frequency  string
 	DayOfMonth int32
+	SecondDay  *int32
+	AnchorDate *time.Time
 	StartMonth time.Time
 	EndMonth   *time.Time
 	Active     bool
@@ -322,7 +342,10 @@ func (q *Queries) UpdateIncomeSource(ctx context.Context, arg UpdateIncomeSource
 		arg.CategoryID,
 		arg.Name,
 		arg.Amount,
+		arg.Frequency,
 		arg.DayOfMonth,
+		arg.SecondDay,
+		arg.AnchorDate,
 		arg.StartMonth,
 		arg.EndMonth,
 		arg.Active,
@@ -342,6 +365,9 @@ func (q *Queries) UpdateIncomeSource(ctx context.Context, arg UpdateIncomeSource
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Frequency,
+		&i.SecondDay,
+		&i.AnchorDate,
 	)
 	return i, err
 }

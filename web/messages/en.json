@@ -17,7 +17,7 @@
     "language": "Language", "mainNav": "Main navigation"
   },
   "auth": {
-    "loginTitle": "Welcome back", "registerTitle": "Create your account", "email": "Email", "password": "Password",
+    "loginTitle": "Welcome back", "registerTitle": "Create your account", "email": "Email", "password": "Password", "showPassword": "Show password", "hidePassword": "Hide password",
     "name": "Name", "currency": "Currency", "timezone": "Time zone", "login": "Log in", "register": "Create account",
     "noAccount": "No account yet?", "haveAccount": "Already have an account?",
     "emailTaken": "An account with this email already exists", "invalidCredentials": "Wrong email or password", "passwordHint": "At least 8 characters",
@@ -29,7 +29,7 @@
   "validation": {
     "len60": "Use 1 to 60 characters.", "notFuture": "The date can't be in the future.", "beforeOpening": "The date is before the account was opened.", "archived": "It is archived.", "goalOtherAccount": "That goal belongs to another account.", "sameAccount": "Pick a different account.", "overBalance": "It's more than the account balance.", "pastMonth": "Pick a date from this month on.", "rate": "Enter a rate between 0 and 100.", "locked": "This can no longer change.", "months36": "Pick 3 or 6 months.",
     "required": "Required", "amount": "Enter a valid amount, e.g. 1,234.50", "email": "Invalid email",
-    "min8": "At least 8 characters", "last4": "Exactly 4 digits", "day": "Day between 1 and 31",
+    "min8": "At least 8 characters", "last4": "Exactly 4 digits", "day": "Day between 1 and 31", "twoDays": "Pick two paydays", "payDate": "Pick a pay date on the calendar",
     "installments": "Between 2 and 48 installments", "max200": "At most 200 characters",
     "endBeforeStart": "The end month can't be before the start month"
   },
@@ -79,6 +79,14 @@
     "status": { "pending": "Pending", "paid": "Paid", "received": "Received", "skipped": "Skipped" },
     "markPaid": "Mark paid", "markReceived": "Mark received", "skip": "Skip", "undo": "Undo",
     "due": "Due {date}", "edited": "Edited", "editEntry": "Edit entry", "empty": "Nothing this month"
+  },
+  "schedule": {
+    "frequency": "How often are you paid?", "monthly": "Monthly", "semimonthly": "Twice a month", "biweekly": "Every 2 weeks", "weekly": "Weekly",
+    "paydays": "Paydays", "twoDaysHint": "Tap the two days of the month you are paid. Shorter months use their last day.",
+    "pickPayDate": "Tap a payday on the calendar", "weeklyHint": "You are paid on that day every week.", "biweeklyHint": "We count every 14 days from that date.",
+    "prevMonth": "Previous month", "nextMonth": "Next month",
+    "upcoming": "Next paydays: {dates}", "perPayment": "Enter what you get on each payday.", "amountPerPayment": "Amount per payday",
+    "everySemimonth": "Days {a} and {b} of every month", "everyTwoWeeks": "Every 2 weeks, on {weekday}", "everyWeek": "Every {weekday}"
   },
   "recurring": {
     "next": "Next: {date}",
@@ -161,7 +169,7 @@
     "tone": { "info": "Notice", "good": "Good news", "warn": "Heads up", "critical": "Urgent" }
   },
   "welcome": {
-    "title1": "How much do you earn a month?", "title2": "Your fixed payments", "title3": "Your cards (optional)",
+    "title1": "How much do you earn?", "title2": "Your fixed payments", "title3": "Your cards (optional)",
     "subtitle1": "We use this to work out what you have left each month.", "subtitle2": "Rent, utilities, subscriptions — whatever you pay monthly.",
     "subtitle3": "Just a nickname and last 4 digits. Never the full number.",
     "salary": "Salary", "payday": "Payday", "other": "Other", "skip": "Skip", "continue": "Continue", "back": "Back",

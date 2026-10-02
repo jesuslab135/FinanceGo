@@ -52,13 +52,50 @@ func (s *Service) ensureMonth(ctx context.Context, q *store.Queries, a Actor, mo
 	if datex.MonthsBetween(datex.MonthStart(s.today(a)), month) > maxMonthsAhead {
 		return apperr.MonthOutOfRange()
 	}
-	if err := q.EnsureIncomeEntries(ctx, store.EnsureIncomeEntriesParams{UserID: a.UserID, Month: month}); err != nil {
+	if err := s.ensureIncome(ctx, q, a, month); err != nil {
 		return err
 	}
 	if err := q.EnsureFixedEntries(ctx, store.EnsureFixedEntriesParams{UserID: a.UserID, Month: month}); err != nil {
 		return err
 	}
 	return s.ensureInstallments(ctx, q, a.UserID, month)
+}
+
+// ensureIncome adds one row per pay date of every income template that covers
+// the month. Once a template has rows in the month, only pay dates from today
+// on are added: a schedule change must not invent income in days already gone.
+func (s *Service) ensureIncome(ctx context.Context, q *store.Queries, a Actor, month time.Time) error {
+	sources, err := q.ListIncomeSourcesForMonth(ctx, store.ListIncomeSourcesForMonthParams{UserID: a.UserID, Month: month})
+	if err != nil || len(sources) == 0 {
+		return err
+	}
+	rows, err := q.ListIncomeOccurrences(ctx, store.ListIncomeOccurrencesParams{UserID: a.UserID, Month: month})
+	if err != nil {
+		return err
+	}
+	have := map[int64]map[int32]bool{}
+	for _, r := range rows {
+		if have[*r.IncomeSourceID] == nil {
+			have[*r.IncomeSourceID] = map[int32]bool{}
+		}
+		have[*r.IncomeSourceID][r.Occurrence] = true
+	}
+	today := s.today(a)
+	for _, src := range sources {
+		for i, due := range scheduleOf(src).Dates(month) {
+			n := int32(i + 1)
+			if have[src.ID][n] || (len(have[src.ID]) > 0 && due.Before(today)) {
+				continue
+			}
+			if err := q.InsertIncomeEntry(ctx, store.InsertIncomeEntryParams{
+				UserID: a.UserID, Month: month, SourceID: src.ID, Occurrence: n, Name: src.Name,
+				CategoryID: src.CategoryID, Amount: src.Amount, DueDate: due,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (s *Service) MonthEntries(ctx context.Context, a Actor, month time.Time) ([]Entry, error) {

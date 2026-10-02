@@ -8,25 +8,39 @@ import (
 
 	"financego/internal/apperr"
 	"financego/internal/datex"
+	"financego/internal/payday"
 	"financego/internal/store"
 )
 
+// IncomeSource pays Amount on every pay date of its schedule: day_of_month
+// (monthly), day_of_month and second_day (semimonthly), or every 7 / 14 days
+// counted from anchor_date (weekly / biweekly).
 type IncomeSource struct {
 	ID         int64        `json:"id" validate:"required"`
 	CategoryID *int64       `json:"category_id"`
 	Name       string       `json:"name" validate:"required"`
 	Amount     int64        `json:"amount" validate:"required"`
+	Frequency  string       `json:"frequency" validate:"required" enums:"monthly,semimonthly,biweekly,weekly"`
 	DayOfMonth int32        `json:"day_of_month" validate:"required"`
+	SecondDay  *int32       `json:"second_day"`
+	AnchorDate *datex.Date  `json:"anchor_date"`
 	StartMonth datex.Month  `json:"start_month" validate:"required"`
 	EndMonth   *datex.Month `json:"end_month"`
 	Active     bool         `json:"active" validate:"required"`
 }
 
+// IncomeSourceInput: frequency defaults to monthly. day_of_month is required
+// for monthly and semimonthly, second_day for semimonthly, anchor_date (any
+// real pay date) for weekly and biweekly; fields the frequency does not use
+// are ignored.
 type IncomeSourceInput struct {
 	CategoryID *int64       `json:"category_id"`
 	Name       string       `json:"name" validate:"required"`
 	Amount     int64        `json:"amount" validate:"required"`
-	DayOfMonth int32        `json:"day_of_month" validate:"required"`
+	Frequency  string       `json:"frequency" enums:"monthly,semimonthly,biweekly,weekly"`
+	DayOfMonth int32        `json:"day_of_month"`
+	SecondDay  *int32       `json:"second_day"`
+	AnchorDate *datex.Date  `json:"anchor_date"`
 	StartMonth datex.Month  `json:"start_month" validate:"required"`
 	EndMonth   *datex.Month `json:"end_month"`
 	Active     *bool        `json:"active"`
@@ -56,7 +70,8 @@ type FixedPaymentInput struct {
 }
 
 func toIncomeSource(r store.IncomeSource) IncomeSource {
-	return IncomeSource{ID: r.ID, CategoryID: r.CategoryID, Name: r.Name, Amount: r.Amount, DayOfMonth: r.DayOfMonth,
+	return IncomeSource{ID: r.ID, CategoryID: r.CategoryID, Name: r.Name, Amount: r.Amount, Frequency: r.Frequency,
+		DayOfMonth: r.DayOfMonth, SecondDay: r.SecondDay, AnchorDate: datex.DatePtr(r.AnchorDate),
 		StartMonth: datex.NewMonth(r.StartMonth), EndMonth: datex.MonthPtr(r.EndMonth), Active: r.Active}
 }
 
@@ -107,8 +122,57 @@ func monthOrNil(m *datex.Month) *time.Time {
 	return &t
 }
 
+// checkSchedule validates the pay schedule and clears the fields its
+// frequency does not use, so the stored row satisfies the table's checks.
+func checkSchedule(v *apperr.V, in *IncomeSourceInput) {
+	if in.Frequency == "" {
+		in.Frequency = payday.Monthly
+	}
+	if !payday.Valid(in.Frequency) {
+		v.Check(false, "frequency", "must be monthly, semimonthly, biweekly or weekly")
+		return
+	}
+	if payday.Anchored(in.Frequency) {
+		in.SecondDay = nil
+		if in.AnchorDate == nil || in.AnchorDate.Year() < 2000 || in.AnchorDate.Year() > 2100 {
+			v.Check(false, "anchor_date", "is required")
+			in.AnchorDate, in.DayOfMonth = nil, 1
+			return
+		}
+		// day_of_month is unused here; keep it meaningful for the NOT NULL column.
+		in.DayOfMonth = int32(in.AnchorDate.Day())
+		return
+	}
+	in.AnchorDate = nil
+	if in.Frequency == payday.Monthly {
+		in.SecondDay = nil
+		return
+	}
+	if in.SecondDay == nil || *in.SecondDay < 1 || *in.SecondDay > 31 {
+		v.Check(false, "second_day", "must be between 1 and 31")
+		return
+	}
+	v.Check(*in.SecondDay != in.DayOfMonth, "second_day", "must differ from day_of_month")
+	if *in.SecondDay < in.DayOfMonth {
+		d := in.DayOfMonth
+		in.DayOfMonth, in.SecondDay = *in.SecondDay, &d
+	}
+}
+
+func scheduleOf(r store.IncomeSource) payday.Schedule {
+	s := payday.Schedule{Frequency: r.Frequency, Day: int(r.DayOfMonth)}
+	if r.SecondDay != nil {
+		s.SecondDay = int(*r.SecondDay)
+	}
+	if r.AnchorDate != nil {
+		s.Anchor = *r.AnchorDate
+	}
+	return s
+}
+
 func (s *Service) validateIncome(ctx context.Context, q *store.Queries, a Actor, in *IncomeSourceInput) error {
 	var v apperr.V
+	checkSchedule(&v, in)
 	checkTemplate(&v, &in.Name, in.Amount, in.DayOfMonth, in.StartMonth, in.EndMonth, &in.Active)
 	if err := v.Err(); err != nil {
 		return err
@@ -150,7 +214,8 @@ func (s *Service) CreateIncomeSource(ctx context.Context, a Actor, in IncomeSour
 		return IncomeSource{}, err
 	}
 	r, err := s.q.CreateIncomeSource(ctx, store.CreateIncomeSourceParams{
-		UserID: a.UserID, CategoryID: in.CategoryID, Name: in.Name, Amount: in.Amount, DayOfMonth: in.DayOfMonth,
+		UserID: a.UserID, CategoryID: in.CategoryID, Name: in.Name, Amount: in.Amount, Frequency: in.Frequency,
+		DayOfMonth: in.DayOfMonth, SecondDay: in.SecondDay, AnchorDate: dateOrNil(in.AnchorDate),
 		StartMonth: in.StartMonth.Time, EndMonth: monthOrNil(in.EndMonth), Active: *in.Active,
 	})
 	if err != nil {
@@ -167,14 +232,15 @@ func (s *Service) UpdateIncomeSource(ctx context.Context, a Actor, id int64, in 
 		}
 		in.EndMonth = s.inactiveEnd(a, *in.Active, in.StartMonth, in.EndMonth)
 		r, err := q.UpdateIncomeSource(ctx, store.UpdateIncomeSourceParams{
-			ID: id, UserID: a.UserID, CategoryID: in.CategoryID, Name: in.Name, Amount: in.Amount, DayOfMonth: in.DayOfMonth,
+			ID: id, UserID: a.UserID, CategoryID: in.CategoryID, Name: in.Name, Amount: in.Amount, Frequency: in.Frequency,
+			DayOfMonth: in.DayOfMonth, SecondDay: in.SecondDay, AnchorDate: dateOrNil(in.AnchorDate),
 			StartMonth: in.StartMonth.Time, EndMonth: monthOrNil(in.EndMonth), Active: *in.Active,
 		})
 		if err != nil {
 			return notFound(err)
 		}
 		out = toIncomeSource(r)
-		return s.afterIncomeChange(ctx, q, a, id)
+		return s.afterIncomeChange(ctx, q, a, r)
 	})
 	return out, err
 }
@@ -187,7 +253,7 @@ func (s *Service) DeactivateIncomeSource(ctx context.Context, a Actor, id int64)
 			return notFound(err)
 		}
 		out = toIncomeSource(r)
-		return s.afterIncomeChange(ctx, q, a, id)
+		return s.afterIncomeChange(ctx, q, a, r)
 	})
 	return out, err
 }
@@ -251,14 +317,35 @@ func (s *Service) DeactivateFixedPayment(ctx context.Context, a Actor, id int64)
 	return out, err
 }
 
-// afterIncomeChange pushes template edits into this and future months' pending,
-// unedited rows and drops rows that fall outside the template's range.
-func (s *Service) afterIncomeChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {
+// afterIncomeChange drops rows that fall outside the template's range, then
+// pushes the template into this and future months' pending, unedited rows:
+// each takes the pay date of its occurrence, and rows past the month's last
+// pay date go. Pay dates the month lacks are added by ensureIncome.
+func (s *Service) afterIncomeChange(ctx context.Context, q *store.Queries, a Actor, src store.IncomeSource) error {
 	from := datex.MonthStart(s.today(a))
-	if err := q.PropagateIncomeSource(ctx, store.PropagateIncomeSourceParams{SourceID: id, FromMonth: from, UserID: a.UserID}); err != nil {
+	if err := q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: src.ID, FromMonth: from, UserID: a.UserID}); err != nil {
 		return err
 	}
-	return q.PruneIncomeEntries(ctx, store.PruneIncomeEntriesParams{SourceID: id, FromMonth: from, UserID: a.UserID})
+	rows, err := q.ListPendingIncomeEntries(ctx, store.ListPendingIncomeEntriesParams{UserID: a.UserID, SourceID: src.ID, FromMonth: from})
+	if err != nil {
+		return err
+	}
+	sched := scheduleOf(src)
+	for _, r := range rows {
+		dates := sched.Dates(r.Month)
+		if int(r.Occurrence) > len(dates) {
+			if err := q.DeleteEntry(ctx, store.DeleteEntryParams{ID: r.ID, UserID: a.UserID}); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := q.SyncIncomeEntry(ctx, store.SyncIncomeEntryParams{
+			ID: r.ID, UserID: a.UserID, Name: src.Name, Amount: src.Amount, CategoryID: src.CategoryID, DueDate: dates[r.Occurrence-1],
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *Service) afterFixedChange(ctx context.Context, q *store.Queries, a Actor, id int64) error {

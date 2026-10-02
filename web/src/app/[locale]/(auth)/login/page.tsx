@@ -6,6 +6,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PasswordInput } from "@/components/common/password-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,7 @@ export default function LoginPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">{t("auth.password")}</Label>
-            <Input className="h-11" id="password" type="password" autoComplete="current-password" aria-invalid={!!errors.password} {...form.register("password")} />
+            <PasswordInput className="h-11" id="password" autoComplete="current-password" aria-invalid={!!errors.password} {...form.register("password")} />
             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
           {errors.root && <p role="alert" className="text-sm text-destructive">{errors.root.message}</p>}

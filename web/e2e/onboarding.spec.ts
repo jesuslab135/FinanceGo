@@ -6,7 +6,7 @@ test("onboarding: income on the keypad, a fixed payment, then the dashboard show
   await expect(page).toHaveURL(/\/es\/welcome/);
 
   // Step 1: income. 3,0,0,0,0,0,0 is $30,000.00 (the keypad is cents-first).
-  await expect(page.getByRole("heading", { level: 1, name: "¿Cuánto ganas al mes?" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "¿Cuánto ganas?" })).toBeVisible();
   await typeDigits(page, "3000000");
   await expect(page.getByRole("status", { name: "¿Cuánto?" })).toHaveText("$30,000.00");
   const payday = page.getByRole("group", { name: "Día de pago" });

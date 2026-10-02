@@ -8,6 +8,7 @@ import { ConfirmButton } from "@/components/common/confirm-button";
 import { FieldError } from "@/components/common/field-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordInput } from "@/components/common/password-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "@/i18n/navigation";
@@ -194,7 +195,7 @@ export default function SettingsPage() {
           <form onSubmit={(e) => e.preventDefault()} className="space-y-3" noValidate>
             <p className="text-sm text-muted-foreground">{t("settings.deleteWarning")}</p>
             <Label htmlFor="d-pass">{t("settings.confirmPassword")}</Label>
-            <Input id="d-pass" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!deleteError} />
+            <PasswordInput id="d-pass" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!deleteError} />
             <FieldError message={deleteError} />
             <ConfirmButton onConfirm={deleteAccount} actionLabel={t("settings.deleteAccount")} description={t("settings.deleteWarning")}>
               <Button type="button" variant="destructive" disabled={!password}>{t("settings.deleteAccount")}</Button>

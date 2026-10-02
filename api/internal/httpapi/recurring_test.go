@@ -10,7 +10,10 @@ type incomeSource struct {
 	CategoryID *int64  `json:"category_id"`
 	Name       string  `json:"name"`
 	Amount     int64   `json:"amount"`
+	Frequency  string  `json:"frequency"`
 	DayOfMonth int32   `json:"day_of_month"`
+	SecondDay  *int32  `json:"second_day"`
+	AnchorDate *string `json:"anchor_date"`
 	StartMonth string  `json:"start_month"`
 	EndMonth   *string `json:"end_month"`
 	Active     bool    `json:"active"`
@@ -154,5 +157,131 @@ func TestDeactivateKeepsPastMonths(t *testing.T) {
 		if e.Name == "Bono" {
 			t.Fatalf("deactivated future template generated %+v", e)
 		}
+	}
+}
+
+func dueDates(es []entry) string {
+	s := ""
+	for _, e := range byKind(es, "income") {
+		s += e.DueDate[8:] + " "
+	}
+	return s
+}
+
+func incomeTotal(es []entry) (sum int64) {
+	for _, e := range byKind(es, "income") {
+		sum += e.Amount
+	}
+	return sum
+}
+
+// Every pay date of a schedule becomes its own row, each for the per-payment amount.
+func TestIncomePaySchedules(t *testing.T) {
+	h := newHarness(t) // today 2026-03-15
+	tok := h.signup("sched@example.com")
+	post := func(body M) incomeSource {
+		body["name"], body["amount"], body["start_month"] = "Pago", 500000, "2026-01"
+		return expect[incomeSource](t, h.do("POST", "/api/v1/income-sources", tok, body), 201)
+	}
+
+	// 2026-03-06 is a Friday.
+	weekly := post(M{"frequency": "weekly", "anchor_date": "2026-03-06"})
+	if weekly.Frequency != "weekly" || weekly.AnchorDate == nil || *weekly.AnchorDate != "2026-03-06" {
+		t.Fatalf("weekly %+v", weekly)
+	}
+	if got := dueDates(h.entries(tok, "2026-03")); got != "06 13 20 27 " {
+		t.Fatalf("weekly march: %s", got)
+	}
+	if es := h.entries(tok, "2026-05"); dueDates(es) != "01 08 15 22 29 " || incomeTotal(es) != 5*500000 {
+		t.Fatalf("weekly may: %+v", es)
+	}
+	if got := dueDates(h.entries(tok, "2026-03")); got != "06 13 20 27 " {
+		t.Fatalf("not idempotent: %s", got)
+	}
+	h.do("DELETE", fmt.Sprintf("/api/v1/income-sources/%d", weekly.ID), tok, nil)
+
+	tok = h.signup("sched2@example.com")
+	post(M{"frequency": "biweekly", "anchor_date": "2026-03-06"})
+	if got := dueDates(h.entries(tok, "2026-03")) + dueDates(h.entries(tok, "2026-04")) + dueDates(h.entries(tok, "2026-02")); got != "06 20 03 17 06 20 " {
+		t.Fatalf("biweekly: %s", got)
+	}
+
+	tok = h.signup("sched3@example.com")
+	semi := post(M{"frequency": "semimonthly", "day_of_month": 30, "second_day": 15})
+	if semi.DayOfMonth != 15 || semi.SecondDay == nil || *semi.SecondDay != 30 {
+		t.Fatalf("semimonthly days are stored in order: %+v", semi)
+	}
+	if got := dueDates(h.entries(tok, "2026-03")) + dueDates(h.entries(tok, "2026-02")); got != "15 30 15 28 " {
+		t.Fatalf("semimonthly: %s", got)
+	}
+	// The dashboard counts both payments.
+	if s := expect[struct {
+		Income int64 `json:"income"`
+	}](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200); s.Income != 1000000 {
+		t.Fatalf("summary income %d", s.Income)
+	}
+
+	// No frequency means monthly, and unused schedule fields are dropped.
+	tok = h.signup("sched4@example.com")
+	monthly := post(M{"day_of_month": 10, "second_day": 20, "anchor_date": "2026-03-06"})
+	if monthly.Frequency != "monthly" || monthly.SecondDay != nil || monthly.AnchorDate != nil {
+		t.Fatalf("monthly %+v", monthly)
+	}
+
+	for i, b := range []M{
+		{"frequency": "daily", "day_of_month": 1},
+		{"frequency": "weekly"},
+		{"frequency": "biweekly", "day_of_month": 5},
+		{"frequency": "semimonthly", "day_of_month": 15},
+		{"frequency": "semimonthly", "day_of_month": 15, "second_day": 15},
+		{"frequency": "semimonthly", "day_of_month": 15, "second_day": 32},
+	} {
+		b["name"], b["amount"], b["start_month"] = "x", 1, "2026-01"
+		if r := h.do("POST", "/api/v1/income-sources", tok, b); r.Code != 422 {
+			t.Errorf("bad[%d]: %d %s", i, r.Code, r.Body)
+		}
+	}
+}
+
+// Changing how often a source pays rewrites pending rows from the current month
+// on, keeps settled ones, and never adds income to days that already passed.
+func TestIncomeScheduleChange(t *testing.T) {
+	h := newHarness(t) // today 2026-03-15
+	tok := h.signup("resched@example.com")
+	id := h.income(tok, 2000000, 1, "2026-01")
+	mar := h.entries(tok, "2026-03")
+	h.entries(tok, "2026-02")
+	h.entries(tok, "2026-04")
+	if r := h.do("PUT", fmt.Sprintf("/api/v1/entries/%d", byKind(mar, "income")[0].ID), tok, M{"amount": 2000000, "status": "received"}); r.Code != 200 {
+		t.Fatalf("receive: %d %s", r.Code, r.Body)
+	}
+	put := func(body M) {
+		t.Helper()
+		body["name"], body["start_month"] = "Salario", "2026-01"
+		if r := h.do("PUT", fmt.Sprintf("/api/v1/income-sources/%d", id), tok, body); r.Code != 200 {
+			t.Fatalf("put: %d %s", r.Code, r.Body)
+		}
+	}
+
+	put(M{"amount": 500000, "frequency": "weekly", "anchor_date": "2026-03-06"})
+	// March keeps the received salary and gains only the Fridays still ahead (20, 27).
+	mar = h.entries(tok, "2026-03")
+	if dueDates(mar) != "01 20 27 " || incomeTotal(mar) != 2000000+2*500000 {
+		t.Fatalf("march after weekly: %+v", byKind(mar, "income"))
+	}
+	if feb := h.entries(tok, "2026-02"); dueDates(feb) != "01 " || incomeTotal(feb) != 2000000 {
+		t.Fatalf("a past month changed: %+v", byKind(feb, "income"))
+	}
+	if apr := h.entries(tok, "2026-04"); dueDates(apr) != "03 10 17 24 " || incomeTotal(apr) != 4*500000 {
+		t.Fatalf("april after weekly: %+v", byKind(apr, "income"))
+	}
+
+	// Back to monthly: the extra pending rows go, the first one takes the new day.
+	put(M{"amount": 2100000, "frequency": "monthly", "day_of_month": 25})
+	if apr := h.entries(tok, "2026-04"); dueDates(apr) != "25 " || incomeTotal(apr) != 2100000 {
+		t.Fatalf("april after monthly: %+v", byKind(apr, "income"))
+	}
+	if mar = h.entries(tok, "2026-03"); dueDates(mar) != "01 " || incomeTotal(mar) != 2000000 {
+		t.Fatalf("march after monthly: %+v", byKind(mar, "income"))
 	}
 }

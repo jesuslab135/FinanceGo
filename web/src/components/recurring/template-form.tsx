@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -17,6 +17,8 @@ import type { FixedPayment, FixedPaymentInput, IncomeSource, IncomeSourceInput }
 import { toMonthKey } from "@/lib/dates";
 import { applyApiError } from "@/lib/forms";
 import { centsToInput, parseMoney } from "@/lib/money";
+import { useToday } from "@/hooks/use-today";
+import { PayScheduleField, scheduleErrors, scheduleFromSource, scheduleInput, type ScheduleErrors } from "./pay-schedule-field";
 
 type Kind = "income" | "fixed";
 type Values = {
@@ -31,6 +33,10 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
   onCancel?: () => void;
 }) {
   const t = useTranslations();
+  const today = useToday();
+  // Income picks its pay schedule in PayScheduleField; fixed payments keep the plain day of the month.
+  const [schedule, setSchedule] = useState(() => scheduleFromSource(kind === "income" ? initial : undefined));
+  const [scheduleErr, setScheduleErr] = useState<ScheduleErrors>({});
   const schema = useMemo(
     () =>
       z
@@ -62,7 +68,13 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
   });
   const { errors, isSubmitting } = form.formState;
 
+  const checkSchedule = () => {
+    const e = kind === "income" ? scheduleErrors(schedule) : {};
+    setScheduleErr(e);
+    return Object.keys(e).length === 0;
+  };
   const submit = form.handleSubmit(async (v) => {
+    if (!checkSchedule()) return;
     const base = {
       name: v.name.trim(), amount: parseMoney(v.amount)!, day_of_month: Number(v.day_of_month),
       start_month: v.start_month,
@@ -72,7 +84,7 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
     try {
       await onSubmit(
         kind === "income"
-          ? { ...base, category_id: v.category_id as number | undefined }
+          ? ({ ...base, ...scheduleInput(schedule, today), category_id: v.category_id } as unknown as IncomeSourceInput)
           : { ...base, category_id: v.category_id!, payment_method_id: v.payment_method_id as number | undefined },
       );
     } catch (e) {
@@ -81,7 +93,7 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
   });
 
   return (
-    <form onSubmit={submit} className="space-y-4" noValidate>
+    <form onSubmit={(e) => { checkSchedule(); void submit(e); }} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="tpl-name">{t("recurring.name")}</Label>
         <Input id="tpl-name" aria-invalid={!!errors.name} {...form.register("name")} />
@@ -89,17 +101,20 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="tpl-amount">{t("recurring.amount")}</Label>
+          <Label htmlFor="tpl-amount">{t(kind === "income" ? "schedule.amountPerPayment" : "recurring.amount")}</Label>
           <MoneyInput id="tpl-amount" aria-invalid={!!errors.amount} {...form.register("amount")} />
           <FieldError message={errors.amount?.message} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="tpl-day">{t("recurring.day")}</Label>
-          <Input id="tpl-day" type="number" min={1} max={31} inputMode="numeric" aria-describedby="tpl-day-hint" aria-invalid={!!errors.day_of_month} {...form.register("day_of_month")} />
-          <p id="tpl-day-hint" className="text-xs text-muted-foreground">{t("recurring.dayHint")}</p>
-          <FieldError message={errors.day_of_month?.message} />
-        </div>
+        {kind === "fixed" && (
+          <div className="space-y-2">
+            <Label htmlFor="tpl-day">{t("recurring.day")}</Label>
+            <Input id="tpl-day" type="number" min={1} max={31} inputMode="numeric" aria-describedby="tpl-day-hint" aria-invalid={!!errors.day_of_month} {...form.register("day_of_month")} />
+            <p id="tpl-day-hint" className="text-xs text-muted-foreground">{t("recurring.dayHint")}</p>
+            <FieldError message={errors.day_of_month?.message} />
+          </div>
+        )}
       </div>
+      {kind === "income" && <PayScheduleField value={schedule} errors={scheduleErr} onChange={(v) => { setScheduleErr({}); setSchedule(v); }} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="tpl-category">{t("expenses.category")}</Label>

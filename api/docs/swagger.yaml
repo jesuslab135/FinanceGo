@@ -454,22 +454,34 @@ definitions:
         type: boolean
       amount:
         type: integer
+      anchor_date:
+        type: string
       category_id:
         type: integer
       day_of_month:
         type: integer
       end_month:
         type: string
+      frequency:
+        enum:
+        - monthly
+        - semimonthly
+        - biweekly
+        - weekly
+        type: string
       id:
         type: integer
       name:
         type: string
+      second_day:
+        type: integer
       start_month:
         type: string
     required:
     - active
     - amount
     - day_of_month
+    - frequency
     - id
     - name
     - start_month
@@ -480,19 +492,29 @@ definitions:
         type: boolean
       amount:
         type: integer
+      anchor_date:
+        type: string
       category_id:
         type: integer
       day_of_month:
         type: integer
       end_month:
         type: string
+      frequency:
+        enum:
+        - monthly
+        - semimonthly
+        - biweekly
+        - weekly
+        type: string
       name:
         type: string
+      second_day:
+        type: integer
       start_month:
         type: string
     required:
     - amount
-    - day_of_month
     - name
     - start_month
     type: object

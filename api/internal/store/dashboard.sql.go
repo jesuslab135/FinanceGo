@@ -440,7 +440,7 @@ func (q *Queries) SpentBetween(ctx context.Context, arg SpentBetweenParams) (int
 }
 
 const upcomingFixedEntries = `-- name: UpcomingFixedEntries :many
-SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at FROM monthly_entries
+SELECT id, user_id, month, kind, income_source_id, fixed_payment_id, installment_plan_id, installment_no, name, category_id, payment_method_id, amount, due_date, status, settled_on, edited, created_at, updated_at, occurrence FROM monthly_entries
 WHERE user_id = $1 AND kind = 'fixed' AND status = 'pending'
   AND due_date BETWEEN $2::date AND $3::date
 ORDER BY due_date, id
@@ -480,6 +480,7 @@ func (q *Queries) UpcomingFixedEntries(ctx context.Context, arg UpcomingFixedEnt
 			&i.Edited,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Occurrence,
 		); err != nil {
 			return nil, err
 		}

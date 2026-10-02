@@ -1,7 +1,8 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { toMonthKey } from "@/lib/dates";
+import { differenceInCalendarDays } from "date-fns";
+import { parseISODate, toMonthKey } from "@/lib/dates";
 import { isOnboardingSettled } from "@/lib/onboarding";
 import { ApiError } from "@/lib/api/errors";
 import { renderWithProviders } from "@/test/render";
@@ -88,10 +89,39 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await screen.findByRole("heading", { name: "Tus pagos fijos" });
     await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
-    await screen.findByRole("heading", { name: "¿Cuánto ganas al mes?" });
+    await screen.findByRole("heading", { name: "¿Cuánto ganas?" });
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await waitFor(() => expect(h.updateIncome).toHaveBeenCalledWith(expect.objectContaining({ id: 100, amount: 100 })));
     expect(h.createIncome).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves a weekly income anchored on the chosen weekday", async () => {
+    renderWithProviders(<WelcomeFlow />);
+    await userEvent.keyboard("500000");
+    await userEvent.click(screen.getByRole("button", { name: "Cada semana" }));
+    await userEvent.click(screen.getAllByRole("button", { name: /^martes \d/ })[0]);
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await waitFor(() => expect(h.createIncome).toHaveBeenCalledWith(expect.objectContaining({ amount: 500000, frequency: "weekly", second_day: null })));
+    const anchor = parseISODate(h.createIncome.mock.calls[0][0].anchor_date);
+    expect(anchor.getDay()).toBe(2);
+    expect(differenceInCalendarDays(anchor, new Date())).toBeGreaterThanOrEqual(0);
+    expect(differenceInCalendarDays(anchor, new Date())).toBeLessThan(7);
+  });
+
+  it("saves a twice-a-month income and asks for both days", async () => {
+    renderWithProviders(<WelcomeFlow />);
+    await userEvent.keyboard("750000");
+    await userEvent.click(screen.getByRole("button", { name: "Dos veces al mes" }));
+    expect(screen.getByRole("button", { name: "15" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("button", { name: "30" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(await screen.findByText("Elige dos días de pago")).toBeInTheDocument();
+    expect(h.createIncome).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "10" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await waitFor(() =>
+      expect(h.createIncome).toHaveBeenCalledWith(expect.objectContaining({ frequency: "semimonthly", day_of_month: 10, second_day: 15, anchor_date: null })),
+    );
   });
 
   it("requires an amount before continuing", async () => {
