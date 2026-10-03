@@ -1,0 +1,19 @@
+# Production edge: same routing as Caddyfile, but it sits behind the VPS nginx (TLS), so it keeps the
+# X-Forwarded-For that nginx sends from the edge-financego network instead of replacing it.
+{
+	admin off
+	servers {
+		trusted_proxies static 172.30.0.0/24
+	}
+}
+
+:80 {
+	handle /api/* {
+		reverse_proxy api:8080 {
+			header_up -X-Real-IP
+		}
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}

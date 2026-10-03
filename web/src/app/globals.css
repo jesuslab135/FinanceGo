@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: var(--font-display);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-surface-raised: var(--surface-raised);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-fg);
+  --color-accent-teal: var(--accent-teal);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-critical: var(--critical);
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --shadow-card: var(--shadow);
+}
+
+:root {
+  --background: #f8f0f2;
+  --foreground: #2b1a22;
+  --card: #fffafb;
+  --card-foreground: #2b1a22;
+  --popover: #fffafb;
+  --popover-foreground: #2b1a22;
+  --surface-raised: #ffffff;
+  --primary: #b42d5f;
+  --primary-foreground: #ffffff;
+  --brand: #d6467a;
+  --brand-fg: #ffffff;
+  --secondary: #f5e4ea;
+  --secondary-foreground: #2b1a22;
+  --muted: #f3e6eb;
+  --muted-foreground: #6e5561;
+  --accent: #f5e4ea;
+  --accent-foreground: #2b1a22;
+  --accent-teal: #3d5a99;
+  --destructive: #b3261e;
+  --border: #f0e2e8;
+  --input: #e8d4dd;
+  --ring: #d6467a;
+  --focus: #d6467a;
+  --chart-1: #d6467a;
+  --chart-2: #3d5a99;
+  --chart-3: #8c7381;
+  --chart-4: #6e5561;
+  --chart-5: #4a3540;
+  --chart-grid: #f0e2e8;
+  --chart-axis: #8c7381;
+  --hero-from: #c2386b;
+  --hero-to: #e98bab;
+  --critical-hero-from: #b42828;
+  --critical-hero-to: #d94a3a;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --critical: #d03b3b;
+  --shadow: 0 1px 2px rgb(74 30 50 / 0.06), 0 8px 24px rgb(74 30 50 / 0.08);
+  --radius: 16px;
+  --sidebar: #fffafb;
+  --sidebar-foreground: #2b1a22;
+  --sidebar-primary: #d6467a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5e4ea;
+  --sidebar-accent-foreground: #2b1a22;
+  --sidebar-border: #f0e2e8;
+  --sidebar-ring: #d6467a;
+}
+
+.dark {
+  --background: #150f12;
+  --foreground: #f7ecf0;
+  --card: #1d1519;
+  --card-foreground: #f7ecf0;
+  --popover: #1d1519;
+  --popover-foreground: #f7ecf0;
+  --surface-raised: #261c21;
+  --primary: #c43a6c;
+  --primary-foreground: #ffffff;
+  --brand: #ee6f9b;
+  --brand-fg: #ffffff;
+  --secondary: #2c2127;
+  --secondary-foreground: #f7ecf0;
+  --muted: #2c2127;
+  --muted-foreground: #bfa6b1;
+  --accent: #2c2127;
+  --accent-foreground: #f7ecf0;
+  --accent-teal: #5470c0;
+  --destructive: #f0625a;
+  --border: #33262c;
+  --input: #3f2f37;
+  --ring: #f28fb1;
+  --focus: #f28fb1;
+  --chart-1: #ee6f9b;
+  --chart-2: #7f9be0;
+  --chart-3: #a08a95;
+  --chart-4: #bfa6b1;
+  --chart-5: #dccad2;
+  --chart-grid: #33262c;
+  --chart-axis: #a08a95;
+  --hero-from: #a82c5a;
+  --hero-to: #d6467a;
+  --critical-hero-from: #8f1f1f;
+  --critical-hero-to: #c23a2e;
+  --shadow: 0 0 0 1px #33262c;
+  --sidebar: #1d1519;
+  --sidebar-foreground: #f7ecf0;
+  --sidebar-primary: #ee6f9b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2c2127;
+  --sidebar-accent-foreground: #f7ecf0;
+  --sidebar-border: #33262c;
+  --sidebar-ring: #f28fb1;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { @apply font-sans; }
+  body { @apply bg-background text-foreground; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+}
+
+@utility num { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* Page transitions: React's <ViewTransition> (PageTransition / SharedElement) drives the browser's View
+   Transitions API; without support navigation is a plain swap. The reduced-motion block above turns all of this off. */
+::view-transition-old(.vt-fade-out) { animation: 200ms cubic-bezier(.4,0,1,1) both vt-fade-out; }
+::view-transition-new(.vt-rise-in) { animation: 200ms cubic-bezier(.2,.8,.2,1) both vt-rise-in; }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-rise-in { from { opacity: 0; transform: translateY(6px); } }
+::view-transition-group(.vt-morph) { animation-duration: 280ms; animation-timing-function: cubic-bezier(.2,.8,.2,1); }

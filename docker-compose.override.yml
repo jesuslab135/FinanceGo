@@ -1,0 +1,11 @@
+services:
+  api:
+    build: !reset null
+    image: golang:1.26-alpine
+    working_dir: /src
+    command: sh -c "go install github.com/air-verse/air@latest && air -c .air.toml"
+    volumes:
+      - ./api:/src
+      - gomod:/go/pkg/mod
+volumes:
+  gomod:

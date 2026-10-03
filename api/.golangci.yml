@@ -1,0 +1,17 @@
+version: "2"
+linters:
+  default: standard
+  enable:
+    - errorlint
+    - bodyclose
+    - misspell
+    - unconvert
+  settings:
+    misspell:
+      # Spanish test data, not a typo of "emergencies".
+      ignore-rules:
+        - emergencias
+  exclusions:
+    paths:
+      - internal/store
+      - docs

@@ -1,0 +1,22 @@
+# Single public entry point: the browser talks only to this edge proxy.
+#   /api/*      -> Go API (so the API sees the real client address)
+#   everything  -> Next.js web app
+#
+# Caddy trusts no upstream proxies by default, so it replaces any client-supplied
+# X-Forwarded-For with the TCP peer address; the API trusts X-Forwarded-For only
+# from this container (TRUSTED_PROXIES in docker-compose.yml).
+{
+	admin off
+}
+
+:80 {
+	handle /api/* {
+		reverse_proxy api:8080 {
+			# Gin also reads X-Real-IP; never let a client supply it.
+			header_up -X-Real-IP
+		}
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+}
