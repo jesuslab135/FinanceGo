@@ -69,6 +69,7 @@ jobs:
     needs: [web]
     env:
       JWT_SECRET: ci-only-secret-with-at-least-thirty-two-bytes!!
+      POSTGRES_PASSWORD: ${{ github.run_id }}-ci
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

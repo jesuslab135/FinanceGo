@@ -3,7 +3,7 @@ services:
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-fin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-finance}
     ports: ["127.0.0.1:${DB_PORT:-5432}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
@@ -17,7 +17,7 @@ services:
     build: ./api
     image: financego-api
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-fin}:${POSTGRES_PASSWORD:-fin}@db:5432/${POSTGRES_DB:-finance}?sslmode=disable
+      DATABASE_URL: postgres://${POSTGRES_USER:-fin}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-finance}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
