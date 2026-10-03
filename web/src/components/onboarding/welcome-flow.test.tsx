@@ -40,6 +40,14 @@ vi.mock("@/lib/query/hooks", () => ({
   useCreatePaymentMethod: () => ({ mutateAsync: h.createCard }),
 }));
 
+/** Accepts the default schedule (quincenal, 15 and 30), types the amount and saves the income. */
+async function enterIncome(digits: string) {
+  await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+  await screen.findByRole("heading", { name: "¿Cuánto recibes cada quincena?" });
+  if (digits) await userEvent.keyboard(digits);
+  await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+}
+
 // Animated step changes under a loaded CI machine can be slow; the timeout is generous instead of the tests sleeping.
 describe("WelcomeFlow", { timeout: 30_000 }, () => {
   beforeEach(() => {
@@ -59,13 +67,18 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
   it("walks income, fixed payment and finish, saving integer cents", async () => {
     renderWithProviders(<WelcomeFlow />);
     expect(screen.getByRole("img", { name: "Paso 1 de 3" })).toBeInTheDocument();
-    await userEvent.keyboard("2500000");
-    expect(screen.getByRole("status")).toHaveTextContent("$25,000.00");
-    await userEvent.click(screen.getByRole("button", { name: "15" }));
+    expect(screen.getByRole("heading", { name: "¿Cada cuándo te pagan?" })).toBeInTheDocument();
+    // Quincenal on the 15th and 30th is preselected: the common case is one tap.
+    expect(screen.getAllByRole("button", { pressed: true }).map((b) => b.textContent)).toEqual(["Quincenal", "15", "30"]);
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "¿Cuánto recibes cada quincena?" });
+    await userEvent.keyboard("1250000");
+    expect(screen.getByRole("status")).toHaveTextContent("$12,500.00");
+    expect(screen.getByText("≈ $25,000.00 al mes")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await waitFor(() =>
       expect(h.createIncome).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "Salario", amount: 2500000, day_of_month: 15, start_month: toMonthKey(new Date()), category_id: 9, active: true, end_month: null }),
+        expect.objectContaining({ name: "Salario", amount: 1250000, frequency: "semimonthly", day_of_month: 15, second_day: 30, start_month: toMonthKey(new Date()), category_id: 9, active: true, end_month: null }),
       ),
     );
 
@@ -85,21 +98,23 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
   it("does not create a second income when coming back to step 1", async () => {
     h.updateIncome.mockResolvedValue({ id: 100 });
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.keyboard("100");
-    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await enterIncome("100");
     await screen.findByRole("heading", { name: "Tus pagos fijos" });
     await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
-    await screen.findByRole("heading", { name: "¿Cuánto ganas?" });
+    await screen.findByRole("heading", { name: "¿Cuánto recibes cada quincena?" });
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await waitFor(() => expect(h.updateIncome).toHaveBeenCalledWith(expect.objectContaining({ id: 100, amount: 100 })));
     expect(h.createIncome).toHaveBeenCalledTimes(1);
   });
 
-  it("saves a weekly income anchored on the chosen weekday", async () => {
+  it("saves a weekly income anchored on the chosen weekday, asking for the weekly amount", async () => {
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.keyboard("500000");
-    await userEvent.click(screen.getByRole("button", { name: "Cada semana" }));
+    await userEvent.click(screen.getByRole("button", { name: "Semanal" }));
     await userEvent.click(screen.getAllByRole("button", { name: /^martes \d/ })[0]);
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "¿Cuánto recibes cada semana?" });
+    await userEvent.keyboard("500000");
+    expect(screen.getByText("≈ $21,666.67 al mes")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await waitFor(() => expect(h.createIncome).toHaveBeenCalledWith(expect.objectContaining({ amount: 500000, frequency: "weekly", second_day: null })));
     const anchor = parseISODate(h.createIncome.mock.calls[0][0].anchor_date);
@@ -108,16 +123,34 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
     expect(differenceInCalendarDays(anchor, new Date())).toBeLessThan(7);
   });
 
-  it("saves a twice-a-month income and asks for both days", async () => {
+  it("going back from the amount keeps the schedule and the typed amount", async () => {
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.keyboard("750000");
-    await userEvent.click(screen.getByRole("button", { name: "Dos veces al mes" }));
-    expect(screen.getByRole("button", { name: "15" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("button", { name: "Mensual" }));
+    await userEvent.click(screen.getByRole("button", { name: "28" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "¿Cuánto recibes al mes?" });
+    await userEvent.keyboard("900");
+    expect(screen.queryByText(/al mes$/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    await screen.findByRole("heading", { name: "¿Cada cuándo te pagan?" });
+    expect(screen.getAllByRole("button", { pressed: true }).map((b) => b.textContent)).toEqual(["Mensual", "28"]);
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "¿Cuánto recibes al mes?" });
+    expect(screen.getByRole("status")).toHaveTextContent("$9.00");
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await waitFor(() => expect(h.createIncome).toHaveBeenCalledWith(expect.objectContaining({ amount: 900, frequency: "monthly", day_of_month: 28 })));
+  });
+
+  it("asks for both quincenal days before moving on to the amount", async () => {
+    renderWithProviders(<WelcomeFlow />);
     await userEvent.click(screen.getByRole("button", { name: "30" }));
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     expect(await screen.findByText("Elige dos días de pago")).toBeInTheDocument();
-    expect(h.createIncome).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "¿Cada cuándo te pagan?" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "10" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await screen.findByRole("heading", { name: "¿Cuánto recibes cada quincena?" });
+    await userEvent.keyboard("750000");
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await waitFor(() =>
       expect(h.createIncome).toHaveBeenCalledWith(expect.objectContaining({ frequency: "semimonthly", day_of_month: 10, second_day: 15, anchor_date: null })),
@@ -126,7 +159,7 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
 
   it("requires an amount before continuing", async () => {
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await enterIncome("");
     expect(await screen.findByText(/monto válido/)).toBeInTheDocument();
     expect(h.createIncome).not.toHaveBeenCalled();
   });
@@ -134,8 +167,7 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
   it("puts a server field error under its fixed-payment row and keeps the user there", async () => {
     h.createFixed.mockRejectedValue(new ApiError(400, "validation_failed", "bad", { amount: "must be between 1 and 999999999999 cents" }));
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.keyboard("100");
-    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await enterIncome("100");
     await userEvent.click(await screen.findByRole("button", { name: "Luz" }));
     await userEvent.type(screen.getByLabelText("Luz: Monto"), "5");
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
@@ -145,8 +177,7 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
 
   it("adds a card, listing it as a tile", async () => {
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.keyboard("100");
-    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await enterIncome("100");
     await screen.findByRole("heading", { name: "Tus pagos fijos" });
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await userEvent.type(await screen.findByLabelText("Alias"), "BBVA");
@@ -160,6 +191,9 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
   it("moves focus to the entering step heading, not the exiting one", async () => {
     renderWithProviders(<WelcomeFlow />);
     expect(document.activeElement).toBe(document.body);
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    const amountHeading = await screen.findByRole("heading", { name: "¿Cuánto recibes cada quincena?" });
+    await waitFor(() => expect(document.activeElement).toBe(amountHeading));
     await userEvent.keyboard("100");
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     const heading = await screen.findByRole("heading", { name: "Tus pagos fijos" });
@@ -168,8 +202,7 @@ describe("WelcomeFlow", { timeout: 30_000 }, () => {
 
   it("keeps a half-typed card when going back and forward", async () => {
     renderWithProviders(<WelcomeFlow />);
-    await userEvent.keyboard("100");
-    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await enterIncome("100");
     await screen.findByRole("heading", { name: "Tus pagos fijos" });
     await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await userEvent.type(await screen.findByLabelText("Alias"), "Nu");

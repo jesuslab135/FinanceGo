@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextOccurrence, payDates, upcomingPayDates, type PaySchedule } from "./recurring";
+import { monthlyEstimate, nextOccurrence, payDates, upcomingPayDates, type PaySchedule } from "./recurring";
 
 const base = { start_month: "2026-01", active: true };
 
@@ -49,6 +49,15 @@ describe("payDates", () => {
     expect(days(biweekly, 2026, 8)).toEqual([4, 18]);
     // Across the autumn clock change the step stays 14 calendar days.
     expect(days(biweekly, 2027, 9)).toEqual([1, 15, 29]);
+  });
+});
+
+describe("monthlyEstimate", () => {
+  it("turns one payment into an average month", () => {
+    expect(monthlyEstimate(1000000, "monthly")).toBe(1000000);
+    expect(monthlyEstimate(1000000, "semimonthly")).toBe(2000000);
+    expect(monthlyEstimate(500000, "weekly")).toBe(2166667);
+    expect(monthlyEstimate(600000, "biweekly")).toBe(1300000);
   });
 });
 

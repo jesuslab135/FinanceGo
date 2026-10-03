@@ -3516,6 +3516,39 @@ const docTemplate = `{
                 }
             }
         },
+        "service.NextPay": {
+            "type": "object",
+            "required": [
+                "amount",
+                "date",
+                "days",
+                "name",
+                "payments"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "available": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "days": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "payments": {
+                    "type": "integer"
+                },
+                "per_day": {
+                    "type": "integer"
+                }
+            }
+        },
         "service.PaymentMethod": {
             "type": "object",
             "required": [
@@ -4227,6 +4260,14 @@ const docTemplate = `{
                 },
                 "month": {
                     "type": "string"
+                },
+                "next_pay": {
+                    "description": "NextPay is set for the current month when a payday lies ahead.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/service.NextPay"
+                        }
+                    ]
                 },
                 "safe_to_spend_per_day": {
                     "type": "integer"

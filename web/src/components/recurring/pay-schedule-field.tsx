@@ -23,7 +23,8 @@ export type ScheduleDraft = {
 };
 export type ScheduleErrors = Partial<Record<"day" | "secondDay" | "payDate", string>>;
 
-export const DEFAULT_SCHEDULE: ScheduleDraft = { frequency: "monthly", day: 15, secondDay: 30, weekday: 5, payDate: "" };
+/** Quincenal on the 15th and 30th, the most common payroll in Mexico; weekly starts on Friday. */
+export const DEFAULT_SCHEDULE: ScheduleDraft = { frequency: "semimonthly", day: 15, secondDay: 30, weekday: 5, payDate: "" };
 
 const MONTH_DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 // Monday first; 2026-01-04 is a Sunday, so day n of that week has weekday n.
@@ -34,7 +35,8 @@ const validDay = (d: number) => Number.isInteger(d) && d >= 1 && d <= 31;
 export function scheduleFromSource(s?: Partial<PaySchedule>): ScheduleDraft {
   const anchor = s?.anchor_date ? parseISODate(s.anchor_date) : null;
   return {
-    frequency: s?.frequency ?? "monthly",
+    // A saved source without a frequency predates pay schedules: it is monthly.
+    frequency: s?.frequency ?? (s?.day_of_month !== undefined ? "monthly" : DEFAULT_SCHEDULE.frequency),
     day: s?.day_of_month ?? DEFAULT_SCHEDULE.day,
     secondDay: s?.second_day ?? DEFAULT_SCHEDULE.secondDay,
     weekday: anchor ? anchor.getDay() : DEFAULT_SCHEDULE.weekday,
@@ -87,7 +89,7 @@ function PayCalendar({ schedule, today, onPick }: { schedule: PaySchedule | null
         <p className="text-sm font-medium capitalize" aria-live="polite">{format(view, "LLLL yyyy", { locale })}</p>
         <button type="button" aria-label={t("nextMonth")} className={cn("flex size-11 items-center justify-center rounded-full hover:bg-muted", FOCUS)} onClick={() => setView(addMonths(view, 1))}><ChevronRight className="size-4" aria-hidden /></button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAYS.map((w) => <span key={w} aria-hidden className="pb-1 text-xs capitalize text-muted-foreground">{format(weekdayDate(w), "EEEEEE", { locale })}</span>)}
         {Array.from({ length: lead }, (_, i) => <span key={`b${i}`} />)}
         {Array.from({ length: count }, (_, i) => {
@@ -107,13 +109,35 @@ function PayCalendar({ schedule, today, onPick }: { schedule: PaySchedule | null
   );
 }
 
-/** How often an income pays and on which days: monthly, twice a month, every two weeks or weekly. */
-export function PayScheduleField({ value, onChange, errors = {} }: {
-  value: ScheduleDraft; onChange: (v: ScheduleDraft) => void; errors?: ScheduleErrors;
+/** Describes a schedule in words: "Los días 15 y 30 de cada mes", "Cada viernes". */
+export function useScheduleLabel(): (s: PaySchedule) => string {
+  const t = useTranslations();
+  const locale = useLocale() === "en" ? enUS : es;
+  return (s) => {
+    const weekday = s.anchor_date ? format(parseISODate(s.anchor_date), "EEEE", { locale }) : "";
+    switch (s.frequency) {
+      case "semimonthly": return t("schedule.everySemimonth", { a: s.day_of_month, b: s.second_day ?? 0 });
+      case "biweekly": return t("schedule.everyTwoWeeks", { weekday });
+      case "weekly": return t("schedule.everyWeek", { weekday });
+      default: return t("recurring.everyMonth", { day: s.day_of_month });
+    }
+  };
+}
+
+/**
+ * How often an income pays and on which days: quincenal, weekly, every two weeks or monthly.
+ * With `collapsible` a valid schedule shows as one line with a button to change it.
+ */
+export function PayScheduleField({ value, onChange, errors = {}, collapsible = false, questionInHeading = false }: {
+  value: ScheduleDraft; onChange: (v: ScheduleDraft) => void; errors?: ScheduleErrors; collapsible?: boolean;
+  /** The page heading already asks "¿Cada cuándo te pagan?": keep the legend for screen readers only. */
+  questionInHeading?: boolean;
 }) {
   const t = useTranslations();
   const dfLocale = useLocale() === "en" ? enUS : es;
   const today = useToday();
+  const label = useScheduleLabel();
+  const [open, setOpen] = useState(false);
   const set = (patch: Partial<ScheduleDraft>) => onChange({ ...value, ...patch });
   const err = (key?: string) => (key ? t(`validation.${key}`) : undefined);
   const ready = Object.keys(scheduleErrors(value)).length === 0;
@@ -129,10 +153,22 @@ export function PayScheduleField({ value, onChange, errors = {} }: {
     set({ day: next[0] ?? NaN, secondDay: next[1] ?? NaN });
   };
 
+  if (collapsible && !open && input && Object.keys(errors).length === 0) {
+    return (
+      <div className="space-y-1">
+        <p className="text-sm font-medium">{t("schedule.frequency")}</p>
+        <div className="flex items-center justify-between gap-3 rounded-2xl border bg-surface-raised px-3 py-2">
+          <p className="min-w-0 text-sm"><span className="font-medium">{t(`schedule.${frequency}`)}</span> · {label(input)}</p>
+          <button type="button" className={cn("min-h-11 shrink-0 rounded-full px-3 text-sm font-medium text-primary underline-offset-4 hover:underline", FOCUS)} onClick={() => setOpen(true)}>{t("schedule.change")}</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">{t("schedule.frequency")}</legend>
+        <legend className={questionInHeading ? "sr-only" : "text-sm font-medium"}>{t("schedule.frequency")}</legend>
         <div className="flex flex-wrap gap-2">
           {FREQUENCIES.map((f) => (
             <button key={f} type="button" aria-pressed={frequency === f} className={cn(CHIP, frequency === f ? "border-primary bg-primary text-primary-foreground" : "bg-surface-raised")} onClick={() => set({ frequency: f })}>
@@ -159,7 +195,6 @@ export function PayScheduleField({ value, onChange, errors = {} }: {
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">{t("schedule.pickPayDate")}</legend>
           <PayCalendar schedule={input} today={today} onPick={(d) => set({ weekday: d.getDay(), payDate: toISODate(d) })} />
-          <p className="text-xs text-muted-foreground">{t(frequency === "weekly" ? "schedule.weeklyHint" : "schedule.biweeklyHint")}</p>
           <FieldError message={err(errors.payDate)} />
         </fieldset>
       )}

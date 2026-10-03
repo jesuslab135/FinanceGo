@@ -78,14 +78,16 @@
     "title": "Mes", "income": "Ingresos", "fixed": "Pagos fijos", "installments": "Meses sin intereses",
     "status": { "pending": "Pendiente", "paid": "Pagado", "received": "Recibido", "skipped": "Omitido" },
     "markPaid": "Marcar pagado", "markReceived": "Marcar recibido", "skip": "Omitir", "undo": "Deshacer",
-    "due": "Vence {date}", "edited": "Editado", "editEntry": "Editar movimiento", "empty": "Sin movimientos este mes"
+    "due": "Vence {date}", "arrives": "Llega {date}", "edited": "Editado", "editEntry": "Editar movimiento", "empty": "Sin movimientos este mes"
   },
   "schedule": {
-    "frequency": "¿Cada cuándo te pagan?", "monthly": "Cada mes", "semimonthly": "Dos veces al mes", "biweekly": "Cada 2 semanas", "weekly": "Cada semana",
-    "paydays": "Días de pago", "twoDaysHint": "Toca los dos días del mes en que te pagan. Si el mes es más corto se usa el último día.",
-    "pickPayDate": "Toca un día de pago en el calendario", "weeklyHint": "Te pagan ese día cada semana.", "biweeklyHint": "Contamos cada 14 días a partir de esa fecha.",
+    "frequency": "¿Cada cuándo te pagan?", "monthly": "Mensual", "semimonthly": "Quincenal", "biweekly": "Catorcenal", "weekly": "Semanal",
+    "change": "Cambiar", "perMonth": "≈ {amount} al mes", "moreOptions": "Más opciones", "lessOptions": "Menos opciones",
+    "editNote": "Al guardar, los pagos pendientes de este mes en adelante siguen el nuevo calendario. Los meses pasados y lo que ya marcaste como recibido no cambian.",
+    "paydays": "Días de pago", "twoDaysHint": "Toca los dos días del mes en que te pagan.",
+    "pickPayDate": "Toca un día de pago en el calendario", 
     "prevMonth": "Mes anterior", "nextMonth": "Mes siguiente",
-    "upcoming": "Próximos pagos: {dates}", "perPayment": "Escribe lo que recibes en cada pago.", "amountPerPayment": "Monto por pago",
+    "upcoming": "Próximos pagos: {dates}", "amountPerPayment": "Monto por pago",
     "everySemimonth": "Los días {a} y {b} de cada mes", "everyTwoWeeks": "Cada 2 semanas, en {weekday}", "everyWeek": "Cada {weekday}"
   },
   "recurring": {
@@ -139,7 +141,7 @@
   },
   "dashboard": {
     "saved": "Ahorro", "savedDetail": "Planeado {planned} · depositado {deposited}",
-    "heroLabel": "Te quedan este mes", "heroHint": "≈ {amount} al día · {days, plural, one {# día} other {# días}}",
+    "heroLabel": "Te quedan este mes", "nextPay": "Próximo pago: {date} · {amount}", "untilNextPay": "Hasta entonces te quedan {amount} · ≈ {perDay} al día", "untilNextPayShort": "Hasta entonces te quedan {amount}", "heroHint": "≈ {amount} al día · {days, plural, one {# día} other {# días}}",
     "greeting": { "morning": "¡Buenos días, {name}!", "afternoon": "¡Buenas tardes, {name}!", "evening": "¡Buenas noches, {name}!", "morningNoName": "¡Buenos días!", "afternoonNoName": "¡Buenas tardes!", "eveningNoName": "¡Buenas noches!" },
     "period": { "day": "Día", "week": "Semana", "month": "Mes" }, "anchor": "Fecha", "periodLabel": "Periodo",
     "income": "Ingresos del mes", "fixed": "Fijos del mes", "fixedDetail": "{paid} pagado · {pending} pendiente",
@@ -169,8 +171,10 @@
     "tone": { "info": "Aviso", "good": "Buena noticia", "warn": "Atención", "critical": "Urgente" }
   },
   "welcome": {
-    "title1": "¿Cuánto ganas?", "title2": "Tus pagos fijos", "title3": "Tus tarjetas (opcional)",
-    "subtitle1": "Con esto calculamos cuánto te queda cada mes.", "subtitle2": "Renta, luz, suscripciones… lo que pagas cada mes.",
+    "title1": "¿Cada cuándo te pagan?", "title2": "Tus pagos fijos", "title3": "Tus tarjetas (opcional)",
+    "subtitle1": "Elige tu tipo de nómina y tu día de pago.",
+    "amountTitle": { "monthly": "¿Cuánto recibes al mes?", "semimonthly": "¿Cuánto recibes cada quincena?", "biweekly": "¿Cuánto recibes cada catorcena?", "weekly": "¿Cuánto recibes cada semana?" },
+    "amountSubtitle": "Lo que te depositan en cada pago. Con esto calculamos cuánto te queda.", "subtitle2": "Renta, luz, suscripciones… lo que pagas cada mes.",
     "subtitle3": "Solo alias y últimos 4 dígitos. Nunca el número completo.",
     "salary": "Salario", "payday": "Día de pago", "other": "Otro", "skip": "Saltar", "continue": "Continuar", "back": "Atrás",
     "addCard": "Agregar otra", "finish": "Terminar", "progress": "Paso {n} de 3",

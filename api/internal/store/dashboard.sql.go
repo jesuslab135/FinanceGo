@@ -355,6 +355,78 @@ func (q *Queries) MonthTotals(ctx context.Context, arg MonthTotalsParams) (Month
 	return i, err
 }
 
+const nextPayday = `-- name: NextPayday :one
+SELECT due_date, SUM(amount)::bigint AS amount, COUNT(*)::int AS payments, MIN(name)::text AS name
+FROM monthly_entries
+WHERE user_id = $1 AND kind = 'income' AND status = 'pending' AND due_date > $2::date
+GROUP BY due_date
+ORDER BY due_date
+LIMIT 1
+`
+
+type NextPaydayParams struct {
+	UserID int64
+	Today  time.Time
+}
+
+type NextPaydayRow struct {
+	DueDate  time.Time
+	Amount   int64
+	Payments int32
+	Name     string
+}
+
+// The first day after today on which pending income lands, with everything due that day.
+func (q *Queries) NextPayday(ctx context.Context, arg NextPaydayParams) (NextPaydayRow, error) {
+	row := q.db.QueryRow(ctx, nextPayday, arg.UserID, arg.Today)
+	var i NextPaydayRow
+	err := row.Scan(
+		&i.DueDate,
+		&i.Amount,
+		&i.Payments,
+		&i.Name,
+	)
+	return i, err
+}
+
+const payPeriodTotals = `-- name: PayPeriodTotals :one
+SELECT
+    COALESCE(SUM(amount) FILTER (WHERE kind = 'income' AND month = $1::date
+        AND (status = 'received' OR (status = 'pending' AND due_date <= $2::date))), 0)::bigint AS income_arrived,
+    COALESCE(SUM(amount) FILTER (WHERE kind IN ('fixed', 'installment')
+        AND ((status = 'paid' AND month = $1::date)
+          OR (status = 'pending' AND due_date < $3::date))), 0)::bigint AS committed
+FROM monthly_entries
+WHERE user_id = $4 AND month >= $1::date AND month <= $3::date
+`
+
+type PayPeriodTotalsParams struct {
+	Month      time.Time
+	Today      time.Time
+	NextPayday time.Time
+	UserID     int64
+}
+
+type PayPeriodTotalsRow struct {
+	IncomeArrived int64
+	Committed     int64
+}
+
+// Money in hand until the next payday: this month's income that has arrived
+// (received, or pending and due by today) against the fixed payments and
+// installments already paid this month or still to pay before that payday.
+func (q *Queries) PayPeriodTotals(ctx context.Context, arg PayPeriodTotalsParams) (PayPeriodTotalsRow, error) {
+	row := q.db.QueryRow(ctx, payPeriodTotals,
+		arg.Month,
+		arg.Today,
+		arg.NextPayday,
+		arg.UserID,
+	)
+	var i PayPeriodTotalsRow
+	err := row.Scan(&i.IncomeArrived, &i.Committed)
+	return i, err
+}
+
 const spendingSeries = `-- name: SpendingSeries :many
 WITH buckets AS (
     SELECT gs::date AS start

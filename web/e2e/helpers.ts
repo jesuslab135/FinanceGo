@@ -8,7 +8,8 @@ export async function registerOnly(page: Page, email: string) {
   await page.goto("/es/register");
   await page.getByLabel("Nombre").fill("E2E");
   await page.getByLabel("Correo").fill(email);
-  await page.getByLabel("Contraseña").fill("password123");
+  // Exact: the show-password button's label also contains the word.
+  await page.getByLabel("Contraseña", { exact: true }).fill("password123");
   await page.getByLabel("Zona horaria").fill("America/Tijuana");
   await page.getByRole("button", { name: "Crear cuenta" }).click();
 }

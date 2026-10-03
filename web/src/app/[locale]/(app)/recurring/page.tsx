@@ -15,13 +15,14 @@ import { ResponsiveDialog } from "@/components/common/responsive-dialog";
 import { RowMenu } from "@/components/common/row-menu";
 import { LoadingRows } from "@/components/common/skeletons";
 import { FadeInItem, FadeInList } from "@/components/motion/fade-in-list";
+import { useScheduleLabel } from "@/components/recurring/pay-schedule-field";
 import { TemplateForm } from "@/components/recurring/template-form";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { FixedPayment, FixedPaymentInput, IncomeSource, IncomeSourceInput } from "@/lib/api/types";
 import { useToday } from "@/hooks/use-today";
 import { parseISODate } from "@/lib/dates";
-import { nextOccurrence, type Frequency } from "@/lib/recurring";
+import { nextOccurrence } from "@/lib/recurring";
 import {
   useCategories, useCreateFixedPayment, useCreateIncomeSource, useDeactivateFixedPayment, useDeactivateIncomeSource,
   useFixedPayments, useIncomeSources, useUpdateFixedPayment, useUpdateIncomeSource,
@@ -37,6 +38,7 @@ function TemplateList({ rows, error, onEdit, onToggle, onAdd, addLabel }: {
   const t = useTranslations();
   const locale = useLocale();
   const today = useToday();
+  const scheduleLabel = useScheduleLabel();
   const { data: categories = [] } = useCategories();
   if (error) return <QueryError error={error} />;
   if (!rows) return <LoadingRows rows={3} rowClassName="h-16" />;
@@ -46,16 +48,8 @@ function TemplateList({ rows, error, onEdit, onToggle, onAdd, addLabel }: {
       {rows.map((r) => {
         const cat = categories.find((c) => c.id === r.category_id);
         const next = nextOccurrence(r, today);
-        const inc = r as IncomeSource;
-        const anchor = inc.anchor_date ? format(parseISODate(inc.anchor_date), "EEEE", { locale: locale === "en" ? enUS : es }) : "";
-        const every: Record<Frequency, string> = {
-          monthly: t("recurring.everyMonth", { day: r.day_of_month }),
-          semimonthly: t("schedule.everySemimonth", { a: r.day_of_month, b: inc.second_day ?? 0 }),
-          biweekly: t("schedule.everyTwoWeeks", { weekday: anchor }),
-          weekly: t("schedule.everyWeek", { weekday: anchor }),
-        };
         const meta = [
-          every[inc.frequency ?? "monthly"],
+          scheduleLabel(r),
           next && t("recurring.next", { date: format(parseISODate(next), "d MMM", { locale: locale === "en" ? enUS : es }) }),
           !r.active && t("common.inactive"),
         ].filter(Boolean).join(" · ");

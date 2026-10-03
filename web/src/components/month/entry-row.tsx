@@ -27,10 +27,11 @@ export function EntryRow({ entry }: { entry: Entry }) {
   const tc = useTranslations("common");
   const errMsg = useErrorMessage();
   const locale = useLocale();
-  const coarse = useMediaQuery("(pointer: coarse)");
+  // Touch screens and narrow windows get the menu: inline buttons would push the name and date off the row.
+  const coarse = useMediaQuery("(pointer: coarse), (max-width: 767px)");
   const update = useUpdateEntry();
   const [editing, setEditing] = useState(false);
-  const due = format(parseISODate(entry.due_date), "d MMM", { locale: locale === "en" ? enUS : es });
+  const due = format(parseISODate(entry.due_date), "EEE d MMM", { locale: locale === "en" ? enUS : es });
 
   // Status-only change: settled_on is omitted so the server defaults it (today for paid/received).
   // Guarded by isPending so swipe and menu actions behave like the disabled desktop buttons.
@@ -85,7 +86,7 @@ export function EntryRow({ entry }: { entry: Entry }) {
         <ListRow
           muted={entry.status === "skipped"}
           title={<span className={cn(entry.status === "skipped" && "line-through")}>{entry.name}</span>}
-          meta={`${t("due", { date: due })}${entry.edited ? ` · ${t("edited")}` : ""}`}
+          meta={`${t(entry.kind === "income" ? "arrives" : "due", { date: due })}${entry.edited ? ` · ${t("edited")}` : ""}`}
           amount={<Money cents={entry.amount} />}
           trailing={trailing}
         />

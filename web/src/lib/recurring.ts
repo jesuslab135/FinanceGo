@@ -2,7 +2,14 @@ import { addDays, differenceInCalendarDays, endOfMonth } from "date-fns";
 import { parseISODate, parseMonthKey, toISODate } from "./dates";
 
 export type Frequency = "monthly" | "semimonthly" | "biweekly" | "weekly";
-export const FREQUENCIES: Frequency[] = ["monthly", "semimonthly", "biweekly", "weekly"];
+/** In the order people in Mexico meet them: quincenal first, then weekly, catorcenal, monthly. */
+export const FREQUENCIES: Frequency[] = ["semimonthly", "weekly", "biweekly", "monthly"];
+const PER_YEAR: Record<Frequency, number> = { monthly: 12, semimonthly: 24, biweekly: 26, weekly: 52 };
+
+/** What one payment adds up to in an average month, in cents. */
+export function monthlyEstimate(cents: number, frequency: Frequency = "monthly"): number {
+  return Math.round((cents * PER_YEAR[frequency]) / 12);
+}
 
 /** When a template lands: day_of_month (monthly, and every fixed payment), two days (semimonthly) or every 7/14 days from anchor_date. */
 export type PaySchedule = { frequency?: Frequency; day_of_month: number; second_day?: number | null; anchor_date?: string | null };

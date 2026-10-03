@@ -24,6 +24,8 @@ export function WelcomeFlow() {
   const reduce = useReducedMotion();
   const today = useToday();
   const [step, setStep] = useState(1);
+  // Step 1 is two screens: the pay schedule, then the amount.
+  const [incomePart, setIncomePart] = useState<1 | 2>(1);
   const [dir, setDir] = useState(1);
   // Drafts live here (not in the steps) so going back keeps what was typed and what was already saved.
   const [income, setIncome] = useState<IncomeDraft>({ name: t("welcome.salary"), cents: 0, schedule: DEFAULT_SCHEDULE });
@@ -49,6 +51,7 @@ export function WelcomeFlow() {
   };
 
 
+  const askingAmount = step === 1 && incomePart === 2;
   const offset = reduce ? 0 : 24 * dir;
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-8 pt-4">
@@ -59,7 +62,7 @@ export function WelcomeFlow() {
       <div className="py-4"><Progress step={step} /></div>
       <AnimatePresence mode="wait" initial={false} custom={dir}>
         <m.section
-          key={step}
+          key={`${step}-${step === 1 ? incomePart : 0}`}
           className="space-y-6"
           initial={{ opacity: 0, x: offset }}
           animate={{ opacity: 1, x: 0 }}
@@ -67,10 +70,10 @@ export function WelcomeFlow() {
           transition={reduce ? { duration: 0 } : { duration: duration.page, ease: ease.enter }}
         >
           <div className="space-y-2">
-            <h1 ref={(el) => { if (el && focusHeading.current) { focusHeading.current = false; el.focus(); } }} tabIndex={-1} className="font-display text-2xl font-extrabold outline-none">{t(`welcome.title${step}`)}</h1>
-            <p className="text-sm text-muted-foreground">{t(`welcome.subtitle${step}`)}</p>
+            <h1 ref={(el) => { if (el && focusHeading.current) { focusHeading.current = false; el.focus(); } }} tabIndex={-1} className="font-display text-2xl font-extrabold outline-none">{askingAmount ? t(`welcome.amountTitle.${income.schedule.frequency}`) : t(`welcome.title${step}`)}</h1>
+            <p className="text-sm text-muted-foreground">{askingAmount ? t("welcome.amountSubtitle") : t(`welcome.subtitle${step}`)}</p>
           </div>
-          {step === 1 && <StepIncome draft={income} onChange={setIncome} today={today} onDone={() => go(2)} />}
+          {step === 1 && <StepIncome draft={income} onChange={setIncome} today={today} onDone={() => go(2)} part={incomePart} onPart={(p) => { focusHeading.current = true; setDir(p > incomePart ? 1 : -1); setIncomePart(p); }} />}
           {step === 2 && <StepFixed draft={fixed} onChange={setFixed} today={today} onBack={() => go(1)} onDone={() => go(3)} />}
           {step === 3 && <StepCards cards={cards} draft={cardDraft} onDraft={setCardDraft} onAdded={(c) => setCards((l) => [...l, c])} onBack={() => go(2)} onFinish={finish} />}
         </m.section>

@@ -3,6 +3,7 @@ package httpapi_test
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 type point struct {
@@ -130,5 +131,74 @@ func TestBudgetPctClamped(t *testing.T) {
 	s := expect[summary](t, h.do("GET", "/api/v1/dashboard/summary?month=2026-03", tok, nil), 200)
 	if len(s.Budgets) != 1 || s.Budgets[0].Pct != 100000 {
 		t.Fatalf("budgets %+v", s.Budgets)
+	}
+}
+
+type nextPay struct {
+	Date      string `json:"date"`
+	Amount    int64  `json:"amount"`
+	Days      int32  `json:"days"`
+	Available *int64 `json:"available"`
+	PerDay    *int64 `json:"per_day"`
+}
+
+func (h *harness) nextPay(tok, query string) *nextPay {
+	h.t.Helper()
+	return expect[struct {
+		NextPay *nextPay `json:"next_pay"`
+	}](h.t, h.do("GET", "/api/v1/dashboard/summary"+query, tok, nil), 200).NextPay
+}
+
+// The summary tells a weekly earner when the next pay lands and what is in
+// hand until then, instead of only the whole month's income.
+func TestSummaryNextPay(t *testing.T) {
+	h := newHarness(t) // today 2026-03-15, a Sunday
+	tok := h.signup("nextpay@example.com")
+	if np := h.nextPay(tok, ""); np != nil {
+		t.Fatalf("no income yet: %+v", np)
+	}
+	// Fridays: March 6, 13, 20, 27. Two have arrived by the 15th.
+	expect[incomeSource](t, h.do("POST", "/api/v1/income-sources", tok, M{
+		"name": "Salario", "amount": 500000, "start_month": "2026-03", "frequency": "weekly", "anchor_date": "2026-03-06",
+	}), 201)
+	h.fixed(tok, "Luz", 80000, 10, "2026-03", nil)    // overdue, still to pay
+	h.fixed(tok, "Renta", 300000, 18, "2026-03", nil) // due before the next payday
+	h.fixed(tok, "Gym", 50000, 25, "2026-03", nil)    // after it: not counted yet
+	h.expense(tok, "Comida", 120000, "2026-03-14", "super", nil)
+
+	np := h.nextPay(tok, "")
+	if np == nil || np.Date != "2026-03-20" || np.Amount != 500000 || np.Days != 5 {
+		t.Fatalf("next pay %+v", np)
+	}
+	if want := int64(2*500000 - 80000 - 300000 - 120000); np.Available == nil || *np.Available != want || *np.PerDay != want/5 {
+		t.Fatalf("available until next pay: %+v, want %d", np, want)
+	}
+	// Other months carry no pay-period figure.
+	if np := h.nextPay(tok, "?month=2026-04"); np != nil {
+		t.Fatalf("april: %+v", np)
+	}
+
+	// After the month's last payday the next one is in the following month, and
+	// that month's bills due before it count.
+	h.setNow(time.Date(2026, 3, 28, 12, 0, 0, 0, time.UTC))
+	tok = h.login("nextpay@example.com")
+	h.fixed(tok, "Seguro", 40000, 2, "2026-04", nil)
+	np = h.nextPay(tok, "")
+	if np == nil || np.Date != "2026-04-03" || np.Days != 6 {
+		t.Fatalf("next pay across months %+v", np)
+	}
+	if want := int64(4*500000 - 80000 - 300000 - 50000 - 40000 - 120000); *np.Available != want {
+		t.Fatalf("available across months %d, want %d", *np.Available, want)
+	}
+}
+
+// Before the month's first payday nothing has arrived, so there is a date but no amount in hand.
+func TestSummaryNextPayBeforeFirstPayday(t *testing.T) {
+	h := newHarness(t) // today 2026-03-15
+	tok := h.signup("nextpay2@example.com")
+	h.income(tok, 2000000, 30, "2026-03")
+	np := h.nextPay(tok, "")
+	if np == nil || np.Date != "2026-03-30" || np.Amount != 2000000 || np.Available != nil || np.PerDay != nil {
+		t.Fatalf("next pay %+v", np)
 	}
 }

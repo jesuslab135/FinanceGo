@@ -2724,6 +2724,15 @@ export interface components {
             limit: number;
             total: number;
         };
+        "service.NextPay": {
+            amount: number;
+            available?: number;
+            date: string;
+            days: number;
+            name: string;
+            payments: number;
+            per_day?: number;
+        };
         "service.PaymentMethod": {
             active: boolean;
             bank?: string;
@@ -2912,6 +2921,8 @@ export interface components {
             income: number;
             installments: number;
             month: string;
+            /** @description NextPay is set for the current month when a payday lies ahead. */
+            next_pay?: components["schemas"]["service.NextPay"];
             safe_to_spend_per_day?: number;
             saved: number;
             saved_deposited: number;

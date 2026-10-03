@@ -27,6 +27,16 @@ describe("HeroAvailable", () => {
     expect(cents?.textContent).toBe(".50");
     expect(el.querySelector(".opacity-60")).toBeNull();
   });
+  it("shows the next payday and what is left until then", () => {
+    renderWithProviders(<HeroAvailable summary={{ ...s, next_pay: { date: "2026-03-20", amount: 500000, name: "Salario", payments: 1, days: 5, available: 380000, per_day: 76000 } }} />);
+    expect(screen.getByText("Próximo pago: vie 20 mar · $5,000.00")).toBeInTheDocument();
+    expect(screen.getByText("Hasta entonces te quedan $3,800.00 · ≈ $760.00 al día")).toBeInTheDocument();
+  });
+  it("before the month's first payday it shows only the date", () => {
+    renderWithProviders(<HeroAvailable summary={{ ...s, next_pay: { date: "2026-03-30", amount: 2000000, name: "Salario", payments: 1, days: 15 } }} />);
+    expect(screen.getByText(/Próximo pago: lun 30 mar/)).toBeInTheDocument();
+    expect(screen.queryByText(/Hasta entonces/)).not.toBeInTheDocument();
+  });
   it("overspent: critical tone with icon and label, not color alone", () => {
     const { container } = renderWithProviders(<HeroAvailable summary={{ ...s, available: -20000, safe_to_spend_per_day: 0 }} />);
     expect(screen.getByText("Sobregirado")).toBeInTheDocument();

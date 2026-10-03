@@ -3,8 +3,11 @@ package service
 import (
 	"cmp"
 	"context"
+	"errors"
 	"slices"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"financego/internal/apperr"
 	"financego/internal/cards"
@@ -38,6 +41,22 @@ type Summary struct {
 	SafeToSpendPerDay *int64         `json:"safe_to_spend_per_day"`
 	DaysRemaining     *int32         `json:"days_remaining"`
 	Budgets           []BudgetStatus `json:"budgets" validate:"required"`
+	// NextPay is set for the current month when a payday lies ahead.
+	NextPay *NextPay `json:"next_pay"`
+}
+
+// NextPay is the next payday and what is in hand until then. Available is the
+// income that has arrived this month minus what was spent and saved, the fixed
+// payments and installments already paid, and those still due before the
+// payday; it is nil until some income has arrived this month.
+type NextPay struct {
+	Date      datex.Date `json:"date" validate:"required"`
+	Amount    int64      `json:"amount" validate:"required"`
+	Name      string     `json:"name" validate:"required"`
+	Payments  int32      `json:"payments" validate:"required"`
+	Days      int32      `json:"days" validate:"required"`
+	Available *int64     `json:"available"`
+	PerDay    *int64     `json:"per_day"`
 }
 
 // SafeToSpend spreads what is left of the month over the remaining days
@@ -86,6 +105,11 @@ func (s *Service) Summary(ctx context.Context, a Actor, month *time.Time) (Summa
 	if per, days, ok := SafeToSpend(out.Available, today, m); ok {
 		d := int32(days)
 		out.SafeToSpendPerDay, out.DaysRemaining = &per, &d
+	}
+	if m.Equal(datex.MonthStart(today)) {
+		if out.NextPay, err = s.nextPay(ctx, a, today, out.Spent+out.Saved); err != nil {
+			return Summary{}, err
+		}
 	}
 	rows, err := s.q.BudgetStatus(ctx, store.BudgetStatusParams{UserID: a.UserID, Month: m})
 	if err != nil {
@@ -159,6 +183,34 @@ type BreakdownItem struct {
 	Name   string `json:"name" validate:"required"`
 	Color  string `json:"color" validate:"required"`
 	Amount int64  `json:"amount" validate:"required"`
+}
+
+// nextPay finds the next payday (this month or the next) and what is left
+// until then; outflows is what was already spent and saved this month.
+func (s *Service) nextPay(ctx context.Context, a Actor, today time.Time, outflows int64) (*NextPay, error) {
+	m := datex.MonthStart(today)
+	if err := s.ensureMonth(ctx, s.q, a, datex.AddMonths(m, 1)); err != nil {
+		return nil, err
+	}
+	next, err := s.q.NextPayday(ctx, store.NextPaydayParams{UserID: a.UserID, Today: today})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	t, err := s.q.PayPeriodTotals(ctx, store.PayPeriodTotalsParams{UserID: a.UserID, Month: m, Today: today, NextPayday: next.DueDate})
+	if err != nil {
+		return nil, err
+	}
+	days := int32(next.DueDate.Sub(today).Hours() / 24)
+	out := &NextPay{Date: datex.NewDate(next.DueDate), Amount: next.Amount, Name: next.Name, Payments: next.Payments, Days: days}
+	if t.IncomeArrived > 0 {
+		avail := t.IncomeArrived - t.Committed - outflows
+		per := max(0, avail) / int64(days)
+		out.Available, out.PerDay = &avail, &per
+	}
+	return out, nil
 }
 
 type CardSummary struct {

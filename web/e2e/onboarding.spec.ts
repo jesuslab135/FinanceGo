@@ -5,13 +5,24 @@ test("onboarding: income on the keypad, a fixed payment, then the dashboard show
   await registerOnly(page, uniqueEmail("welcome"));
   await expect(page).toHaveURL(/\/es\/welcome/);
 
-  // Step 1: income. 3,0,0,0,0,0,0 is $30,000.00 (the keypad is cents-first).
-  await expect(page.getByRole("heading", { level: 1, name: "¿Cuánto ganas?" })).toBeVisible();
-  await typeDigits(page, "3000000");
-  await expect(page.getByRole("status", { name: "¿Cuánto?" })).toHaveText("$30,000.00");
+  // Step 1a: how often. Quincenal is preselected; this user is paid monthly on the 1st.
+  await expect(page.getByRole("heading", { level: 1, name: "¿Cada cuándo te pagan?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Quincenal" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Mensual" }).click();
   const payday = page.getByRole("group", { name: "Día de pago" });
   await payday.getByRole("button", { name: "1", exact: true }).click();
   await expect(payday.getByRole("button", { name: "1", exact: true })).toHaveAttribute("aria-pressed", "true");
+  // The schedule screen fits a phone without scrolling: the action is in view.
+  const desktop = page.viewportSize()!;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("button", { name: "Continuar" })).toBeInViewport();
+  await page.setViewportSize(desktop);
+  await page.getByRole("button", { name: "Continuar" }).click();
+
+  // Step 1b: how much. 3,0,0,0,0,0,0 is $30,000.00 (the keypad is cents-first).
+  await expect(page.getByRole("heading", { level: 1, name: "¿Cuánto recibes al mes?" })).toBeVisible();
+  await typeDigits(page, "3000000");
+  await expect(page.getByRole("status", { name: "¿Cuánto?" })).toHaveText("$30,000.00");
   await page.getByRole("button", { name: "Continuar" }).click();
 
   // Step 2: rent, $10,000 on day 1.

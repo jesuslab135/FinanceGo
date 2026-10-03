@@ -28,7 +28,9 @@ describe("TemplateForm", () => {
   it("submits an income paid every two weeks from a pay date", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<TemplateForm kind="income" initial={{ name: "Salario", amount: 800000, start_month: "2026-05" }} onSubmit={onSubmit} />);
-    await userEvent.click(screen.getByRole("button", { name: "Cada 2 semanas" }));
+    expect(screen.getByText(/Los días 15 y 30 de cada mes/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cambiar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Catorcenal" }));
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     expect(await screen.findByText("Elige una fecha de pago en el calendario")).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -48,16 +50,37 @@ describe("TemplateForm", () => {
     renderWithProviders(
       <TemplateForm kind="income" initial={{ name: "Salario", amount: 800000, start_month: "2026-05", frequency: "semimonthly", day_of_month: 10, second_day: 25 }} onSubmit={vi.fn()} />,
     );
-    expect(screen.getByRole("button", { name: "Dos veces al mes" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getAllByRole("button", { pressed: true }).map((b) => b.textContent)).toEqual(["Dos veces al mes", "10", "25"]);
+    expect(screen.getByText(/Los días 10 y 25 de cada mes/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "10" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/siguen el nuevo calendario/)).not.toBeInTheDocument();
   });
 
   it("lets a monthly income fall on any day of the month", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<TemplateForm kind="income" initial={{ name: "Salario", amount: 800000, start_month: "2026-05" }} onSubmit={onSubmit} />);
+    await userEvent.click(screen.getByRole("button", { name: "Cambiar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Mensual" }));
     await userEvent.click(screen.getByRole("button", { name: "23" }));
     await userEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ frequency: "monthly", day_of_month: 23, second_day: null, anchor_date: null })));
+  });
+
+  it("warns what a schedule change does to an income that already exists, and shows the monthly total", async () => {
+    renderWithProviders(
+      <TemplateForm kind="income" initial={{ id: 7, name: "Salario", amount: 800000, start_month: "2026-05", frequency: "monthly", day_of_month: 15 }} onSubmit={vi.fn()} />,
+    );
+    expect(screen.queryByText(/al mes$/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cambiar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Semanal" }));
+    expect(screen.getByRole("status")).toHaveTextContent("siguen el nuevo calendario");
+    expect(screen.getByText("≈ $34,666.67 al mes")).toBeInTheDocument();
+  });
+
+  it("keeps start and end month under more options until they are needed", async () => {
+    renderWithProviders(<TemplateForm kind="income" initial={{ name: "Salario", amount: 800000, start_month: "2026-05" }} onSubmit={vi.fn()} />);
+    expect(screen.getByLabelText("Mes de inicio")).not.toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Más opciones" }));
+    expect(screen.getByLabelText("Mes de inicio")).toBeVisible();
   });
 
   it("rejects an end month before the start month", async () => {

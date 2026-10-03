@@ -598,6 +598,29 @@ definitions:
     - limit
     - total
     type: object
+  service.NextPay:
+    properties:
+      amount:
+        type: integer
+      available:
+        type: integer
+      date:
+        type: string
+      days:
+        type: integer
+      name:
+        type: string
+      payments:
+        type: integer
+      per_day:
+        type: integer
+    required:
+    - amount
+    - date
+    - days
+    - name
+    - payments
+    type: object
   service.PaymentMethod:
     properties:
       active:
@@ -1088,6 +1111,10 @@ definitions:
         type: integer
       month:
         type: string
+      next_pay:
+        allOf:
+        - $ref: '#/definitions/service.NextPay'
+        description: NextPay is set for the current month when a payday lies ahead.
       safe_to_spend_per_day:
         type: integer
       saved:

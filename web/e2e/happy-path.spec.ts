@@ -22,8 +22,11 @@ test("register → income + card fixed payment → card expense → Available �
   const header = pageHeader(page);
   await header.getByRole("button", { name: "Nueva fuente de ingreso" }).click();
   await page.getByLabel("Nombre").fill("Salario");
-  await page.getByLabel("Monto").fill("30,000");
-  await page.getByLabel("Día del mes").fill("1");
+  await page.getByLabel("Monto por pago").fill("30,000");
+  await page.getByRole("button", { name: "Cambiar" }).click();
+  await page.getByRole("button", { name: "Mensual" }).click();
+  await page.getByRole("group", { name: "Día de pago" }).getByRole("button", { name: "1", exact: true }).click();
+  await page.getByRole("button", { name: "Más opciones" }).click();
   await page.getByLabel("Mes de inicio").fill(month);
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.locator("p", { hasText: "Salario" }).first()).toBeVisible();
@@ -35,6 +38,7 @@ test("register → income + card fixed payment → card expense → Available �
   await page.getByLabel("Día del mes").fill("5");
   await pick(page, "Categoría", "Vivienda");
   await pick(page, "Método de pago", /Visa Oro/);
+  await page.getByRole("button", { name: "Más opciones" }).click();
   await page.getByLabel("Mes de inicio").fill(month);
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.locator("p", { hasText: "Renta" }).first()).toBeVisible();

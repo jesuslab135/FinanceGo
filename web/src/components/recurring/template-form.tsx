@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CategorySelect } from "@/components/common/category-select";
@@ -18,6 +18,8 @@ import { toMonthKey } from "@/lib/dates";
 import { applyApiError } from "@/lib/forms";
 import { centsToInput, parseMoney } from "@/lib/money";
 import { useToday } from "@/hooks/use-today";
+import { useFormatMoney } from "@/components/common/money";
+import { monthlyEstimate } from "@/lib/recurring";
 import { PayScheduleField, scheduleErrors, scheduleFromSource, scheduleInput, type ScheduleErrors } from "./pay-schedule-field";
 
 type Kind = "income" | "fixed";
@@ -37,6 +39,11 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
   // Income picks its pay schedule in PayScheduleField; fixed payments keep the plain day of the month.
   const [schedule, setSchedule] = useState(() => scheduleFromSource(kind === "income" ? initial : undefined));
   const [scheduleErr, setScheduleErr] = useState<ScheduleErrors>({});
+  const [savedSchedule] = useState(() => JSON.stringify(schedule));
+  // Editing an existing income's schedule rewrites pending rows; say so before saving.
+  const scheduleChanged = kind === "income" && initial?.id !== undefined && JSON.stringify(schedule) !== savedSchedule;
+  const fmt = useFormatMoney();
+  const [more, setMore] = useState(() => !!initial?.end_month);
   const schema = useMemo(
     () =>
       z
@@ -67,6 +74,8 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
     },
   });
   const { errors, isSubmitting } = form.formState;
+  const cents = parseMoney(useWatch({ control: form.control, name: "amount" }));
+  const showMore = more || !!errors.start_month || !!errors.end_month;
 
   const checkSchedule = () => {
     const e = kind === "income" ? scheduleErrors(schedule) : {};
@@ -103,6 +112,9 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
         <div className="space-y-2">
           <Label htmlFor="tpl-amount">{t(kind === "income" ? "schedule.amountPerPayment" : "recurring.amount")}</Label>
           <MoneyInput id="tpl-amount" aria-invalid={!!errors.amount} {...form.register("amount")} />
+          {kind === "income" && cents !== null && cents > 0 && schedule.frequency !== "monthly" && (
+            <p className="text-xs text-muted-foreground">{t("schedule.perMonth", { amount: fmt(monthlyEstimate(cents, schedule.frequency)) })}</p>
+          )}
           <FieldError message={errors.amount?.message} />
         </div>
         {kind === "fixed" && (
@@ -114,7 +126,7 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
           </div>
         )}
       </div>
-      {kind === "income" && <PayScheduleField value={schedule} errors={scheduleErr} onChange={(v) => { setScheduleErr({}); setSchedule(v); }} />}
+      {kind === "income" && <PayScheduleField collapsible value={schedule} errors={scheduleErr} onChange={(v) => { setScheduleErr({}); setSchedule(v); }} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="tpl-category">{t("expenses.category")}</Label>
@@ -138,7 +150,11 @@ export function TemplateForm({ kind, initial, onSubmit, onCancel }: {
           </div>
         )}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      {scheduleChanged && <p role="status" className="rounded-2xl bg-muted px-3 py-2 text-sm text-muted-foreground">{t("schedule.editNote")}</p>}
+      <button type="button" aria-expanded={showMore} className="min-h-11 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline" onClick={() => setMore(!showMore)}>
+        {t(showMore ? "schedule.lessOptions" : "schedule.moreOptions")}
+      </button>
+      <div hidden={!showMore} className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="tpl-start">{t("recurring.startMonth")}</Label>
           <Input id="tpl-start" type="month" aria-invalid={!!errors.start_month} {...form.register("start_month")} />

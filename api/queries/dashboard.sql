@@ -112,3 +112,25 @@ LEFT JOIN categories c ON c.id = m.category_id
 LEFT JOIN payment_methods pm ON pm.id = m.payment_method_id
 WHERE m.user_id = @user_id AND m.due_date BETWEEN sqlc.arg(from_date)::date AND sqlc.arg(to_date)::date
 ORDER BY m.due_date, m.id;
+
+-- name: NextPayday :one
+-- The first day after today on which pending income lands, with everything due that day.
+SELECT due_date, SUM(amount)::bigint AS amount, COUNT(*)::int AS payments, MIN(name)::text AS name
+FROM monthly_entries
+WHERE user_id = @user_id AND kind = 'income' AND status = 'pending' AND due_date > sqlc.arg(today)::date
+GROUP BY due_date
+ORDER BY due_date
+LIMIT 1;
+
+-- name: PayPeriodTotals :one
+-- Money in hand until the next payday: this month's income that has arrived
+-- (received, or pending and due by today) against the fixed payments and
+-- installments already paid this month or still to pay before that payday.
+SELECT
+    COALESCE(SUM(amount) FILTER (WHERE kind = 'income' AND month = sqlc.arg(month)::date
+        AND (status = 'received' OR (status = 'pending' AND due_date <= sqlc.arg(today)::date))), 0)::bigint AS income_arrived,
+    COALESCE(SUM(amount) FILTER (WHERE kind IN ('fixed', 'installment')
+        AND ((status = 'paid' AND month = sqlc.arg(month)::date)
+          OR (status = 'pending' AND due_date < sqlc.arg(next_payday)::date))), 0)::bigint AS committed
+FROM monthly_entries
+WHERE user_id = @user_id AND month >= sqlc.arg(month)::date AND month <= sqlc.arg(next_payday)::date;

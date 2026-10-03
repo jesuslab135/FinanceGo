@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { FieldError } from "@/components/common/field-error";
+import { useFormatMoney } from "@/components/common/money";
 import { Keypad } from "@/components/quick-add/keypad";
 import { PayScheduleField, scheduleErrors, scheduleInput, type ScheduleDraft, type ScheduleErrors } from "@/components/recurring/pay-schedule-field";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { IncomeSourceInput } from "@/lib/api/types";
 import { toMonthKey } from "@/lib/dates";
+import { monthlyEstimate } from "@/lib/recurring";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { markOnboardingSettled } from "@/lib/onboarding";
 import { applyApiError } from "@/lib/forms";
@@ -19,8 +21,13 @@ import { StepActions } from "./progress";
 
 export type IncomeDraft = { name: string; cents: number; schedule: ScheduleDraft; savedId?: number };
 
-export function StepIncome({ draft, onChange, onDone, today }: {
+/**
+ * Two short screens so neither needs scrolling: first how often and on which days the income lands,
+ * then how much one payment is (asked in the words of that schedule).
+ */
+export function StepIncome({ draft, onChange, onDone, today, part, onPart }: {
   draft: IncomeDraft; onChange: (d: IncomeDraft) => void; onDone: () => void; today: Date;
+  part: 1 | 2; onPart: (p: 1 | 2) => void;
 }) {
   const t = useTranslations();
   const categories = useCategories();
@@ -31,6 +38,13 @@ export function StepIncome({ draft, onChange, onDone, today }: {
   const errors = form.formState.errors as Record<string, { message?: string } | undefined>;
   const [scheduleErr, setScheduleErr] = useState<ScheduleErrors>({});
   const [busy, setBusy] = useState(false);
+  const fmt = useFormatMoney();
+
+  const toAmount = () => {
+    const sErr = scheduleErrors(draft.schedule);
+    setScheduleErr(sErr);
+    if (Object.keys(sErr).length === 0) onPart(2);
+  };
 
   const submit = async () => {
     if (busy) return;
@@ -39,9 +53,6 @@ export function StepIncome({ draft, onChange, onDone, today }: {
     let bad = false;
     if (!name) { form.setError("name", { message: t("validation.required") }); bad = true; }
     if (draft.cents <= 0) { form.setError("amount", { message: t("validation.amount") }); bad = true; }
-    const sErr = scheduleErrors(draft.schedule);
-    setScheduleErr(sErr);
-    if (Object.keys(sErr).length > 0) bad = true;
     if (bad) return;
     const categoryId = categories.data?.find((c) => c.kind === "income" && c.icon === "briefcase")?.id;
     // Generated types are `T | undefined`; the Go API takes JSON null for a missing end month.
@@ -64,6 +75,18 @@ export function StepIncome({ draft, onChange, onDone, today }: {
     }
   };
 
+  if (part === 1) {
+    return (
+      <div className="space-y-6">
+        <PayScheduleField questionInHeading value={draft.schedule} errors={scheduleErr} onChange={(schedule) => { setScheduleErr({}); onChange({ ...draft, schedule }); }} />
+        <StepActions>
+          <Button type="button" className="min-h-11 px-6" onClick={toAmount}>{t("welcome.continue")}</Button>
+        </StepActions>
+      </div>
+    );
+  }
+
+  const { frequency } = draft.schedule;
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -73,11 +96,12 @@ export function StepIncome({ draft, onChange, onDone, today }: {
       </div>
       <div>
         <Keypad cents={draft.cents} onChange={(cents) => { form.clearErrors("amount"); onChange({ ...draft, cents }); }} onSubmit={() => void submit()} />
-        <p className="pt-2 text-center text-xs text-muted-foreground">{t("schedule.perPayment")}</p>
+        {frequency !== "monthly" && draft.cents > 0 && (
+          <p className="pt-2 text-center text-sm text-muted-foreground" aria-live="polite">{t("schedule.perMonth", { amount: fmt(monthlyEstimate(draft.cents, frequency)) })}</p>
+        )}
         <div className="text-center"><FieldError message={errors.amount?.message} /></div>
       </div>
-      <PayScheduleField value={draft.schedule} errors={scheduleErr} onChange={(schedule) => { setScheduleErr({}); onChange({ ...draft, schedule }); }} />
-      <StepActions>
+      <StepActions onBack={() => onPart(1)}>
         <Button type="button" className="min-h-11 px-6" disabled={busy || categories.isPending} onClick={() => void submit()}>{t("welcome.continue")}</Button>
       </StepActions>
     </div>
