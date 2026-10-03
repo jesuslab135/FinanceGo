@@ -80,15 +80,19 @@ jobs:
           node-version: 24
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
-      - run: docker compose -f docker-compose.yml up -d --build
+      # The e2e overlay raises the auth rate limit: the suite registers more accounts per minute than the default allows.
+      - run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
       - name: wait for the web app
         run: |
           for i in $(seq 1 60); do curl -fs http://localhost:3000/es/login >/dev/null && exit 0; sleep 2; done
           docker compose -f docker-compose.yml logs; exit 1
       - working-directory: web
-        run: pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium && pnpm e2e
+        run: pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium && pnpm e2e --project=desktop --project=mobile --project=desktop-reduced
+      # The visual project is left out above: its baselines are rendered on Windows and do not match Linux fonts.
       - name: edge ignores spoofed X-Forwarded-For (one client, one rate-limit bucket)
         run: |
+          docker compose -f docker-compose.yml up -d --wait api # back to the default auth rate limit
+          for i in $(seq 1 30); do curl -fs http://localhost:8080/healthz >/dev/null && break; sleep 1; done
           codes=""
           for i in $(seq 1 11); do
             codes="$codes $(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000/api/v1/auth/login \

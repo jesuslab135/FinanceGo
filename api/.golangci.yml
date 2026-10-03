@@ -6,6 +6,11 @@ linters:
     - bodyclose
     - misspell
     - unconvert
+  settings:
+    misspell:
+      # Spanish test data, not a typo of "emergencies".
+      ignore-rules:
+        - emergencias
   exclusions:
     paths:
       - internal/store
