@@ -32,3 +32,9 @@ UPDATE refresh_tokens SET revoked_at = sqlc.arg(now)::timestamptz WHERE token_ha
 
 -- name: RevokeRefreshFamily :exec
 UPDATE refresh_tokens SET revoked_at = sqlc.arg(now)::timestamptz WHERE family_id = @family_id AND revoked_at IS NULL;
+
+-- name: UpdateUserPassword :exec
+UPDATE users SET password_hash = @password_hash, updated_at = now() WHERE id = @id;
+
+-- name: RevokeUserRefreshTokens :exec
+UPDATE refresh_tokens SET revoked_at = sqlc.arg(now)::timestamptz WHERE user_id = @user_id AND revoked_at IS NULL;

@@ -131,6 +131,7 @@ func (h *handlers) routes(v1 *gin.RouterGroup) {
 	p.PUT("/account-movements/:id", h.updateAccountMovement)
 	p.DELETE("/account-movements/:id", h.deleteAccountMovement)
 	p.DELETE("/me", authLimit, h.deleteMe) // password check: same budget as login
+	p.PUT("/me/password", authLimit, h.putPassword)
 	p.GET("/export/expenses.csv", h.exportExpenses)
 	p.GET("/export/entries.csv", h.exportEntries)
 	p.GET("/export/savings.csv", h.exportSavings)

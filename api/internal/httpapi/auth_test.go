@@ -207,3 +207,43 @@ func TestRefreshRaceGraceWindow(t *testing.T) {
 		t.Fatalf("rotated cookie no longer refreshes: %d %s", r.Code, r.Body)
 	}
 }
+
+func TestChangePassword(t *testing.T) {
+	h := newHarness(t)
+	reg := h.do("POST", "/api/v1/auth/register", "", M{
+		"email": "pw@example.com", "password": "password123", "name": "Pw", "currency": "MXN", "locale": "es", "timezone": "UTC",
+	})
+	tok := expect[struct {
+		AccessToken string `json:"access_token"`
+	}](t, reg, 201).AccessToken
+	other := refreshCookieOf(t, reg)
+
+	if r := h.do("PUT", "/api/v1/me/password", "", M{"current_password": "password123", "new_password": "new-password-1"}); r.Code != 401 {
+		t.Fatalf("no token: %d", r.Code)
+	}
+	if r := h.do("PUT", "/api/v1/me/password", tok, M{"current_password": "nope-nope", "new_password": "new-password-1"}); r.Code != 422 || errFields(r)["current_password"] != "is incorrect" {
+		t.Fatalf("wrong current password: %d %s", r.Code, r.Body)
+	}
+	if r := h.do("PUT", "/api/v1/me/password", tok, M{"current_password": "password123", "new_password": "short"}); r.Code != 422 || errFields(r)["new_password"] == "" {
+		t.Fatalf("short new password: %d %s", r.Code, r.Body)
+	}
+
+	r := h.do("PUT", "/api/v1/me/password", tok, M{"current_password": "password123", "new_password": "new-password-1"})
+	fresh := expect[struct {
+		AccessToken string `json:"access_token"`
+	}](t, r, 200).AccessToken
+	mine := refreshCookieOf(t, r)
+	expect[M](t, h.do("GET", "/api/v1/me", fresh, nil), 200)
+
+	// The old password stops working and the new one logs in.
+	if r := h.do("POST", "/api/v1/auth/login", "", M{"email": "pw@example.com", "password": "password123"}); r.Code != 401 {
+		t.Fatalf("old password: %d", r.Code)
+	}
+	expect[M](t, h.do("POST", "/api/v1/auth/login", "", M{"email": "pw@example.com", "password": "new-password-1"}), 200)
+
+	// Sessions opened before the change are signed out; the one returned by the change keeps working.
+	if r := h.do("POST", "/api/v1/auth/refresh", "", nil, other); r.Code != 401 {
+		t.Fatalf("old session refresh: %d", r.Code)
+	}
+	expect[M](t, h.do("POST", "/api/v1/auth/refresh", "", nil, mine), 200)
+}

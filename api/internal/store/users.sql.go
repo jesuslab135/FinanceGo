@@ -189,6 +189,20 @@ func (q *Queries) RevokeRefreshToken(ctx context.Context, arg RevokeRefreshToken
 	return result.RowsAffected(), nil
 }
 
+const revokeUserRefreshTokens = `-- name: RevokeUserRefreshTokens :exec
+UPDATE refresh_tokens SET revoked_at = $1::timestamptz WHERE user_id = $2 AND revoked_at IS NULL
+`
+
+type RevokeUserRefreshTokensParams struct {
+	Now    time.Time
+	UserID int64
+}
+
+func (q *Queries) RevokeUserRefreshTokens(ctx context.Context, arg RevokeUserRefreshTokensParams) error {
+	_, err := q.db.Exec(ctx, revokeUserRefreshTokens, arg.Now, arg.UserID)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users SET name = $1, currency = $2, locale = $3, timezone = $4, updated_at = now()
 WHERE id = $5
@@ -224,4 +238,18 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users SET password_hash = $1, updated_at = now() WHERE id = $2
+`
+
+type UpdateUserPasswordParams struct {
+	PasswordHash string
+	ID           int64
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, updateUserPassword, arg.PasswordHash, arg.ID)
+	return err
 }

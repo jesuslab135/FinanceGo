@@ -23,6 +23,16 @@ definitions:
     required:
     - monthly_limit
     type: object
+  httpapi.changePasswordInput:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
   httpapi.deleteAccountInput:
     properties:
       password:
@@ -2280,6 +2290,34 @@ paths:
       security:
       - BearerAuth: []
       summary: Update profile (name, currency, locale, timezone)
+      tags:
+      - me
+  /me/password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: current and new password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.changePasswordInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/service.Session'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change the password; signs out every other device and rotates the refresh
+        cookie
       tags:
       - me
   /months/{month}/entries:

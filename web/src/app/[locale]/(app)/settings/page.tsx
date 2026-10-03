@@ -12,7 +12,7 @@ import { PasswordInput } from "@/components/common/password-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "@/i18n/navigation";
-import { api } from "@/lib/api/client";
+import { api, tokenStore, unwrap } from "@/lib/api/client";
 import { ApiError, toApiError } from "@/lib/api/errors";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { toISODate } from "@/lib/dates";
@@ -68,6 +68,52 @@ function ThemeChooser() {
 }
 
 const selectCls = "h-9 w-full rounded-md border bg-transparent px-2 text-sm";
+
+/** Changing the password signs out every other device; this one continues on the session the API returns. */
+function PasswordForm() {
+  const t = useTranslations();
+  const errMsg = useErrorMessage();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    setSaving(true);
+    try {
+      const s = await unwrap(api.PUT("/me/password", { body: { current_password: current, new_password: next } }));
+      tokenStore.set(s.access_token);
+      setCurrent("");
+      setNext("");
+      toast.success(t("settings.passwordChanged"));
+    } catch (err) {
+      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(localizeFields(err.fields, t));
+      else toast.error(errMsg(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2" noValidate>
+      <div className="space-y-2">
+        <Label htmlFor="pw-current">{t("settings.currentPassword")}</Label>
+        <PasswordInput id="pw-current" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} aria-invalid={!!errors.current_password} />
+        <FieldError message={errors.current_password} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="pw-new">{t("settings.newPassword")}</Label>
+        <PasswordInput id="pw-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} aria-invalid={!!errors.new_password} aria-describedby="pw-new-hint" />
+        {errors.new_password ? <FieldError message={errors.new_password} /> : <p id="pw-new-hint" className="text-xs text-muted-foreground">{t("auth.passwordHint")}</p>}
+      </div>
+      <div className="sm:col-span-2 flex justify-end">
+        <Button type="submit" disabled={saving || !current || !next}>{t("settings.changePassword")}</Button>
+      </div>
+    </form>
+  );
+}
 
 export default function SettingsPage() {
   const t = useTranslations();
@@ -172,6 +218,10 @@ export default function SettingsPage() {
             </div>
           </form>
         </CardContent>
+      </Card>
+      <Card className={cardCls}>
+        <CardHeader><CardTitle>{t("settings.password")}</CardTitle></CardHeader>
+        <CardContent><PasswordForm /></CardContent>
       </Card>
       <Card className={cardCls}>
         <CardHeader><CardTitle>{t("settings.export")}</CardTitle></CardHeader>

@@ -131,3 +131,30 @@ test("settings: account deletion asks for confirmation and a correct password", 
   // The auth gate may reach /login before the redirect to /register; either proves the session is gone.
   await expect(page).toHaveURL(/\/es\/(login|register)$/);
 });
+
+test("settings: changing the password keeps this session and only the new password logs in", async ({ page }) => {
+  const email = uniqueEmail("newpass");
+  await register(page, email);
+  await page.goto("/es/settings");
+  const current = page.getByLabel("Contraseña actual", { exact: true });
+  const next = page.getByLabel("Nueva contraseña", { exact: true });
+  const change = page.getByRole("button", { name: "Cambiar contraseña" });
+
+  await current.fill("wrong-password");
+  await next.fill("nueva-clave-2026");
+  await change.click();
+  await expect(page.getByText("Contraseña incorrecta")).toBeVisible();
+
+  await current.fill("password123");
+  await change.click();
+  await expect(page.getByText("Contraseña actualizada")).toBeVisible();
+  await expect(current).toHaveValue("");
+
+  // The rotated refresh cookie restores the session after a reload.
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Ajustes" })).toBeVisible();
+
+  const login = (password: string) => page.request.post("/api/v1/auth/login", { data: { email, password } });
+  expect((await login("password123")).status()).toBe(401);
+  expect((await login("nueva-clave-2026")).status()).toBe(200);
+});

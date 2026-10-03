@@ -255,3 +255,41 @@ func (s *Service) UpdateMe(ctx context.Context, a Actor, in ProfileInput) (User,
 	}
 	return toUser(u), nil
 }
+
+// ChangePassword replaces the password after checking the current one. Every
+// refresh token of the user is revoked, so other devices are signed out, and
+// the caller gets a fresh session.
+func (s *Service) ChangePassword(ctx context.Context, a Actor, current, next string) (Session, error) {
+	u, err := s.q.GetUser(ctx, a.UserID)
+	if err != nil {
+		return Session{}, notFound(err)
+	}
+	ok, err := auth.VerifyPassword(u.PasswordHash, current)
+	if err != nil {
+		return Session{}, err
+	}
+	if !ok {
+		return Session{}, apperr.Validation(map[string]string{"current_password": "is incorrect"})
+	}
+	var v apperr.V
+	v.Check(utf8.RuneCountInString(next) >= 8 && len(next) <= 128, "new_password", "must be 8-128 characters")
+	if err := v.Err(); err != nil {
+		return Session{}, err
+	}
+	hash, err := auth.HashPassword(next)
+	if err != nil {
+		return Session{}, err
+	}
+	var sess Session
+	err = s.inTx(ctx, func(q *store.Queries) error {
+		if err := q.UpdateUserPassword(ctx, store.UpdateUserPasswordParams{ID: u.ID, PasswordHash: hash}); err != nil {
+			return err
+		}
+		if err := q.RevokeUserRefreshTokens(ctx, store.RevokeUserRefreshTokensParams{Now: s.now(), UserID: u.ID}); err != nil {
+			return err
+		}
+		sess, err = s.newSession(ctx, q, u, "")
+		return err
+	})
+	return sess, err
+}

@@ -132,6 +132,7 @@
     "budget": "Límite mensual", "budgetFor": "Límite mensual de {name}", "noBudget": "Sin límite", "removeBudget": "Quitar límite"
   },
   "settings": {
+    "password": "Contraseña", "currentPassword": "Contraseña actual", "newPassword": "Nueva contraseña", "changePassword": "Cambiar contraseña", "passwordChanged": "Contraseña actualizada. Cerramos tu sesión en los demás dispositivos.",
     "exportSavings": "Ahorro (CSV)",
     "theme": "Apariencia",
     "title": "Ajustes", "profile": "Perfil", "export": "Exportar datos", "exportExpenses": "Gastos (CSV)",

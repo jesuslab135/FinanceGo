@@ -1652,6 +1652,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change the password; signs out every other device and rotates the refresh cookie */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description current and new password */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["httpapi.changePasswordInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["service.Session"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["httpapi.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/months/{month}/entries": {
         parameters: {
             query?: never;
@@ -2503,6 +2553,10 @@ export interface components {
         };
         "httpapi.budgetInput": {
             monthly_limit: number;
+        };
+        "httpapi.changePasswordInput": {
+            current_password: string;
+            new_password: string;
         };
         "httpapi.deleteAccountInput": {
             password: string;

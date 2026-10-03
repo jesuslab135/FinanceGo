@@ -173,3 +173,31 @@ func (h *handlers) deleteMe(c *gin.Context) {
 	h.setRefreshCookie(c, "", -1)
 	c.Status(http.StatusNoContent)
 }
+
+type changePasswordInput struct {
+	CurrentPassword string `json:"current_password" validate:"required"`
+	NewPassword     string `json:"new_password" validate:"required"`
+}
+
+// putPassword godoc
+// @Summary  Change the password; signs out every other device and rotates the refresh cookie
+// @Tags     me
+// @Accept   json
+// @Produce  json
+// @Security BearerAuth
+// @Param    body body     changePasswordInput true "current and new password"
+// @Success  200  {object} service.Session
+// @Failure  422  {object} ErrorResponse
+// @Router   /me/password [put]
+func (h *handlers) putPassword(c *gin.Context) {
+	var in changePasswordInput
+	if !bind(c, &in) {
+		return
+	}
+	sess, err := h.svc.ChangePassword(c.Request.Context(), actorOf(c), in.CurrentPassword, in.NewPassword)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	h.startSession(c, http.StatusOK, sess)
+}
